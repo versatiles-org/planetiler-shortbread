@@ -56,7 +56,7 @@ else
 	STORAGE="mmap"
 fi
 
-java -Xmx"${available_memory}"m -jar planetiler.jar \
+java -Xmx"${available_memory}"m -jar planetiler.jar config/shortbread.yml \
 	--area=$AREA \
 	--download \
 	--download-threads=10 \
@@ -65,9 +65,6 @@ java -Xmx"${available_memory}"m -jar planetiler.jar \
 	--nodemap-type=sparsearray \
 	--storage=$STORAGE \
 	--output=data/$NAME.pmtiles \
-	--force=true \
-	config/shortbread.yml
+	--force=true
 
 versatiles convert -c brotli data/$NAME.pmtiles data/$NAME.versatiles
-
-# java -Xmx"${available_memory}"m -jar planetiler.jar --help

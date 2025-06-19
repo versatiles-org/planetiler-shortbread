@@ -1,3 +1,8 @@
 #!/bin/bash
 
-docker run --rm -v "$(pwd)/data:/app/data" versatiles-planetiler:latest $@
+docker run \
+   --rm \
+   -m 0 \
+   -v "$(pwd)/data:/app/data" \
+   versatiles-planetiler:latest \
+   $@

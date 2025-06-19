@@ -3,7 +3,7 @@
 **Generate Shortbread‑schema vector tiles from any OpenStreetMap extract with a single command.**
 
 [![Docker Hub](https://img.shields.io/docker/pulls/versatiles/versatiles-planetiler?label=Docker%20Hub)](https://hub.docker.com/r/versatiles/versatiles-planetiler)
-[![GitHub release](https://img.shields.io/github/v/release/versatiles-org/planetiler-shortbread?label=Latest%20tag)](https://github.com/versatiles-org/planetiler-shortbread/releases)
+[![Image Size](https://img.shields.io/docker/image-size/versatiles/versatiles-planetiler?label=Image%20Size)](https://hub.docker.com/r/versatiles/versatiles-planetiler)
 
 ---
 
@@ -13,9 +13,9 @@
 | ------------------------------------------------------------------------ | ------- | ---------------------------------------------- |
 | **[Planetiler](https://github.com/onthegomap/planetiler)**               | Latest  | OSM → vector tiles compiler                    |
 | **[Shortbread configuration](https://shortbread-tiles.org/schema/1.0/)** | 1.0     | Styling / layer schema                         |
-| **[Versatiles](https://github.com/versatiles-org/versatiles)**           | Latest  | Converts `.pmtiles` → `.versatiles` containers |
+| **[VersaTiles](https://github.com/versatiles-org/versatiles)**           | Latest  | Converts `.pmtiles` → `.versatiles` containers |
 
-The final output is a space‑efficient `.versatiles` archive (Brotli‑compressed) that you can serve directly with any Versatiles‑compatible server. The intermediate `.pmtiles` (Gzip‑compressed) is left in the `/app/data` volume for inspection.
+The final output is a space‑efficient `.versatiles` archive (Brotli‑compressed) that you can serve directly with any VersaTiles‑compatible server. The intermediate `.pmtiles` (Gzip‑compressed) is left in the `/app/data` volume for inspection.
 
 ---
 
@@ -71,7 +71,7 @@ After the run you’ll find two files in the mounted `data` directory:
 | `osm.pmtiles`    | Gzip‑compressed vector‑tile archive produced by Planetiler |
 | `osm.versatiles` | Brotli‑compressed archive, auto‑converted by Versatiles    |
 
-Serve the `.versatiles` file with [Versatiles‑server](https://github.com/versatiles-org/versatiles-rs) or any other compatible tool.
+Serve the `.versatiles` file with [VersaTiles‑server](https://github.com/versatiles-org/versatiles-rs) or any other compatible tool.
 
 ---
 

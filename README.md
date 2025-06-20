@@ -13,9 +13,9 @@
 | ------------------------------------------------------------------------ | ------- | ---------------------------------------------- |
 | **[Planetiler](https://github.com/onthegomap/planetiler)**               | Latest  | OSM → vector tiles compiler                    |
 | **[Shortbread configuration](https://shortbread-tiles.org/schema/1.0/)** | 1.0     | Styling / layer schema                         |
-| **[VersaTiles](https://github.com/versatiles-org/versatiles)**           | Latest  | Converts `.pmtiles` → `.versatiles` containers |
+| **[VersaTiles](https://github.com/versatiles-org/versatiles)**           | Latest  | Converts `.mbtiles` → `.versatiles` containers |
 
-The final output is a space‑efficient `.versatiles` archive (Brotli‑compressed) that you can serve directly with any VersaTiles‑compatible server. The intermediate `.pmtiles` (Gzip‑compressed) is left in the `/app/data` volume for inspection.
+The final output is a space‑efficient `.versatiles` archive (Brotli‑compressed) that you can serve directly with any VersaTiles‑compatible server. The intermediate `.mbtiles` (Gzip‑compressed) is left in the `/app/data` volume for inspection.
 
 ---
 
@@ -63,7 +63,7 @@ After the run you’ll find two files in the mounted `data` directory:
 
 | File             | Description                                                |
 | ---------------- | ---------------------------------------------------------- |
-| `osm.pmtiles`    | Gzip‑compressed vector‑tile archive produced by Planetiler |
+| `osm.mbtiles`    | Gzip‑compressed vector‑tile archive produced by Planetiler |
 | `osm.versatiles` | Brotli‑compressed archive, auto‑converted by Versatiles    |
 
 Serve the `.versatiles` file with [VersaTiles‑server](https://github.com/versatiles-org/versatiles-rs) or any other compatible tool.

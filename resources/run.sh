@@ -63,7 +63,7 @@ java -Xmx"${MEM_USE}"m -jar planetiler.jar config/shortbread.yml \
 	--fetch-wikidata \
 	--force=true \
 	--nodemap-type=sparsearray \
-	--output=data/$NAME.pmtiles \
+	--output=data/$NAME.mbtiles \
 	--storage=$STORAGE
 
-versatiles convert -c brotli data/$NAME.pmtiles data/$NAME.versatiles
+versatiles convert -c brotli data/$NAME.mbtiles data/$NAME.versatiles

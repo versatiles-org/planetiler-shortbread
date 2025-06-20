@@ -1,5 +1,5 @@
-schema_name: Shortbread
-schema_description: A basic, lean, general-purpose vector tile schema for OpenStreetMap data. See https://shortbread.geofabrik.de/
+schema_name: VersaTiles - OSM
+schema_description: A vector tile schema for OpenStreetMap data using Shortbread (https://shortbread-tiles.org). 
 attribution: <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>
 examples: shortbread.spec.yml
 args:

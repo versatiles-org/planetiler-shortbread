@@ -40,31 +40,30 @@ if [[ "$AREA" != "planet" ]]; then
 fi
 
 # get the available memory
-available_memory=$(free -m | awk '/^Mem:/{print $7}')
+MEM_FREE=$(free -m | awk '/^Mem:/{print $7}')
 
-if [ "$available_memory" -lt 4096 ]; then
-	# use 75% of the available memory for processing
-	available_memory=$(awk '{print int($1 * 0.75)}' <<<"${available_memory}")
+if [ "$MEM_FREE" -lt 2000 ]; then
+	echo "Error: Not enough memory available. At least 2GB is required."
+	exit 1
 else
-	# reserve 1GB for the system and other processes
-	available_memory=$((available_memory - 1024))
+	MEM_USE=$(awk '{print int($1 - ($1 ^ 0.25) * 200)}' <<<"${MEM_USE}")
 fi
 
-if [ "$available_memory" -gt 130000 ]; then
+if [ "$MEM_USE" -gt 130000 ]; then
 	STORAGE="ram"
 else
 	STORAGE="mmap"
 fi
 
-java -Xmx"${available_memory}"m -jar planetiler.jar config/shortbread.yml \
+java -Xmx"${MEM_USE}"m -jar planetiler.jar config/shortbread.yml \
 	--area=$AREA \
 	--download \
-	--download-threads=10 \
 	--download-chunk-size-mb=1000 \
+	--download-threads=10 \
 	--fetch-wikidata \
+	--force=true \
 	--nodemap-type=sparsearray \
-	--storage=$STORAGE \
 	--output=data/$NAME.pmtiles \
-	--force=true
+	--storage=$STORAGE
 
 versatiles convert -c brotli data/$NAME.pmtiles data/$NAME.versatiles

@@ -28,15 +28,14 @@ The final output is a space‑efficient `.versatiles` archive (Brotli‑compress
 
 ## Quick start
 
-```bash
-# Download OSM → vector tiles for the whole planet …
+Generate OSM vector tiles for the whole planet …
 
-docker run --rm \
-  -v "$(pwd)/data:/app/data" \
-  versatiles/versatiles-planetiler:latest -a planet
+```
+curl https://get.docker.com | sh
+docker run --rm -v "$(pwd)/data:/app/data" versatiles/versatiles-planetiler:latest -a planet
 ```
 
-The container writes all intermediate / output files into the mounted `data` folder **on your host**, so make sure you have enough free disk space (\~200 GB for planet‑wide tiles).
+The container writes all intermediate / output files into the mounted `data` folder **on your host**, so make sure you have enough free disk space (\~300 GB for planet‑wide tiles).
 
 ### Command‑line options
 
@@ -50,14 +49,10 @@ Options:
 
 `-a planet` – downloads the minute‑updated planet PBF and renders **everything**.
 
-Examples:
+Example: Spain’s capital only (≈ a few minutes on a laptop)
 
 ```bash
-# Spain’s capital only (≈ a few minutes on a laptop)
 docker run --rm -v "$(pwd)/data:/app/data" versatiles/versatiles-planetiler:latest -a madrid
-
-# Planet‑wide tiles (≈ hours, needs beefy machine)
-docker run --rm -v "$(pwd)/data:/app/data" versatiles/versatiles-planetiler:latest -a planet
 ```
 
 ---

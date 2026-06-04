@@ -40,9 +40,9 @@ class ShortbreadUtilTest {
 
   @Test
   void zminDecreasesWithSize() {
-    // a bigger area becomes visible at a lower zoom than a smaller one
-    assertTrue(Zooms.zminForArea(0.1, 1e10) < Zooms.zminForArea(0.1, 1e6));
-    assertTrue(Zooms.zminForLength(0.25, 1e7) < Zooms.zminForLength(0.25, 1e3));
+    // inputs are fractions of the planet; a bigger feature becomes visible at a lower zoom
+    assertTrue(Zooms.zminForArea(0.1, 1e-3) < Zooms.zminForArea(0.1, 1e-9));
+    assertTrue(Zooms.zminForLength(0.25, 1e-2) < Zooms.zminForLength(0.25, 1e-7));
   }
 
   @Test

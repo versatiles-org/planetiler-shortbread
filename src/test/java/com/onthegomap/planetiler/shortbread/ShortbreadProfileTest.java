@@ -10,6 +10,9 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeometryException;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import com.onthegomap.planetiler.reader.osm.OsmElement;
+import com.onthegomap.planetiler.reader.osm.OsmReader;
+import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -181,6 +184,62 @@ class ShortbreadProfileTest {
     assertEquals("station", attrs(pt).get("kind"));
     // DEVIATION: per-kind zoom (13) instead of the hard-coded 11
     assertEquals(13, pt.getMinZoom());
+  }
+
+  @Test
+  void boundaryRelationIsCaptured() {
+    var relation = new OsmElement.Relation(1);
+    relation.setTag("type", "boundary");
+    relation.setTag("boundary", "administrative");
+    relation.setTag("admin_level", "2");
+    var infos = profile.preprocessOsmRelation(relation);
+    assertEquals(1, infos.size());
+  }
+
+  @Test
+  void boundaryLineFromMemberWay() {
+    var relation = new OsmElement.Relation(1);
+    relation.setTag("type", "boundary");
+    relation.setTag("boundary", "administrative");
+    relation.setTag("admin_level", "2");
+    OsmRelationInfo info = profile.preprocessOsmRelation(relation).get(0);
+    var member = new OsmReader.RelationMember<>("outer", info);
+    SourceFeature way = SimpleFeature.createFakeOsmFeature(
+      TestUtils.newLineString(0, 0, 1, 1), Map.of(), Shortbread.OSM_SOURCE, null, 2, List.of(member));
+
+    var features = TestUtils.processSourceFeature(way, profile);
+    var line = onlyOne(features, "boundaries");
+    assertEquals(2, attrs(line).get("admin_level"));
+    assertEquals(0, line.getMinZoom());
+    assertEquals(false, attrs(line).get("disputed"));
+  }
+
+  @Test
+  void boundaryLabelFromAdminPolygon() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("boundary", "administrative", "admin_level", "2", "name", "Country"));
+    var label = onlyOne(features, "boundary_labels");
+    assertEquals(2, attrs(label).get("admin_level"));
+    assertEquals("Country", attrs(label).get("name"));
+  }
+
+  @Test
+  void placeLabelCityWithDefaultPopulation() {
+    var features = process(TestUtils.newPoint(0, 0), Map.of("place", "city", "name", "Metropolis"));
+    var place = onlyOne(features, "place_labels");
+    assertEquals("city", attrs(place).get("kind"));
+    assertEquals(6, place.getMinZoom());
+    assertEquals(100_000L, attrs(place).get("population"));
+  }
+
+  @Test
+  void placeLabelCapital() {
+    var features = process(TestUtils.newPoint(0, 0),
+      Map.of("place", "city", "capital", "yes", "name", "Capital City", "population", "2000000"));
+    var place = onlyOne(features, "place_labels");
+    assertEquals("capital", attrs(place).get("kind"));
+    assertEquals(4, place.getMinZoom());
+    assertEquals(2_000_000L, attrs(place).get("population"));
   }
 
   @Test

@@ -113,6 +113,77 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void motorwayStreetWithAttributeTiers() {
+    var features = process(TestUtils.newLineString(0, 0, 0.5, 0.5, 1, 1),
+      Map.of("highway", "motorway", "surface", "asphalt", "oneway", "yes"));
+    var street = onlyOne(features, "streets");
+    assertEquals(5, street.getMinZoom());
+    // low tier (z5-10): only kind + rail
+    var z5 = street.getAttrsAtZoom(5);
+    assertEquals("motorway", z5.get("kind"));
+    assertNull(z5.get("surface"));
+    assertNull(z5.get("oneway"));
+    // mid tier (z11): surface/tunnel/bridge appear
+    var z11 = street.getAttrsAtZoom(11);
+    assertEquals("paved", z11.get("surface"));
+    assertEquals(false, z11.get("tunnel"));
+    assertNull(z11.get("oneway"));
+    // full tier (z14): oneway appears
+    assertEquals(true, street.getAttrsAtZoom(14).get("oneway"));
+  }
+
+  @Test
+  void railwayStreet() {
+    var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("railway", "rail"));
+    var street = onlyOne(features, "streets");
+    assertEquals("rail", attrs(street).get("kind"));
+    assertEquals(true, attrs(street).get("rail"));
+  }
+
+  @Test
+  void streetLabelWithRefGrid() {
+    var features = process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "motorway", "ref", "A1;A2;A3"));
+    var label = onlyOne(features, "street_labels");
+    assertEquals("motorway", attrs(label).get("kind"));
+    assertEquals("A1\nA2\nA3", attrs(label).get("ref"));
+    assertEquals(3, attrs(label).get("ref_rows"));
+    assertEquals(2, attrs(label).get("ref_cols"));
+  }
+
+  @Test
+  void motorwayJunctionPoint() {
+    var features = process(TestUtils.newPoint(0, 0),
+      Map.of("highway", "motorway_junction", "ref", "12", "name", "Exit"));
+    var p = onlyOne(features, "street_labels_points");
+    assertEquals("motorway_junction", attrs(p).get("kind"));
+    assertEquals("12", attrs(p).get("ref"));
+  }
+
+  @Test
+  void aerialwayLine() {
+    var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("aerialway", "gondola"));
+    assertEquals("gondola", attrs(onlyOne(features, "aerialways")).get("kind"));
+  }
+
+  @Test
+  void ferryLine() {
+    var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("route", "ferry", "name", "Ferry"));
+    var ferry = onlyOne(features, "ferries");
+    assertEquals("ferry", attrs(ferry).get("kind"));
+    assertEquals(10, ferry.getMinZoom());
+  }
+
+  @Test
+  void publicTransportStationUsesPerKindZoom() {
+    var features = process(TestUtils.newPoint(0, 0), Map.of("railway", "station", "name", "Hbf"));
+    var pt = onlyOne(features, "public_transport");
+    assertEquals("station", attrs(pt).get("kind"));
+    // DEVIATION: per-kind zoom (13) instead of the hard-coded 11
+    assertEquals(13, pt.getMinZoom());
+  }
+
+  @Test
   void nameFallbackOnPoi() throws GeometryException {
     var features = process(TestUtils.newPoint(0, 0), Map.of("amenity", "bank", "name:de", "Bankhaus"));
     var poi = onlyOne(features, "pois");

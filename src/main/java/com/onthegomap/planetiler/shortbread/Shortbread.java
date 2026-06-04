@@ -3,13 +3,18 @@ package com.onthegomap.planetiler.shortbread;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.shortbread.layers.Addresses;
+import com.onthegomap.planetiler.shortbread.layers.Aerialways;
 import com.onthegomap.planetiler.shortbread.layers.Buildings;
 import com.onthegomap.planetiler.shortbread.layers.Dams;
+import com.onthegomap.planetiler.shortbread.layers.Ferries;
 import com.onthegomap.planetiler.shortbread.layers.Land;
 import com.onthegomap.planetiler.shortbread.layers.Ocean;
 import com.onthegomap.planetiler.shortbread.layers.Piers;
 import com.onthegomap.planetiler.shortbread.layers.Pois;
+import com.onthegomap.planetiler.shortbread.layers.PublicTransport;
 import com.onthegomap.planetiler.shortbread.layers.Sites;
+import com.onthegomap.planetiler.shortbread.layers.StreetLabels;
+import com.onthegomap.planetiler.shortbread.layers.Streets;
 import com.onthegomap.planetiler.shortbread.layers.WaterLines;
 import com.onthegomap.planetiler.shortbread.layers.WaterPolygons;
 import com.onthegomap.planetiler.shortbread.util.MergeLines;
@@ -51,10 +56,19 @@ public class Shortbread extends ForwardingProfile {
     registerHandler(new Addresses());
     registerHandler(new Pois());
 
+    // streets and transport
+    registerHandler(new Streets());
+    registerHandler(new StreetLabels());
+    registerHandler(new Aerialways());
+    registerHandler(new Ferries());
+    registerHandler(new PublicTransport());
+
     // line layers with `combine_below` in the Tilemaker config
     registerHandler(new MergeLines(WaterLines.LAYER));
     registerHandler(new MergeLines(WaterLines.LABELS));
     registerHandler(new MergeLines(Dams.LINES));
+    registerHandler(new MergeLines(Streets.STREETS));
+    registerHandler(new MergeLines(StreetLabels.LABELS));
   }
 
   @Override

@@ -28,6 +28,26 @@ Two input sources are used and downloaded automatically if missing:
 
 Output is written to `data/shortbread.mbtiles` by default (override with `--output`).
 
+## Schema version (1.0 / 1.1)
+
+The profile produces Shortbread **1.0** by default. The **1.1** draft is available via a flag or a dedicated task:
+
+```bash
+java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco --shortbread_version=1.1
+# or the shorthand task:
+java -jar planetiler-dist/target/*-with-deps.jar shortbread-1.1 --area=monaco
+```
+
+Differences applied for 1.1:
+
+- `water_lines` / `water_lines_labels`: `waterway=drain` moves to zoom 14.
+- `pois`: adds `amenity=fuel` (`kind=fuel`) and `leisure=park` (`kind=park`).
+- Names: instead of the fixed `name_en` / `name_de`, any IETF-coded `name_<code>` is emitted from `name:<code>` for the
+  configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). This flag also works for 1.0.
+
+(The `dog_park` / `playground` POI tagging "fix" in 1.1 — moving them from `amenity` to `leisure` — already matches this
+implementation, which follows Tilemaker's `leisure` classification.)
+
 The previous YAML schema is still runnable for comparison:
 
 ```bash

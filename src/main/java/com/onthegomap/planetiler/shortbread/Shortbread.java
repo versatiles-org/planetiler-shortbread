@@ -42,13 +42,16 @@ public class Shortbread extends ForwardingProfile {
   /** Shapefile input source name for the OSM water (ocean) polygons. */
   public static final String OCEAN_SOURCE = "ocean";
 
+  private final ShortbreadOptions options;
+
   public Shortbread(PlanetilerConfig config) {
     super(config);
+    this.options = ShortbreadOptions.from(config.arguments());
 
     // water
     registerHandler(new Ocean());
-    registerHandler(new WaterPolygons());
-    registerHandler(new WaterLines());
+    registerHandler(new WaterPolygons(options));
+    registerHandler(new WaterLines(options));
     registerHandler(new Dams());
     registerHandler(new Piers());
     registerHandler(new Bridges());
@@ -57,19 +60,19 @@ public class Shortbread extends ForwardingProfile {
     registerHandler(new Land());
     registerHandler(new Sites());
     registerHandler(new Buildings());
-    registerHandler(new Addresses());
-    registerHandler(new Pois());
+    registerHandler(new Addresses(options));
+    registerHandler(new Pois(options));
 
     // streets and transport
-    registerHandler(new Streets());
-    registerHandler(new StreetLabels());
+    registerHandler(new Streets(options));
+    registerHandler(new StreetLabels(options));
     registerHandler(new Aerialways());
-    registerHandler(new Ferries());
-    registerHandler(new PublicTransport());
+    registerHandler(new Ferries(options));
+    registerHandler(new PublicTransport(options));
 
     // boundaries and places
-    registerHandler(new Boundaries());
-    registerHandler(new PlaceLabels());
+    registerHandler(new Boundaries(options));
+    registerHandler(new PlaceLabels(options));
 
     // line layers with `combine_below` in the Tilemaker config
     registerHandler(new MergeLines(WaterLines.LAYER));
@@ -100,6 +103,6 @@ public class Shortbread extends ForwardingProfile {
 
   @Override
   public String version() {
-    return "1.0";
+    return options.v11() ? "1.1" : "1.0";
   }
 }

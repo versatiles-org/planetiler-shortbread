@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.Poi;
@@ -22,6 +23,12 @@ import com.onthegomap.planetiler.shortbread.util.Poi;
 public class Pois implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "pois";
+
+  private final ShortbreadOptions options;
+
+  public Pois(ShortbreadOptions options) {
+    this.options = options;
+  }
 
   @Override
   public Expression filter() {
@@ -47,6 +54,15 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
     String manMade = Poi.accepted(Poi.MAN_MADE, f.getString("man_made"));
     String historic = Poi.accepted(Poi.HISTORIC, f.getString("historic"));
     String leisure = Poi.accepted(Poi.LEISURE, f.getString("leisure"));
+    // Shortbread 1.1 additions
+    if (options.v11()) {
+      if (amenity == null && f.hasTag("amenity", "fuel")) {
+        amenity = "fuel";
+      }
+      if (leisure == null && f.hasTag("leisure", "park")) {
+        leisure = "park";
+      }
+    }
     String emergency = Poi.accepted(Poi.EMERGENCY, f.getString("emergency"));
     String highway = Poi.accepted(Poi.HIGHWAY, f.getString("highway"));
     String office = Poi.accepted(Poi.OFFICE, f.getString("office"));
@@ -105,7 +121,7 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
       setIfPresent(feature, "denomination", f.getString("denomination"));
     }
 
-    Names.setNames(feature, f);
+    Names.setNames(feature, f, options.languages());
     setIfPresent(feature, "housename", f.getString("addr:housename"));
     setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
   }

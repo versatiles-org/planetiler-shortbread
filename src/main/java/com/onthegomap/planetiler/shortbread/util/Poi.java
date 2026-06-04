@@ -72,6 +72,14 @@ public final class Poi {
 
   /** Returns true if the feature carries at least one whitelisted POI key/value pair. */
   public static boolean matches(SourceFeature f) {
+    return matches(f, false);
+  }
+
+  /**
+   * Returns true if the feature is a POI. When {@code v11} is set, the Shortbread 1.1 additions ({@code amenity=fuel}
+   * and {@code leisure=park}) are also accepted.
+   */
+  public static boolean matches(SourceFeature f, boolean v11) {
     return accepted(AMENITY, f.getString("amenity")) != null ||
       accepted(SHOP, f.getString("shop")) != null ||
       accepted(TOURISM, f.getString("tourism")) != null ||
@@ -80,6 +88,7 @@ public final class Poi {
       accepted(LEISURE, f.getString("leisure")) != null ||
       accepted(EMERGENCY, f.getString("emergency")) != null ||
       accepted(HIGHWAY, f.getString("highway")) != null ||
-      accepted(OFFICE, f.getString("office")) != null;
+      accepted(OFFICE, f.getString("office")) != null ||
+      (v11 && (f.hasTag("amenity", "fuel") || f.hasTag("leisure", "park")));
   }
 }

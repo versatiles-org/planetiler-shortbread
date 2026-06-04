@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.ZOrder;
@@ -19,6 +20,12 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "water_lines";
   public static final String LABELS = "water_lines_labels";
+
+  private final ShortbreadOptions options;
+
+  public WaterLines(ShortbreadOptions options) {
+    this.options = options;
+  }
 
   @Override
   public Expression filter() {
@@ -40,8 +47,11 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
       int byLength = Zooms.zminForLength(0.25, Geo.worldLength(f));
       mz = Math.max(9, byLength);
       mzLabel = Math.max(13, byLength);
-    } else if (kind.equals("drain") || kind.equals("stream")) {
+    } else if (kind.equals("stream")) {
       mz = 13;
+      mzLabel = 14;
+    } else if (kind.equals("drain")) {
+      mz = options.v11() ? 14 : 13; // Shortbread 1.1 documents drain at z14
       mzLabel = 14;
     } else if (kind.equals("ditch")) {
       mz = 14;
@@ -74,7 +84,7 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
         .setAttr("tunnel", tunnel)
         .setAttr("bridge", bridge)
         .setSortKey(sortKey);
-      Names.setNames(label, f);
+      Names.setNames(label, f, options.languages());
     }
   }
 }

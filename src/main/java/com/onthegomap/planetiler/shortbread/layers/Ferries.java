@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Names;
 
 /**
@@ -14,6 +15,12 @@ import com.onthegomap.planetiler.shortbread.util.Names;
 public class Ferries implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "ferries";
+
+  private final ShortbreadOptions options;
+
+  public Ferries(ShortbreadOptions options) {
+    this.options = options;
+  }
 
   @Override
   public Expression filter() {
@@ -33,6 +40,6 @@ public class Ferries implements ForwardingProfile.FeatureProcessor {
       .setMaxZoom(14)
       .setMinPixelSize(0)
       .setAttr("kind", "ferry");
-    Names.setNames(feature, f);
+    Names.setNames(feature, f, options.languages());
   }
 }

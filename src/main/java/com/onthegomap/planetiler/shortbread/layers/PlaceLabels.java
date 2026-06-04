@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.util.Parse;
 import com.onthegomap.planetiler.util.SortKey;
@@ -18,6 +19,12 @@ import com.onthegomap.planetiler.util.SortKey;
 public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "place_labels";
+
+  private final ShortbreadOptions options;
+
+  public PlaceLabels(ShortbreadOptions options) {
+    this.options = options;
+  }
 
   @Override
   public Expression filter() {
@@ -69,6 +76,6 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("kind", kind)
       .setAttr("population", pop)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get());
-    Names.setNames(feature, f);
+    Names.setNames(feature, f, options.languages());
   }
 }

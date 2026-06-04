@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.ZOrder;
@@ -24,6 +25,12 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
   public static final String LABELS = "street_labels";
   public static final String POINTS = "street_labels_points";
 
+  private final ShortbreadOptions options;
+
+  public StreetLabels(ShortbreadOptions options) {
+    this.options = options;
+  }
+
   @Override
   public Expression filter() {
     return Expression.and(
@@ -41,7 +48,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
           .setZoomRange(12, 14)
           .setAttr("kind", highway);
         setIfPresent(feature, "ref", f.getString("ref"));
-        Names.setNames(feature, f);
+        Names.setNames(feature, f, options.languages());
       }
       return;
     }
@@ -88,7 +95,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       feature.setAttr("ref_rows", rows);
       feature.setAttr("ref_cols", cols);
     }
-    Names.setNames(feature, f);
+    Names.setNames(feature, f, options.languages());
   }
 
   private static int labelMinZoom(String highway) {

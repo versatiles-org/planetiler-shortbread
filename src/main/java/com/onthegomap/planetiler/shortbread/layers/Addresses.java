@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Poi;
 
@@ -19,6 +20,12 @@ public class Addresses implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "addresses";
 
+  private final ShortbreadOptions options;
+
+  public Addresses(ShortbreadOptions options) {
+    this.options = options;
+  }
+
   @Override
   public Expression filter() {
     return Expression.and(
@@ -30,7 +37,7 @@ public class Addresses implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public void processFeature(SourceFeature f, FeatureCollector features) {
-    if (Poi.matches(f)) {
+    if (Poi.matches(f, options.v11())) {
       return;
     }
     FeatureCollector.Feature feature;

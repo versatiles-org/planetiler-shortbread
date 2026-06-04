@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.Zooms;
@@ -19,6 +20,12 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "water_polygons";
   public static final String LABELS = "water_polygons_labels";
+
+  private final ShortbreadOptions options;
+
+  public WaterPolygons(ShortbreadOptions options) {
+    this.options = options;
+  }
 
   @Override
   public Expression filter() {
@@ -80,7 +87,7 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
         .setAttr("kind", kind)
         .setAttr("way_area", wayArea)
         .setSortKeyDescending(sortKey);
-      Names.setNames(label, f);
+      Names.setNames(label, f, options.languages());
     }
   }
 }

@@ -2,25 +2,29 @@ package com.onthegomap.planetiler.shortbread.util;
 
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.List;
 
 /**
- * Sets the three Shortbread name attributes from their OSM tags: {@code name} ← {@code name}, {@code name_en} ←
- * {@code name:en}, {@code name_de} ← {@code name:de}. Each is emitted only when the tag is present.
+ * Sets the Shortbread name attributes from their OSM tags: {@code name} ← {@code name}, and one {@code name_<code>} ←
+ * {@code name:<code>} per requested IETF language code. Each is emitted only when the tag is present.
+ * <p>
+ * Shortbread 1.0 fixes the set to {@code name_en} / {@code name_de}; Shortbread 1.1 generalizes this to an
+ * implementation-defined {@code name_<code>} list (see {@link com.onthegomap.planetiler.shortbread.ShortbreadOptions}).
  * <p>
  * DEVIATION: the Tilemaker reference ({@code setNameAttributes}) fills each field with a fallback chain (e.g.
- * {@code name_en} = name:en → name → name:de), so a feature tagged only with {@code name} gets three identical name
- * fields. Following the Shortbread schema's test spec (and the previous Planetiler YAML schema) we instead emit each
- * field from its own tag only, leaving the translated fields unset when no translation exists — this keeps tiles
- * smaller and matches the existing output.
+ * {@code name_en} = name:en → name → name:de), so a feature tagged only with {@code name} gets identical name fields.
+ * Following the Shortbread schema's test spec (and the previous Planetiler YAML schema) we instead emit each field from
+ * its own tag only, leaving the translated fields unset when no translation exists.
  */
 public final class Names {
 
   private Names() {}
 
-  public static void setNames(FeatureCollector.Feature feature, SourceFeature source) {
+  public static void setNames(FeatureCollector.Feature feature, SourceFeature source, List<String> languages) {
     setIfPresent(feature, "name", source.getString("name"));
-    setIfPresent(feature, "name_en", source.getString("name:en"));
-    setIfPresent(feature, "name_de", source.getString("name:de"));
+    for (String code : languages) {
+      setIfPresent(feature, "name_" + code, source.getString("name:" + code));
+    }
   }
 
   private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {

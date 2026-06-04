@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.util.Parse;
@@ -26,6 +27,12 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
 
   public static final String LINES = "boundaries";
   public static final String LABELS = "boundary_labels";
+
+  private final ShortbreadOptions options;
+
+  public Boundaries(ShortbreadOptions options) {
+    this.options = options;
+  }
 
   /** Relation info captured during pass 1: admin level (99 if disputed-only) and whether it is a disputed boundary. */
   record BoundaryRelation(long id, int adminLevel, boolean disputed) implements OsmRelationInfo {}
@@ -129,6 +136,6 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setMaxZoom(14)
       .setAttr("admin_level", adminLevel)
       .setAttr("way_area", Geo.areaHectares(f)); // hectares, as in the Planetiler YAML schema
-    Names.setNames(label, f);
+    Names.setNames(label, f, options.languages());
   }
 }

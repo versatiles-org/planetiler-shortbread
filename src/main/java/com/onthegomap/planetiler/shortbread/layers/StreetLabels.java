@@ -79,6 +79,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
     var feature = features.line(LABELS)
       .setMinZoom(mz)
       .setMaxZoom(14)
+      .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, false, true))
       .setAttr("kind", highway)
       .setAttr("tunnel", ZOrder.isTunnel(f)); // DEVIATION: actually computed (Tilemaker always emitted false)

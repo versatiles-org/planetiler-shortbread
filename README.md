@@ -56,7 +56,19 @@ deviation is marked with a `// DEVIATION:` comment in the code; the notable ones
 - `sites`: matches the correct `leisure=sports_centre` spelling.
 - `street_labels`: `tunnel` is computed from the tags (the reference always emitted `false`).
 - `public_transport`: uses the intended per-kind minimum zoom (the reference computed it, then hard-coded zoom 11).
+- `name` / `name_en` / `name_de` are taken from their own tags with no fallback (matching the schema's test spec and
+  the previous YAML schema), rather than Tilemaker's fallback chaining.
+- `surface` is canonicalized to `paved` / `unpaved`; `way_area` is a full-precision number.
 - Empty string values are omitted rather than written as the empty-string NULL sentinel that Tilemaker uses.
+
+## Tests
+
+`ShortbreadSpecTest` runs the example-based specification in
+`src/test/resources/shortbread.spec.yml` (ported from the YAML schema's test spec) against the Java profile via
+`BaseSchemaValidator`. Each example lists an input feature and the vector-tile features it should produce. Where the
+Java output intentionally differs from the original YAML expectation, the spec entry is annotated with a
+`# DEVIATION` comment. `ShortbreadProfileTest` adds focused per-layer unit tests and `ShortbreadIntegrationTest` runs
+the whole pipeline over the bundled Monaco extract.
 
 `boundary_labels` are derived from administrative boundary polygons (matching the current Planetiler YAML schema) instead
 of Tilemaker's externally pre-built admin-points shapefile, so no extra data source is required.

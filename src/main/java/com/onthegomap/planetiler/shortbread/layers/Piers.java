@@ -27,9 +27,9 @@ public class Piers implements ForwardingProfile.FeatureProcessor {
   public void processFeature(SourceFeature f, FeatureCollector features) {
     String kind = f.getString("man_made");
     if (Geo.isArea(f)) {
-      features.polygon(POLYGONS).setMinZoom(12).setMaxZoom(14).setAttr("kind", kind);
+      features.polygon(POLYGONS).setMinZoom(12).setMaxZoom(14).setMinPixelSize(0).setAttr("kind", kind);
     } else if (f.canBeLine()) {
-      features.line(LINES).setMinZoom(12).setMaxZoom(14).setAttr("kind", kind);
+      features.line(LINES).setMinZoom(12).setMaxZoom(14).setMinPixelSize(0).setAttr("kind", kind);
     }
   }
 }

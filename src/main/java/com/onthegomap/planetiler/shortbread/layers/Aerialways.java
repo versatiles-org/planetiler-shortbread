@@ -31,6 +31,7 @@ public class Aerialways implements ForwardingProfile.FeatureProcessor {
     features.line(LAYER)
       .setMinZoom(12)
       .setMaxZoom(14)
+      .setMinPixelSize(0)
       .setAttr("kind", f.getString("aerialway"));
   }
 }

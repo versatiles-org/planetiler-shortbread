@@ -49,8 +49,13 @@ public final class Geo {
     }
   }
 
-  /** Approximate feature area in square meters, or 0 on geometry errors. */
-  public static long areaMeters(SourceFeature f) {
-    return Math.round(f.area(Unit.Area.SQUARE_METER));
+  /** Approximate feature area in square meters. */
+  public static double areaSquareMeters(SourceFeature f) {
+    return f.area(Unit.Area.SQUARE_METER);
+  }
+
+  /** Approximate feature area in hectares. */
+  public static double areaHectares(SourceFeature f) {
+    return f.area(Unit.Area.HECTARE);
   }
 }

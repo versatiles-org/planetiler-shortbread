@@ -109,6 +109,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     var feature = features.line(STREETS)
       .setMinZoom(mz)
       .setMaxZoom(14)
+      .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, rail, false))
       .setAttr("kind", kind)
       .setAttr("rail", rail);
@@ -155,6 +156,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     var feature = features.polygon(POLYGONS)
       .setMinZoom(mz)
       .setMaxZoom(14)
+      .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, false, false))
       .setAttr("kind", kind)
       .setAttr("rail", false)

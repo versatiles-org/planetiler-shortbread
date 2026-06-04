@@ -61,13 +61,20 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (f.hasTag("type") || !f.canBeLine()) {
       return;
     }
-    var relations = f.relationInfo(BoundaryRelation.class);
-    if (relations.isEmpty()) {
-      return;
-    }
     int minAdminLevel = 99;
     boolean disputed = false;
-    for (var member : relations) {
+    // the way's own boundary tags (covers directly tagged ways, as the previous YAML schema relied on)
+    if (f.hasTag("boundary", "administrative")) {
+      Integer ownLevel = Parse.parseIntOrNull(f.getTag("admin_level"));
+      if (ownLevel != null && ownLevel >= 2 && ownLevel <= 4) {
+        minAdminLevel = Math.min(minAdminLevel, ownLevel);
+      }
+    }
+    if (f.hasTag("boundary", "disputed")) {
+      disputed = true;
+    }
+    // plus any parent boundary relations (covers untagged member ways)
+    for (var member : f.relationInfo(BoundaryRelation.class)) {
       BoundaryRelation info = member.relation();
       if (!info.disputed() && info.adminLevel() >= 2) {
         minAdminLevel = Math.min(minAdminLevel, info.adminLevel());
@@ -106,8 +113,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (adminLevel == null || (adminLevel != 2 && adminLevel != 4)) {
       return;
     }
-    long areaMeters = Geo.areaMeters(f);
-    double areaKm2 = areaMeters / 1e6;
+    double areaKm2 = Geo.areaSquareMeters(f) / 1e6;
     int mz;
     if (adminLevel == 2 && areaKm2 >= 2e6) {
       mz = 2;
@@ -122,7 +128,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setAttr("admin_level", adminLevel)
-      .setAttr("way_area", areaMeters / 10_000); // hectares, as in the Planetiler YAML schema
+      .setAttr("way_area", Geo.areaHectares(f)); // hectares, as in the Planetiler YAML schema
     Names.setNames(label, f);
   }
 }

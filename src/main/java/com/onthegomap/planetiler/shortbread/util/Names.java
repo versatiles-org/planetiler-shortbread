@@ -4,52 +4,28 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.reader.SourceFeature;
 
 /**
- * Sets the three Shortbread name attributes ({@code name}, {@code name_en}, {@code name_de}) with the exact fallback
- * chaining used by the Tilemaker reference ({@code setNameAttributes} / {@code fillWithFallback} in {@code process.lua}):
- * <ul>
- * <li>{@code name} = name → name:en → name:de</li>
- * <li>{@code name_en} = name:en → name → name:de</li>
- * <li>{@code name_de} = name:de → name → name:en</li>
- * </ul>
+ * Sets the three Shortbread name attributes from their OSM tags: {@code name} ← {@code name}, {@code name_en} ←
+ * {@code name:en}, {@code name_de} ← {@code name:de}. Each is emitted only when the tag is present.
  * <p>
- * Planetiler's {@code LanguageUtils}/{@code OmtLanguageUtils} emit far more {@code name:*} fields than Shortbread wants,
- * so this minimal helper is used instead.
- * <p>
- * DEVIATION: Tilemaker writes empty strings (it cannot emit NULL into a tile). Here we omit a field when its fallback
- * result is empty, which only happens for completely unnamed features — this keeps tiles smaller without changing the
- * value seen by consumers for any named feature.
+ * DEVIATION: the Tilemaker reference ({@code setNameAttributes}) fills each field with a fallback chain (e.g.
+ * {@code name_en} = name:en → name → name:de), so a feature tagged only with {@code name} gets three identical name
+ * fields. Following the Shortbread schema's test spec (and the previous Planetiler YAML schema) we instead emit each
+ * field from its own tag only, leaving the translated fields unset when no translation exists — this keeps tiles
+ * smaller and matches the existing output.
  */
 public final class Names {
 
   private Names() {}
 
   public static void setNames(FeatureCollector.Feature feature, SourceFeature source) {
-    String name = nonNull(source.getString("name"));
-    String nameEn = nonNull(source.getString("name:en"));
-    String nameDe = nonNull(source.getString("name:de"));
-
-    setIfPresent(feature, "name", fallback(name, nameEn, nameDe));
-    setIfPresent(feature, "name_en", fallback(nameEn, name, nameDe));
-    setIfPresent(feature, "name_de", fallback(nameDe, name, nameEn));
-  }
-
-  static String fallback(String first, String second, String third) {
-    if (!first.isEmpty()) {
-      return first;
-    }
-    if (!second.isEmpty()) {
-      return second;
-    }
-    return third;
+    setIfPresent(feature, "name", source.getString("name"));
+    setIfPresent(feature, "name_en", source.getString("name:en"));
+    setIfPresent(feature, "name_de", source.getString("name:de"));
   }
 
   private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {
-    if (!value.isEmpty()) {
+    if (value != null && !value.isEmpty()) {
       feature.setAttr(key, value);
     }
-  }
-
-  private static String nonNull(String value) {
-    return value == null ? "" : value;
   }
 }

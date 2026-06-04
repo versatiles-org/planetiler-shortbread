@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.TestUtils;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
-import com.onthegomap.planetiler.geo.GeometryException;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
@@ -243,12 +242,13 @@ class ShortbreadProfileTest {
   }
 
   @Test
-  void nameFallbackOnPoi() throws GeometryException {
-    var features = process(TestUtils.newPoint(0, 0), Map.of("amenity", "bank", "name:de", "Bankhaus"));
+  void nameTranslationsWithoutFallback() {
+    var features = process(TestUtils.newPoint(0, 0),
+      Map.of("amenity", "bank", "name", "Bank", "name:de", "Bankhaus"));
     var poi = onlyOne(features, "pois");
-    // no `name`, so name falls back to name:de
-    assertEquals("Bankhaus", attrs(poi).get("name"));
+    assertEquals("Bank", attrs(poi).get("name"));
     assertEquals("Bankhaus", attrs(poi).get("name_de"));
-    assertEquals("Bankhaus", attrs(poi).get("name_en"));
+    // no name:en tag and no fallback, so name_en is unset
+    assertNull(attrs(poi).get("name_en"));
   }
 }

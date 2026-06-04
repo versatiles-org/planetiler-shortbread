@@ -18,15 +18,6 @@ class ShortbreadUtilTest {
   }
 
   @Test
-  void nameFallbackChaining() {
-    // name = name -> en -> de
-    assertEquals("a", Names.fallback("a", "b", "c"));
-    assertEquals("b", Names.fallback("", "b", "c"));
-    assertEquals("c", Names.fallback("", "", "c"));
-    assertEquals("", Names.fallback("", "", ""));
-  }
-
-  @Test
   void surfaceCanonicalization() {
     assertEquals("unpaved", Surface.canonicalize("gravel"));
     assertEquals("unpaved", Surface.canonicalize("unpaved"));

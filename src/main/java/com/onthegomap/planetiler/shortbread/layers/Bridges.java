@@ -8,26 +8,28 @@ import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 
 /**
- * The {@code dam_lines} and {@code dam_polygons} layers from {@code waterway=dam}. Ports {@code process_dam}.
+ * The {@code bridges} layer (zoom 12): bridge outlines from {@code man_made=bridge} areas. Ports
+ * {@code process_bridges}.
  */
-public class Dams implements ForwardingProfile.FeatureProcessor {
+public class Bridges implements ForwardingProfile.FeatureProcessor {
 
-  public static final String LINES = "dam_lines";
-  public static final String POLYGONS = "dam_polygons";
+  public static final String LAYER = "bridges";
 
   @Override
   public Expression filter() {
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
-      Expression.matchAny("waterway", "dam"));
+      Expression.matchAny("man_made", "bridge"));
   }
 
   @Override
   public void processFeature(SourceFeature f, FeatureCollector features) {
     if (Geo.isArea(f)) {
-      features.polygon(POLYGONS).setMinZoom(12).setMaxZoom(14).setMinPixelSize(0).setAttr("kind", "dam");
-    } else if (f.canBeLine()) {
-      features.line(LINES).setMinZoom(12).setMaxZoom(14).setMinPixelSize(0).setAttr("kind", "dam");
+      features.polygon(LAYER)
+        .setMinZoom(12)
+        .setMaxZoom(14)
+        .setMinPixelSize(0)
+        .setAttr("kind", "bridge");
     }
   }
 }

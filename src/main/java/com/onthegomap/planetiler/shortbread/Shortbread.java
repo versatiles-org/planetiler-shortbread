@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.shortbread.layers.Addresses;
 import com.onthegomap.planetiler.shortbread.layers.Aerialways;
 import com.onthegomap.planetiler.shortbread.layers.Boundaries;
+import com.onthegomap.planetiler.shortbread.layers.Bridges;
 import com.onthegomap.planetiler.shortbread.layers.Buildings;
 import com.onthegomap.planetiler.shortbread.layers.Dams;
 import com.onthegomap.planetiler.shortbread.layers.Ferries;
@@ -50,6 +51,7 @@ public class Shortbread extends ForwardingProfile {
     registerHandler(new WaterLines());
     registerHandler(new Dams());
     registerHandler(new Piers());
+    registerHandler(new Bridges());
 
     // land use / sites / buildings / addresses / pois
     registerHandler(new Land());

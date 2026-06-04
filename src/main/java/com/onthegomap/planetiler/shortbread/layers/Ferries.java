@@ -31,6 +31,7 @@ public class Ferries implements ForwardingProfile.FeatureProcessor {
     var feature = features.line(LAYER)
       .setMinZoom(mz)
       .setMaxZoom(14)
+      .setMinPixelSize(0)
       .setAttr("kind", "ferry");
     Names.setNames(feature, f);
   }

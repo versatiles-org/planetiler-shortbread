@@ -120,6 +120,12 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (adminLevel == null || (adminLevel != 2 && adminLevel != 4)) {
       return;
     }
+    // Guard against broken/degenerate multipolygons (e.g. "no rings to process after fixing"): worldArea catches the
+    // geometry error and returns 0, like WaterPolygons does before calling areaSquareMeters. An unbuildable polygon has
+    // no valid interior label point, so skip it quietly instead of letting the exception abort processing.
+    if (Geo.worldArea(f) <= 0) {
+      return;
+    }
     double areaKm2 = Geo.areaSquareMeters(f) / 1e6;
     int mz;
     if (adminLevel == 2 && areaKm2 >= 2e6) {

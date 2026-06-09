@@ -59,7 +59,7 @@ public class Shortbread extends ForwardingProfile {
     registerHandler(new WaterLines(options));
     registerHandler(new Dams());
     registerHandler(new Piers());
-    registerHandler(new Bridges());
+    registerHandler(new Bridges(options));
 
     // land use / sites / buildings / addresses / pois
     registerHandler(new Land());

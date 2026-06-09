@@ -182,6 +182,15 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void bridgeWithName() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("man_made", "bridge", "name", "Tower Bridge"));
+    var bridge = onlyOne(features, "bridges");
+    assertEquals("bridge", attrs(bridge).get("kind"));
+    assertEquals("Tower Bridge", attrs(bridge).get("name"));
+  }
+
+  @Test
   void motorwayStreetWithAttributeTiers() {
     var features = process(TestUtils.newLineString(0, 0, 0.5, 0.5, 1, 1),
       Map.of("highway", "motorway", "surface", "asphalt", "oneway", "yes"));

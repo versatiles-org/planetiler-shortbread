@@ -90,6 +90,7 @@ public class Land implements ForwardingProfile.FeatureProcessor {
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setMinPixelSize(1)
+      .setPixelTolerance(0.25)
       .setAttr("kind", kind);
   }
 }

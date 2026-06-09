@@ -58,6 +58,9 @@ public class Addresses implements ForwardingProfile.FeatureProcessor {
       .setPointLabelGridSizeAndLimit(14, 8, 8);
     setIfPresent(feature, "housename", f.getString("addr:housename"));
     setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
+    // EXTENSION (beyond Shortbread, which defines only housename/housenumber): emit unit/block when present
+    setIfPresent(feature, "unit", f.getString("addr:unit"));
+    setIfPresent(feature, "block", f.getString("addr:block"));
   }
 
   private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {

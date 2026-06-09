@@ -179,6 +179,17 @@ class ShortbreadProfileTest {
     var addr = onlyOne(features, "addresses");
     assertEquals("5", attrs(addr).get("housenumber"));
     assertNull(attrs(addr).get("housename"));
+    assertNull(attrs(addr).get("unit"));
+  }
+
+  @Test
+  void addressUnitAndBlock() {
+    var features = process(TestUtils.newPoint(0, 0),
+      Map.of("addr:housenumber", "5", "addr:unit", "A", "addr:block", "12"));
+    var addr = onlyOne(features, "addresses");
+    assertEquals("5", attrs(addr).get("housenumber"));
+    assertEquals("A", attrs(addr).get("unit"));
+    assertEquals("12", attrs(addr).get("block"));
   }
 
   @Test

@@ -89,7 +89,7 @@ public class Land implements ForwardingProfile.FeatureProcessor {
     features.polygon(LAYER)
       .setMinZoom(mz)
       .setMaxZoom(14)
-      .setMinPixelSize(0)
+      .setMinPixelSize(1)
       .setAttr("kind", kind);
   }
 }

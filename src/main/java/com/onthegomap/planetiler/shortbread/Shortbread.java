@@ -21,6 +21,7 @@ import com.onthegomap.planetiler.shortbread.layers.Streets;
 import com.onthegomap.planetiler.shortbread.layers.WaterLines;
 import com.onthegomap.planetiler.shortbread.layers.WaterPolygons;
 import com.onthegomap.planetiler.shortbread.util.MergeLines;
+import com.onthegomap.planetiler.shortbread.util.MergePolygons;
 
 /**
  * A {@link com.onthegomap.planetiler.Profile} that implements the
@@ -81,6 +82,9 @@ public class Shortbread extends ForwardingProfile {
     registerHandler(new MergeLines(Streets.STREETS));
     registerHandler(new MergeLines(StreetLabels.LABELS));
     registerHandler(new MergeLines(Boundaries.LINES));
+
+    // coalesce adjacent same-kind area polygons to shrink dense overview tiles
+    registerHandler(new MergePolygons(Land.LAYER, 1));
   }
 
   @Override

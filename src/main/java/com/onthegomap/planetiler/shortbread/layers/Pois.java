@@ -76,7 +76,7 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
     if (f.isPoint()) {
       feature = features.point(LAYER);
     } else if (Geo.isArea(f)) {
-      feature = features.centroid(LAYER);
+      feature = features.pointOnSurface(LAYER);
     } else {
       return;
     }

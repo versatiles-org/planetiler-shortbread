@@ -178,9 +178,9 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       feature.setAttr("service", service);
     }
 
-    // DEVIATION: emit the centroid label only for named polygons (process.lua emitted it unconditionally)
+    // DEVIATION: emit the label only for named polygons (process.lua emitted it unconditionally)
     if (f.hasTag("name")) {
-      var label = features.centroid(POLYGON_LABELS)
+      var label = features.pointOnSurface(POLYGON_LABELS)
         .setZoomRange(14, 14)
         .setAttr("kind", kind);
       Names.setNames(label, f, options.languages());

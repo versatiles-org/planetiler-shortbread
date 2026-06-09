@@ -82,7 +82,7 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
       .setSortKeyDescending(sortKey);
 
     if (f.hasTag("name")) {
-      var label = features.centroid(LABELS)
+      var label = features.pointOnSurface(LABELS)
         .setZoomRange(14, 14)
         .setAttr("kind", kind)
         .setAttr("way_area", wayArea)

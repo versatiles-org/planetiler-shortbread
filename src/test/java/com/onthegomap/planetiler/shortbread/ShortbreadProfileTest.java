@@ -1,12 +1,14 @@
 package com.onthegomap.planetiler.shortbread;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.TestUtils;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
+import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
@@ -45,6 +47,24 @@ class ShortbreadProfileTest {
     var label = onlyOne(features, "water_polygons_labels");
     assertEquals("water", attrs(label).get("kind"));
     assertEquals("Lake Test", attrs(label).get("name"));
+  }
+
+  @Test
+  void waterLabelPointFallsInsideConcavePolygon() {
+    // U-shaped lake (base + two prongs) whose area-weighted centroid lands in the notch between the
+    // prongs, i.e. OUTSIDE the polygon. A centroid-based label would be placed in the water gap;
+    // pointOnSurface must place it on the polygon itself.
+    var polygon = TestUtils.newPolygon(0, 0, 3, 0, 3, 3, 2, 3, 2, 1, 1, 1, 1, 3, 0, 3, 0, 0);
+    // precondition: prove the centroid really is outside, so this test would fail with centroid()
+    assertFalse(polygon.covers(polygon.getCentroid()),
+      () -> "test precondition broken: centroid " + polygon.getCentroid() + " should be outside the U-shape");
+
+    var features = process(polygon, Map.of("natural", "water", "name", "U Lake"));
+    var label = onlyOne(features, "water_polygons_labels");
+    // getGeometry() is in world web-mercator coords; convert back to lat/lon to compare with the input
+    var labelLatLon = GeoUtils.worldToLatLonCoords(label.getGeometry());
+    assertTrue(polygon.covers(labelLatLon),
+      () -> "water_polygons_labels point must lie inside the polygon, got " + labelLatLon);
   }
 
   @Test

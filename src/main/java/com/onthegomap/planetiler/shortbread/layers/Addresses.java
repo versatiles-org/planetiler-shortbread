@@ -48,7 +48,14 @@ public class Addresses implements ForwardingProfile.FeatureProcessor {
     } else {
       return;
     }
-    feature.setZoomRange(14, 14);
+    feature.setZoomRange(14, 14)
+      // DEVIATION: cap address density to keep dense-city tiles lean. A single z14 tile over central Amsterdam
+      // otherwise carries 30k+ housenumbers (~750 KB, the bulk of a ~450 KB compressed tile). This per-cell cap
+      // (<=8 per 8px grid) only thins cells that exceed it, so sparse areas keep every address; but it does drop
+      // housenumbers in the densest cells, so the base output is not strictly "all addresses at z14". Buffer >= grid
+      // keeps the cap consistent across tile edges.
+      .setBufferPixels(8)
+      .setPointLabelGridSizeAndLimit(14, 8, 8);
     setIfPresent(feature, "housename", f.getString("addr:housename"));
     setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
   }

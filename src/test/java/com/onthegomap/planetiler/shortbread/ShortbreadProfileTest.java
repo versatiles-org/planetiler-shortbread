@@ -85,6 +85,20 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void pierPolygonMinZoom() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("man_made", "pier"));
+    var pier = onlyOne(features, "pier_polygons");
+    assertEquals("pier", attrs(pier).get("kind"));
+    assertEquals(12, pier.getMinZoom()); // spec-aligned, not z13
+  }
+
+  @Test
+  void trunkStreetMinZoom() {
+    var street = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("highway", "trunk")), "streets");
+    assertEquals(6, street.getMinZoom());
+  }
+
+  @Test
   void buildingNoIsSkipped() {
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "no"));
     assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("buildings")));
@@ -174,6 +188,17 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void streetLabelRefSkipsEmptySegments() {
+    // an empty segment from "A1;;B22" must be dropped, not rendered as a blank shield row
+    var features = process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "motorway", "ref", "A1;;B22"));
+    var label = onlyOne(features, "street_labels");
+    assertEquals("A1\nB22", attrs(label).get("ref"));
+    assertEquals(2, attrs(label).get("ref_rows"));
+    assertEquals(3, attrs(label).get("ref_cols")); // widest of "A1"(2) and "B22"(3)
+  }
+
+  @Test
   void motorwayJunctionPoint() {
     var features = process(TestUtils.newPoint(0, 0),
       Map.of("highway", "motorway_junction", "ref", "12", "name", "Exit"));
@@ -259,6 +284,17 @@ class ShortbreadProfileTest {
     assertEquals("capital", attrs(place).get("kind"));
     assertEquals(4, place.getMinZoom());
     assertEquals(2_000_000L, attrs(place).get("population"));
+  }
+
+  @Test
+  void placeLabelsRankByPopulation() {
+    var big = onlyOne(process(TestUtils.newPoint(0, 0),
+      Map.of("place", "city", "name", "Big", "population", "5000000")), "place_labels");
+    var small = onlyOne(process(TestUtils.newPoint(0, 0),
+      Map.of("place", "city", "name", "Small", "population", "20000")), "place_labels");
+    // for label layers a lower sort key shows at lower zooms (higher priority), so the bigger city must win
+    assertTrue(big.getSortKey() < small.getSortKey(),
+      () -> "big city sortKey " + big.getSortKey() + " should be < small city " + small.getSortKey());
   }
 
   @Test

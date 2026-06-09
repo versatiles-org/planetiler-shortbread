@@ -94,6 +94,27 @@ class ShortbreadProfileTest {
     var b = onlyOne(features, "buildings");
     assertEquals(1, attrs(b).get("dummy"));
     assertEquals(14, b.getMinZoom());
+    // EXTENSION: untagged building gets the 5m default height, no min_height
+    assertEquals(5, attrs(b).get("height"));
+    assertNull(attrs(b).get("min_height"));
+  }
+
+  @Test
+  void buildingHeightFromLevels() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building", "yes", "building:levels", "4"));
+    var b = onlyOne(features, "buildings");
+    assertEquals(15, attrs(b).get("height")); // ceil(4 * 3.66) = ceil(14.64)
+    assertNull(attrs(b).get("min_height"));
+  }
+
+  @Test
+  void buildingExplicitHeightAndMinHeight() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building", "yes", "height", "12.5", "min_height", "3"));
+    var b = onlyOne(features, "buildings");
+    assertEquals(13, attrs(b).get("height")); // ceil(12.5)
+    assertEquals(3, attrs(b).get("min_height")); // floor(3)
   }
 
   @Test

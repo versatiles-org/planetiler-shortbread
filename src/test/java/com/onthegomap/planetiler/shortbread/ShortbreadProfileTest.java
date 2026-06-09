@@ -68,6 +68,18 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void naturalEarthGlacierBecomesLowZoomWaterPolygon() {
+    var geom = TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0);
+    SourceFeature ne =
+      SimpleFeature.create(geom, Map.of(), Shortbread.NATURAL_EARTH_SOURCE, "ne_10m_glaciated_areas", 1);
+    var features = TestUtils.processSourceFeature(ne, profile);
+    var glacier = onlyOne(features, "water_polygons");
+    assertEquals("glacier", glacier.getAttrsAtZoom(6).get("kind"));
+    assertEquals(5, glacier.getMinZoom());
+    assertEquals(6, glacier.getMaxZoom());
+  }
+
+  @Test
   void riverBecomesWaterLine() {
     var features = process(TestUtils.newLineString(0, 0, 0.5, 0.5, 1, 1),
       Map.of("waterway", "river"));

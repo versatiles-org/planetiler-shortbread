@@ -9,6 +9,7 @@ import com.onthegomap.planetiler.shortbread.layers.Bridges;
 import com.onthegomap.planetiler.shortbread.layers.Buildings;
 import com.onthegomap.planetiler.shortbread.layers.Dams;
 import com.onthegomap.planetiler.shortbread.layers.Ferries;
+import com.onthegomap.planetiler.shortbread.layers.Glaciers;
 import com.onthegomap.planetiler.shortbread.layers.Land;
 import com.onthegomap.planetiler.shortbread.layers.Ocean;
 import com.onthegomap.planetiler.shortbread.layers.Piers;
@@ -42,6 +43,8 @@ public class Shortbread extends ForwardingProfile {
   public static final String OSM_SOURCE = "osm";
   /** Shapefile input source name for the OSM water (ocean) polygons. */
   public static final String OCEAN_SOURCE = "ocean";
+  /** Natural Earth input source name, used for low-zoom glaciers/ice ({@link Glaciers}). */
+  public static final String NATURAL_EARTH_SOURCE = "natural_earth";
 
   private final ShortbreadOptions options;
 
@@ -51,6 +54,7 @@ public class Shortbread extends ForwardingProfile {
 
     // water
     registerHandler(new Ocean());
+    registerHandler(new Glaciers()); // low-zoom (z0-6) glaciers/ice from Natural Earth into water_polygons
     registerHandler(new WaterPolygons(options));
     registerHandler(new WaterLines(options));
     registerHandler(new Dams());

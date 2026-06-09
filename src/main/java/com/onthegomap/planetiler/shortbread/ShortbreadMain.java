@@ -18,6 +18,9 @@ public class ShortbreadMain {
 
   private static final String OCEAN_URL =
     "https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip";
+  // MapTiler mirror used by OpenMapTiles (upstream: naciscdn.org/naturalearth/packages/natural_earth_vector.sqlite.zip)
+  private static final String NATURAL_EARTH_URL =
+    "https://dev.maptiler.download/geodata/omt/natural_earth_vector.sqlite.zip";
 
   public static void main(String[] args) throws Exception {
     run(Arguments.fromArgsOrConfigFile(args));
@@ -33,6 +36,9 @@ public class ShortbreadMain {
       .addOsmSource(Shortbread.OSM_SOURCE, Path.of("data", "sources", area + ".osm.pbf"), osmUrl)
       .addShapefileSource(Shortbread.OCEAN_SOURCE,
         Path.of("data", "sources", "water-polygons-split-3857.zip"), OCEAN_URL)
+      // low-zoom (z0-6) glaciers/ice; TODO migrate to addGeoPackageSource (addNaturalEarthSource is deprecated)
+      .addNaturalEarthSource(Shortbread.NATURAL_EARTH_SOURCE,
+        Path.of("data", "sources", "natural_earth_vector.sqlite.zip"), NATURAL_EARTH_URL)
       .overwriteOutput(Path.of("data", "shortbread.mbtiles"))
       .run();
   }

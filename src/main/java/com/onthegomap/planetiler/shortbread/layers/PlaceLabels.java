@@ -6,6 +6,7 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
+import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.util.Parse;
 import com.onthegomap.planetiler.util.SortKey;
@@ -37,10 +38,19 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public void processFeature(SourceFeature f, FeatureCollector features) {
-    if (!f.isPoint() || !f.hasTag("name")) {
+    if (!f.hasTag("name")) {
       return;
     }
     String place = f.getString("place", "");
+    // Islands mapped as polygons (the common case for real islands) get an area-ranked label point; previously only
+    // island *nodes* were labelled, so most islands had no label. Bigger islands appear at lower zoom, à la OMT.
+    if (place.equals("island") && !f.isPoint() && Geo.isArea(f)) {
+      processIslandArea(f, features);
+      return;
+    }
+    if (!f.isPoint()) {
+      return;
+    }
     int mz;
     long defaultPopulation;
     switch (place) {
@@ -77,5 +87,21 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("population", pop)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get());
     Names.setNames(feature, f, options.languages());
+  }
+
+  private void processIslandArea(SourceFeature f, FeatureCollector features) {
+    if (Geo.worldArea(f) <= 0) {
+      return; // broken/degenerate polygon → no usable label point
+    }
+    double areaM2 = Geo.areaSquareMeters(f);
+    // big islands appear earlier, mirroring the OpenMapTiles place/island area ranks
+    int mz = areaM2 >= 160_000_000 ? 8 : areaM2 >= 40_000_000 ? 9 : 10;
+    var label = features.pointOnSurface(LAYER)
+      .setMinZoom(mz)
+      .setMaxZoom(14)
+      .setAttr("kind", "island")
+      .setAttr("population", 0L)
+      .setSortKeyDescending(SortKey.orderByLog(Math.max(areaM2, 1), 1, 1e14).get());
+    Names.setNames(label, f, options.languages());
   }
 }

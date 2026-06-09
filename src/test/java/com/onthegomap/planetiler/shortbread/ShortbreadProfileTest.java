@@ -340,6 +340,25 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void islandPolygonGetsAreaRankedLabel() {
+    // ~1°×1° polygon near the equator ≈ 1.2e10 m² (>= 160M) → big-island min zoom 8
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("place", "island", "name", "Big Isle"));
+    var label = onlyOne(features, "place_labels");
+    assertEquals("island", attrs(label).get("kind"));
+    assertEquals("Big Isle", attrs(label).get("name"));
+    assertEquals(8, label.getMinZoom());
+  }
+
+  @Test
+  void islandPointStillLabeled() {
+    var features = process(TestUtils.newPoint(0, 0), Map.of("place", "island", "name", "Isle"));
+    var label = onlyOne(features, "place_labels");
+    assertEquals("island", attrs(label).get("kind"));
+    assertEquals(10, label.getMinZoom());
+  }
+
+  @Test
   void placeLabelsRankByPopulation() {
     var big = onlyOne(process(TestUtils.newPoint(0, 0),
       Map.of("place", "city", "name", "Big", "population", "5000000")), "place_labels");

@@ -43,8 +43,6 @@ public class Shortbread extends ForwardingProfile {
   public static final String OSM_SOURCE = "osm";
   /** Shapefile input source name for the OSM water (ocean) polygons. */
   public static final String OCEAN_SOURCE = "ocean";
-  /** Natural Earth input source name, used for low-zoom glaciers/ice ({@link Glaciers}). */
-  public static final String NATURAL_EARTH_SOURCE = "natural_earth";
 
   private final ShortbreadOptions options;
 

@@ -11,6 +11,7 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import com.onthegomap.planetiler.shortbread.layers.Glaciers;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmReader;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
@@ -70,8 +71,8 @@ class ShortbreadProfileTest {
   @Test
   void naturalEarthGlacierBecomesLowZoomWaterPolygon() {
     var geom = TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0);
-    SourceFeature ne =
-      SimpleFeature.create(geom, Map.of(), Shortbread.NATURAL_EARTH_SOURCE, "ne_10m_glaciated_areas", 1);
+    // ne_10m_glaciated_areas is wired as its own shapefile source (name == layer name)
+    SourceFeature ne = SimpleFeature.create(geom, Map.of(), Glaciers.GLACIATED_10M, null, 1);
     var features = TestUtils.processSourceFeature(ne, profile);
     var glacier = onlyOne(features, "water_polygons");
     assertEquals("glacier", glacier.getAttrsAtZoom(6).get("kind"));

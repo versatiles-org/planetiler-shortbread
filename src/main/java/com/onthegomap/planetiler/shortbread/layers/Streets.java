@@ -80,7 +80,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
         case "tertiary", "tertiary_link" -> { kind = "tertiary"; mz = 10; }
         case "unclassified", "residential", "bus_guideway", "busway" -> { kind = highway; mz = 12; }
         case "living_street", "pedestrian", "track" -> { kind = highway; mz = 13; }
-        case "service" -> { kind = highway; mz = 14; }
+        case "service" -> { kind = highway; mz = 13; }
         case "footway", "steps", "path", "cycleway" -> { kind = highway; mz = 13; }
         default -> { /* not a street */ }
       }

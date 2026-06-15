@@ -51,6 +51,17 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void waterPolygonLabelFollowsPolygonZoom() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("natural", "water", "name", "Lake Test"));
+    var poly = onlyOne(features, "water_polygons");
+    var label = onlyOne(features, "water_polygons_labels");
+    // spec: water label appears with its polygon (area-based), not only at z14
+    assertEquals(poly.getMinZoom(), label.getMinZoom());
+    assertTrue(label.getMinZoom() < 14);
+  }
+
+  @Test
   void waterLabelPointFallsInsideConcavePolygon() {
     // U-shaped lake (base + two prongs) whose area-weighted centroid lands in the notch between the
     // prongs, i.e. OUTSIDE the polygon. A centroid-based label would be placed in the water gap;
@@ -133,6 +144,12 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void serviceStreetMinZoom() {
+    var street = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("highway", "service")), "streets");
+    assertEquals(13, street.getMinZoom()); // spec: service from z13 (was z14)
+  }
+
+  @Test
   void buildingNoIsSkipped() {
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "no"));
     assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("buildings")));
@@ -142,6 +159,13 @@ class ShortbreadProfileTest {
   void forestLand() {
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("natural", "wood"));
     assertEquals("forest", attrs(onlyOne(features, "land")).get("kind"));
+  }
+
+  @Test
+  void landGaragesMinZoom() {
+    var land = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("landuse", "garages")), "land");
+    assertEquals("garages", attrs(land).get("kind"));
+    assertEquals(10, land.getMinZoom()); // spec: garages from z10 (was z12)
   }
 
   @Test
@@ -250,6 +274,16 @@ class ShortbreadProfileTest {
     assertEquals("A1\nB22", attrs(label).get("ref"));
     assertEquals(2, attrs(label).get("ref_rows"));
     assertEquals(3, attrs(label).get("ref_cols")); // widest of "A1"(2) and "B22"(3)
+  }
+
+  @Test
+  void railwayLineGetsLabel() {
+    // spec: railways are labelled in street_labels from z10
+    var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("railway", "rail", "name", "Main Line"));
+    var label = onlyOne(features, "street_labels");
+    assertEquals("rail", attrs(label).get("kind"));
+    assertEquals("Main Line", attrs(label).get("name"));
+    assertEquals(10, label.getMinZoom());
   }
 
   @Test

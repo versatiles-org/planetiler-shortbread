@@ -9,11 +9,14 @@ import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.ZOrder;
+import java.util.Set;
 
 /**
  * The {@code street_labels} line layer and the {@code street_labels_points} layer ({@code highway=motorway_junction}
  * nodes). Ports {@code process_street_labels} and the motorway-junction branch of {@code node_function}.
  * <p>
+ * Per the Shortbread spec this carries named/ref'd highways <em>and</em> railways: {@code rail}, {@code narrow_gauge},
+ * {@code tram}, {@code light_rail}, {@code funicular}, {@code subway} and {@code monorail} are labelled from zoom 10.
  * The {@code ref} tag is split on {@code ;} into a multi-line string, with {@code ref_rows}/{@code ref_cols} giving the
  * shield grid dimensions.
  * <p>
@@ -25,6 +28,10 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
   public static final String LABELS = "street_labels";
   public static final String POINTS = "street_labels_points";
 
+  // railways labelled in street_labels (z10+ per the spec), matching the rail kinds in the streets layer
+  private static final Set<String> RAILWAY_LABELS =
+    Set.of("rail", "narrow_gauge", "light_rail", "tram", "subway", "funicular", "monorail");
+
   private final ShortbreadOptions options;
 
   public StreetLabels(ShortbreadOptions options) {
@@ -35,7 +42,9 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
   public Expression filter() {
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
-      Expression.matchField("highway"));
+      Expression.or(
+        Expression.matchField("highway"),
+        Expression.matchField("railway")));
   }
 
   @Override
@@ -56,7 +65,22 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
     if (!f.canBeLine() || Geo.areaYesMultiBoundary(f)) {
       return;
     }
-    int mz = labelMinZoom(highway);
+
+    String railway = f.getString("railway", "");
+    String kind;
+    int mz;
+    boolean rail;
+    if (!highway.isEmpty()) {
+      kind = highway;
+      mz = labelMinZoom(highway);
+      rail = false;
+    } else if (RAILWAY_LABELS.contains(railway)) {
+      kind = railway;
+      mz = 10; // spec: railways are labelled from zoom 10
+      rail = true;
+    } else {
+      return;
+    }
     if (mz > 14) {
       return;
     }
@@ -87,8 +111,8 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setMinPixelSize(0)
-      .setSortKey(ZOrder.zOrder(f, false, true))
-      .setAttr("kind", highway)
+      .setSortKey(ZOrder.zOrder(f, rail, true))
+      .setAttr("kind", kind)
       .setAttr("tunnel", ZOrder.isTunnel(f)); // DEVIATION: actually computed (Tilemaker always emitted false)
     if (rows > 0) {
       feature.setAttr("ref", joined.toString());

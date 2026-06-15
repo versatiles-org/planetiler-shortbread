@@ -1,12 +1,13 @@
 package com.onthegomap.planetiler.shortbread.layers;
 
+import java.util.Set;
+
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.util.Geo;
-import java.util.Set;
 
 /**
  * The {@code land} layer: land use / land cover polygons (forest, residential, farmland, parks, wetlands, …). Ports
@@ -75,7 +76,7 @@ public class Land implements ForwardingProfile.FeatureProcessor {
       mz = 13;
     } else if (landuse.equals("garages")) {
       kind = "garages";
-      mz = 12;
+      mz = 10;
     } else if (LEISURE_Z11.contains(leisure)) {
       kind = leisure;
       mz = 11;

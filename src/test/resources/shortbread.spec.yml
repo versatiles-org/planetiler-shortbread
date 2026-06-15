@@ -29,7 +29,8 @@ examples:
       kind: glacier
   - layer: water_polygons_labels
     geometry: point
-    min_zoom: 14
+    # spec: labels follow their water polygon's (area-based) availability
+    min_zoom: 4
     tags:
       kind: glacier
       name: The glacier
@@ -44,8 +45,8 @@ examples:
       waterway: dock
   output:
     layer: water_polygons
-    # DEVIATION: the YAML schema floored dock/canal at z10; like Tilemaker we use the size-based minimum zoom
-    min_zoom: 4
+    # spec: docks/canals have a fixed minimum zoom of 10
+    min_zoom: 10
     geometry: polygon
     tags:
       kind: dock
@@ -75,8 +76,8 @@ examples:
       bridge: false
   - layer: water_lines_labels
     geometry: line
-    # DEVIATION: Tilemaker uses max(13, size-based) for river/canal labels (YAML used 12)
-    min_zoom: 13
+    # spec: river/canal labels from z12 (size-based above)
+    min_zoom: 12
     tags:
       kind: canal
       tunnel: true
@@ -97,8 +98,8 @@ examples:
   output:
   - layer: water_lines
     geometry: line
-    # DEVIATION: Tilemaker uses z13 for streams/drains (YAML used 14)
-    min_zoom: 13
+    # spec: streams from z14
+    min_zoom: 14
     tags:
       kind: stream
       tunnel: false

@@ -62,9 +62,12 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
       } else if (natural.equals("water") || natural.equals("glacier")) {
         kind = natural;
       }
-    } else if (isRiver || waterway.equals("dock") || waterway.equals("canal")) {
+    } else if (isRiver) {
       mz = Math.max(4, Zooms.zminForArea(0.1, worldArea));
-      kind = isRiver ? "river" : waterway;
+      kind = "river";
+    } else if (waterway.equals("dock") || waterway.equals("canal")) {
+      mz = 10;
+      kind = waterway;
     }
 
     if (kind == null || mz > 14) {
@@ -84,7 +87,9 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
 
     if (f.hasTag("name")) {
       var label = features.pointOnSurface(LABELS)
-        .setZoomRange(14, 14)
+        // spec: water_polygons_labels follows its polygon's (area-based) availability, not z14 only
+        .setMinZoom(mz)
+        .setMaxZoom(14)
         .setAttr("kind", kind)
         .setAttr("way_area", wayArea)
         .setSortKeyDescending(sortKey);

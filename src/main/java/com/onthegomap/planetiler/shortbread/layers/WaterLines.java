@@ -46,9 +46,9 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
     if (kind.equals("river") || kind.equals("canal")) {
       int byLength = Zooms.zminForLength(0.25, Geo.worldLength(f));
       mz = Math.max(9, byLength);
-      mzLabel = Math.max(13, byLength);
+      mzLabel = Math.max(12, byLength); // spec: river/canal labels from z12
     } else if (kind.equals("stream")) {
-      mz = 13;
+      mz = 14; // spec: streams from z14
       mzLabel = 14;
     } else if (kind.equals("drain")) {
       mz = options.v11() ? 14 : 13; // Shortbread 1.1 documents drain at z14

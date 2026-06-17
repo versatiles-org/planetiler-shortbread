@@ -9,6 +9,7 @@ import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.util.Parse;
 import java.util.List;
@@ -29,9 +30,11 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
   public static final String LABELS = "boundary_labels";
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public Boundaries(ShortbreadOptions options) {
+  public Boundaries(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   /** Relation info captured during pass 1: admin level (99 if disputed-only) and whether it is a disputed boundary. */
@@ -143,6 +146,6 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setMaxZoom(14)
       .setAttr("admin_level", adminLevel)
       .setAttr("way_area", mercatorM2 / 1e4); // hectares (Mercator projection), per the spec
-    Names.setNames(label, f, options.languages());
+    Names.setNames(label, f, options.languages(), countries);
   }
 }

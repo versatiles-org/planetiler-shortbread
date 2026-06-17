@@ -3,6 +3,7 @@ package com.onthegomap.planetiler.shortbread;
 import com.onthegomap.planetiler.Planetiler;
 import com.onthegomap.planetiler.config.Arguments;
 import com.onthegomap.planetiler.shortbread.layers.Glaciers;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -14,6 +15,8 @@ import java.util.List;
  * <li>{@code osm} — an OpenStreetMap {@code .osm.pbf} extract (downloaded from Geofabrik by default)</li>
  * <li>{@code ocean} — the OSM water polygons shapefile from osmdata.openstreetmap.de, for the {@code ocean} layer</li>
  * <li>5 small Natural Earth per-layer shapefiles (glaciated areas + antarctic ice shelves) for low-zoom glaciers</li>
+ * <li>{@code ne_10m_admin_0_countries} — Natural Earth country polygons, declared <em>before</em> the OSM source so
+ * {@link CountryLanguages} builds its country&rarr;language index before any OSM feature is processed</li>
  * </ul>
  */
 public class ShortbreadMain {
@@ -36,6 +39,10 @@ public class ShortbreadMain {
 
     var planetiler = Planetiler.create(args)
       .setProfile(p -> new Shortbread(p.config()))
+      // country polygons FIRST: stages run in declared order, so CountryLanguages' index is fully built before the
+      // OSM source is processed (the same Natural-Earth-before-OSM ordering OpenMapTiles relies on)
+      .addShapefileSource(CountryLanguages.SOURCE, Path.of("data", "sources", CountryLanguages.SOURCE + ".zip"),
+        NATURAL_EARTH_BASE_URL + "10m/cultural/" + CountryLanguages.SOURCE + ".zip")
       .addOsmSource(Shortbread.OSM_SOURCE, Path.of("data", "sources", area + ".osm.pbf"), osmUrl)
       .addShapefileSource(Shortbread.OCEAN_SOURCE,
         Path.of("data", "sources", "water-polygons-split-3857.zip"), OCEAN_URL);

@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.Poi;
 
@@ -25,9 +26,11 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
   public static final String LAYER = "pois";
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public Pois(ShortbreadOptions options) {
+  public Pois(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -121,7 +124,7 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
       setIfPresent(feature, "denomination", f.getString("denomination"));
     }
 
-    Names.setNames(feature, f, options.languages());
+    Names.setNames(feature, f, options.languages(), countries);
     setIfPresent(feature, "housename", f.getString("addr:housename"));
     setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
   }

@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.Surface;
 import com.onthegomap.planetiler.shortbread.util.ZOrder;
@@ -34,9 +35,11 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     Set.of("motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link");
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public Streets(ShortbreadOptions options) {
+  public Streets(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -183,7 +186,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       var label = features.pointOnSurface(POLYGON_LABELS)
         .setZoomRange(14, 14)
         .setAttr("kind", kind);
-      Names.setNames(label, f, options.languages());
+      Names.setNames(label, f, options.languages(), countries);
     }
   }
 

@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.ZOrder;
 import com.onthegomap.planetiler.shortbread.util.Zooms;
@@ -22,9 +23,11 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
   public static final String LABELS = "water_lines_labels";
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public WaterLines(ShortbreadOptions options) {
+  public WaterLines(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -84,7 +87,7 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
         .setAttr("tunnel", tunnel)
         .setAttr("bridge", bridge)
         .setSortKey(sortKey);
-      Names.setNames(label, f, options.languages());
+      Names.setNames(label, f, options.languages(), countries);
     }
   }
 }

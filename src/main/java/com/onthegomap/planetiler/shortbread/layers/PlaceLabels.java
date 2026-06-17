@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.util.Parse;
 import com.onthegomap.planetiler.util.SortKey;
@@ -22,9 +23,11 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
   public static final String LAYER = "place_labels";
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public PlaceLabels(ShortbreadOptions options) {
+  public PlaceLabels(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -86,7 +89,7 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("kind", kind)
       .setAttr("population", pop)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get());
-    Names.setNames(feature, f, options.languages());
+    Names.setNames(feature, f, options.languages(), countries);
   }
 
   private void processIslandArea(SourceFeature f, FeatureCollector features) {
@@ -102,6 +105,6 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("kind", "island")
       .setAttr("population", 0L)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(areaM2, 1), 1, 1e14).get());
-    Names.setNames(label, f, options.languages());
+    Names.setNames(label, f, options.languages(), countries);
   }
 }

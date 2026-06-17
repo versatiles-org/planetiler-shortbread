@@ -12,6 +12,7 @@ import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.layers.Glaciers;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmReader;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
@@ -423,5 +424,44 @@ class ShortbreadProfileTest {
     assertEquals("Bankhaus", attrs(poi).get("name_de"));
     // no name:en tag and no fallback, so name_en is unset
     assertNull(attrs(poi).get("name_en"));
+  }
+
+  // a generous lon/lat box around Germany, fed to the profile's CountryLanguages handler to populate its index
+  private static final Geometry GERMANY_BOX = TestUtils.newPolygon(6, 47, 15, 47, 15, 55, 6, 55, 6, 47);
+
+  /** Populate the profile's country->language index by running an admin_0 polygon through it (stages run in order). */
+  private void indexCountry(String iso, Geometry latLonPolygon) {
+    SourceFeature country = SimpleFeature.create(latLonPolygon, Map.of("ISO_A2", iso),
+      CountryLanguages.SOURCE, null, 1);
+    TestUtils.processSourceFeature(country, profile);
+  }
+
+  @Test
+  void nameDeFallbackInsideGermany() {
+    indexCountry("DE", GERMANY_BOX);
+    // a feature tagged only with `name`, inside Germany, gets name_de = name
+    var poi = onlyOne(process(TestUtils.newPoint(10, 51),
+      Map.of("amenity", "bank", "name", "Sparkasse")), "pois");
+    assertEquals("Sparkasse", attrs(poi).get("name"));
+    assertEquals("Sparkasse", attrs(poi).get("name_de"));
+  }
+
+  @Test
+  void noNameDeFallbackOutsideIndexedCountries() {
+    indexCountry("DE", GERMANY_BOX);
+    // outside the indexed German polygon (and no French polygon indexed): no fallback
+    var poi = onlyOne(process(TestUtils.newPoint(2, 48),
+      Map.of("amenity", "bank", "name", "Banque")), "pois");
+    assertEquals("Banque", attrs(poi).get("name"));
+    assertNull(attrs(poi).get("name_de"));
+  }
+
+  @Test
+  void explicitNameDeNotOverwrittenByFallback() {
+    indexCountry("DE", GERMANY_BOX);
+    var poi = onlyOne(process(TestUtils.newPoint(10, 51),
+      Map.of("amenity", "bank", "name", "Bank am Dom", "name:de", "Dombank")), "pois");
+    // an explicit name:de tag wins over the geofenced fallback
+    assertEquals("Dombank", attrs(poi).get("name_de"));
   }
 }

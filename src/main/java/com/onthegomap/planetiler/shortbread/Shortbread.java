@@ -21,6 +21,7 @@ import com.onthegomap.planetiler.shortbread.layers.StreetLabels;
 import com.onthegomap.planetiler.shortbread.layers.Streets;
 import com.onthegomap.planetiler.shortbread.layers.WaterLines;
 import com.onthegomap.planetiler.shortbread.layers.WaterPolygons;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.MergeLines;
 import com.onthegomap.planetiler.shortbread.util.MergePolygons;
 
@@ -50,32 +51,37 @@ public class Shortbread extends ForwardingProfile {
     super(config);
     this.options = ShortbreadOptions.from(config.arguments());
 
+    // country -> default-language spatial index (Natural Earth admin_0, wired before OSM in ShortbreadMain), used by
+    // Names to geofence the `name` -> `name_<lang>` fallback. Registered as a handler so it consumes its source.
+    CountryLanguages countries = new CountryLanguages(options.languages());
+    registerHandler(countries);
+
     // water
     registerHandler(new Ocean());
     registerHandler(new Glaciers()); // low-zoom (z0-6) glaciers/ice from Natural Earth into water_polygons
-    registerHandler(new WaterPolygons(options));
-    registerHandler(new WaterLines(options));
+    registerHandler(new WaterPolygons(options, countries));
+    registerHandler(new WaterLines(options, countries));
     registerHandler(new Dams());
     registerHandler(new Piers());
-    registerHandler(new Bridges(options));
+    registerHandler(new Bridges(options, countries));
 
     // land use / sites / buildings / addresses / pois
     registerHandler(new Land());
     registerHandler(new Sites());
     registerHandler(new Buildings());
     registerHandler(new Addresses(options));
-    registerHandler(new Pois(options));
+    registerHandler(new Pois(options, countries));
 
     // streets and transport
-    registerHandler(new Streets(options));
-    registerHandler(new StreetLabels(options));
+    registerHandler(new Streets(options, countries));
+    registerHandler(new StreetLabels(options, countries));
     registerHandler(new Aerialways());
-    registerHandler(new Ferries(options));
-    registerHandler(new PublicTransport(options));
+    registerHandler(new Ferries(options, countries));
+    registerHandler(new PublicTransport(options, countries));
 
     // boundaries and places
-    registerHandler(new Boundaries(options));
-    registerHandler(new PlaceLabels(options));
+    registerHandler(new Boundaries(options, countries));
+    registerHandler(new PlaceLabels(options, countries));
 
     // line layers with `combine_below` in the Tilemaker config
     registerHandler(new MergeLines(WaterLines.LAYER));

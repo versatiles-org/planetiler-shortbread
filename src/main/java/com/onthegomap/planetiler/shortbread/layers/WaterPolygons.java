@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.Zooms;
 import com.onthegomap.planetiler.util.SortKey;
@@ -22,9 +23,11 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
   public static final String LABELS = "water_polygons_labels";
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public WaterPolygons(ShortbreadOptions options) {
+  public WaterPolygons(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -93,7 +96,7 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
         .setAttr("kind", kind)
         .setAttr("way_area", wayArea)
         .setSortKeyDescending(sortKey);
-      Names.setNames(label, f, options.languages());
+      Names.setNames(label, f, options.languages(), countries);
     }
   }
 }

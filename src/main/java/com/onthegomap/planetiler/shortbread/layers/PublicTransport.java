@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 
 /**
@@ -22,9 +23,11 @@ public class PublicTransport implements ForwardingProfile.FeatureProcessor {
   public static final String LAYER = "public_transport";
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public PublicTransport(ShortbreadOptions options) {
+  public PublicTransport(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -90,6 +93,6 @@ public class PublicTransport implements ForwardingProfile.FeatureProcessor {
     if (iata != null && !iata.isEmpty()) {
       feature.setAttr("iata", iata);
     }
-    Names.setNames(feature, f, options.languages());
+    Names.setNames(feature, f, options.languages(), countries);
   }
 }

@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
+import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.shortbread.util.Names;
 import com.onthegomap.planetiler.shortbread.util.ZOrder;
 import java.util.Set;
@@ -33,9 +34,11 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
     Set.of("rail", "narrow_gauge", "light_rail", "tram", "subway", "funicular", "monorail");
 
   private final ShortbreadOptions options;
+  private final CountryLanguages countries;
 
-  public StreetLabels(ShortbreadOptions options) {
+  public StreetLabels(ShortbreadOptions options, CountryLanguages countries) {
     this.options = options;
+    this.countries = countries;
   }
 
   @Override
@@ -57,7 +60,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
           .setZoomRange(12, 14)
           .setAttr("kind", highway);
         setIfPresent(feature, "ref", f.getString("ref"));
-        Names.setNames(feature, f, options.languages());
+        Names.setNames(feature, f, options.languages(), countries);
       }
       return;
     }
@@ -119,7 +122,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       feature.setAttr("ref_rows", rows);
       feature.setAttr("ref_cols", cols);
     }
-    Names.setNames(feature, f, options.languages());
+    Names.setNames(feature, f, options.languages(), countries);
   }
 
   private static int labelMinZoom(String highway) {

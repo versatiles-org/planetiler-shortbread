@@ -54,7 +54,7 @@ examples:
       # 1° lat ~ 110.567km at the equator
       # 1° lon ~ 111.321km at the equator
       # => ~12308.429km² = ~12308.429e^6 m² = ~1.2308429e^10 m²
-      way_area: 1.236418893560872E10
+      way_area: 1.2392186317964426E10
 
 - name: waterway=canal linestring
   input:
@@ -996,7 +996,7 @@ examples:
       # 1° lon ~ 111.321km at the equator
         # => ~12308.429km² = ~1230842,9 ha
         # similar enough to ~1236418 ha adjusting for projection
-      way_area: 1236418.8935608722
+      way_area: 1239218.6317964427
 
 - name: 'boundary_labels admin_level=2 z4'
   input:
@@ -1011,7 +1011,7 @@ examples:
     geometry: point
     min_zoom: 4
     tags:
-      way_area: 1.112664016653054E7
+      way_area: 1.1154100350186361E7
       admin_level: 2
 
 - name: 'boundary_labels admin_level=2 z3'
@@ -1027,7 +1027,7 @@ examples:
     geometry: point
     min_zoom: 3
     tags:
-      way_area: 7.906754940857396E7
+      way_area: 7.937348813434787E7
       admin_level: 2
 
 - name: 'boundary_labels admin_level=2 z2'
@@ -1043,7 +1043,7 @@ examples:
     geometry: point
     min_zoom: 2
     tags:
-      way_area: 4.920667262278699E8
+      way_area: 4.9821704901954776E8
       admin_level: 2
 
 - name: 'boundary_labels admin_level=4 z3'
@@ -1059,7 +1059,7 @@ examples:
     geometry: point
     min_zoom: 3
     tags:
-      way_area: 4.920667262278699E8
+      way_area: 4.9821704901954776E8
       admin_level: 4
 
 - name: 'country boundary'

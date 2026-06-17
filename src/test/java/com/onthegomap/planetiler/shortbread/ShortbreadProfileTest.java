@@ -356,6 +356,16 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void boundaryLabelUsesMercatorArea() {
+    // a ~71,000 km² (geodesic) country at latitude 55: geodesic < 1e5 km² → would be z5, but its Web-Mercator area
+    // is ~2.2e5 km² (>= 1e5) so the spec puts it at z4. Confirms gating + way_area use Mercator, not geodesic.
+    var features = process(TestUtils.newPolygon(0, 55, 10, 55, 10, 56, 0, 56, 0, 55),
+      Map.of("boundary", "administrative", "admin_level", "2", "name", "Highland"));
+    var label = onlyOne(features, "boundary_labels");
+    assertEquals(4, label.getMinZoom());
+  }
+
+  @Test
   void placeLabelCityWithDefaultPopulation() {
     var features = process(TestUtils.newPoint(0, 0), Map.of("place", "city", "name", "Metropolis"));
     var place = onlyOne(features, "place_labels");

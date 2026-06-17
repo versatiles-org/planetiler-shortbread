@@ -120,13 +120,14 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (adminLevel == null || (adminLevel != 2 && adminLevel != 4)) {
       return;
     }
-    // Guard against broken/degenerate multipolygons (e.g. "no rings to process after fixing"): worldArea catches the
-    // geometry error and returns 0, like WaterPolygons does before calling areaSquareMeters. An unbuildable polygon has
-    // no valid interior label point, so skip it quietly instead of letting the exception abort processing.
-    if (Geo.worldArea(f) <= 0) {
+    // spec: the min-area thresholds and way_area are Web-Mercator-projected (not geodesic) — geodesic area is
+    // ~cos²(lat) smaller, which would push mid/high-latitude countries below the thresholds. mercatorArea also
+    // returns 0 on a broken/degenerate multipolygon, so this guards unbuildable geometries too.
+    double mercatorM2 = Geo.mercatorAreaSquareMeters(f);
+    if (mercatorM2 <= 0) {
       return;
     }
-    double areaKm2 = Geo.areaSquareMeters(f) / 1e6;
+    double areaKm2 = mercatorM2 / 1e6;
     int mz;
     if (adminLevel == 2 && areaKm2 >= 2e6) {
       mz = 2;
@@ -141,7 +142,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setAttr("admin_level", adminLevel)
-      .setAttr("way_area", Geo.areaHectares(f)); // hectares, as in the Planetiler YAML schema
+      .setAttr("way_area", mercatorM2 / 1e4); // hectares (Mercator projection), per the spec
     Names.setNames(label, f, options.languages());
   }
 }

@@ -73,7 +73,7 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
     if (kind == null || mz > 14) {
       return;
     }
-    double wayArea = Geo.areaSquareMeters(f);
+    double wayArea = Geo.mercatorAreaSquareMeters(f); // spec: way_area is in m² (Mercator projection)
     int sortKey = SortKey.orderByLog(Math.max(wayArea, 1), 1, 1e14).get();
 
     features.polygon(LAYER)

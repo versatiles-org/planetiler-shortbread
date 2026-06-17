@@ -58,4 +58,16 @@ public final class Geo {
   public static double areaHectares(SourceFeature f) {
     return f.area(Unit.Area.HECTARE);
   }
+
+  /** Web-Mercator world area: a square whose side is the WGS84 equatorial circumference (in m²). */
+  private static final double MERCATOR_WORLD_AREA_M2 = 40075016.6855785 * 40075016.6855785;
+
+  /**
+   * Feature area in the <b>Web-Mercator projection</b>, in square meters — the unit Shortbread's {@code way_area} uses
+   * ("Mercator Projection"). Derived from {@link #worldArea} (the Web-Mercator world fraction), so it returns 0 on
+   * geometry errors (e.g. a multipolygon that cannot be assembled).
+   */
+  public static double mercatorAreaSquareMeters(SourceFeature f) {
+    return worldArea(f) * MERCATOR_WORLD_AREA_M2;
+  }
 }

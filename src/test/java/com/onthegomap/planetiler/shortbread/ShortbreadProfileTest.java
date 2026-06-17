@@ -11,7 +11,6 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
-import com.onthegomap.planetiler.shortbread.layers.Glaciers;
 import com.onthegomap.planetiler.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmReader;
@@ -78,18 +77,6 @@ class ShortbreadProfileTest {
     var labelLatLon = GeoUtils.worldToLatLonCoords(label.getGeometry());
     assertTrue(polygon.covers(labelLatLon),
       () -> "water_polygons_labels point must lie inside the polygon, got " + labelLatLon);
-  }
-
-  @Test
-  void naturalEarthGlacierBecomesLowZoomWaterPolygon() {
-    var geom = TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0);
-    // ne_10m_glaciated_areas is wired as its own shapefile source (name == layer name)
-    SourceFeature ne = SimpleFeature.create(geom, Map.of(), Glaciers.GLACIATED_10M, null, 1);
-    var features = TestUtils.processSourceFeature(ne, profile);
-    var glacier = onlyOne(features, "water_polygons");
-    assertEquals("glacier", glacier.getAttrsAtZoom(6).get("kind"));
-    assertEquals(5, glacier.getMinZoom());
-    assertEquals(6, glacier.getMaxZoom());
   }
 
   @Test

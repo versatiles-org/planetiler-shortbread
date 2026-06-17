@@ -348,6 +348,23 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void adminLevel3BoundaryIsDropped() {
+    // Shortbread boundaries only has admin_level 2 and 4; level-3 relations must not be captured...
+    var relation = new OsmElement.Relation(1);
+    relation.setTag("type", "boundary");
+    relation.setTag("boundary", "administrative");
+    relation.setTag("admin_level", "3");
+    assertNull(profile.preprocessOsmRelation(relation));
+
+    // ...and a directly-tagged admin_level=3 way produces no boundaries line
+    var features = process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("boundary", "administrative", "admin_level", "3"));
+    assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("boundaries")),
+      () -> "expected no boundaries feature, got " +
+        features.stream().map(FeatureCollector.Feature::getLayer).toList());
+  }
+
+  @Test
   void boundaryLabelFromAdminPolygon() {
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
       Map.of("boundary", "administrative", "admin_level", "2", "name", "Country"));

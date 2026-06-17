@@ -48,7 +48,8 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     String boundary = relation.getString("boundary");
     Integer adminLevel = Parse.parseIntOrNull(relation.getTag("admin_level"));
     if ("administrative".equals(boundary)) {
-      if (adminLevel != null && adminLevel >= 2 && adminLevel <= 4) {
+      // Shortbread boundaries are only country (2) and state (4) lines; admin_level=3 (and 5+) are not in the schema
+      if (adminLevel != null && (adminLevel == 2 || adminLevel == 4)) {
         return List.of(new BoundaryRelation(relation.id(), adminLevel, false));
       }
     } else if ("disputed".equals(boundary) && (adminLevel == null || (adminLevel >= 2 && adminLevel <= 4))) {
@@ -76,7 +77,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     // the way's own boundary tags (covers directly tagged ways, as the previous YAML schema relied on)
     if (f.hasTag("boundary", "administrative")) {
       Integer ownLevel = Parse.parseIntOrNull(f.getTag("admin_level"));
-      if (ownLevel != null && ownLevel >= 2 && ownLevel <= 4) {
+      if (ownLevel != null && (ownLevel == 2 || ownLevel == 4)) {
         minAdminLevel = Math.min(minAdminLevel, ownLevel);
       }
     }
@@ -96,7 +97,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     int mz;
     if (minAdminLevel == 2) {
       mz = 0;
-    } else if (minAdminLevel <= 4) {
+    } else if (minAdminLevel == 4) {
       mz = 7;
     } else {
       return; // disputed-only ways with no administrative parent are not drawn

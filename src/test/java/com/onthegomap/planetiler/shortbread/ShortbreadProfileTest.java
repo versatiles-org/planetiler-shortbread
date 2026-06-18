@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.TestUtils;
+import com.onthegomap.planetiler.config.Arguments;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
@@ -22,7 +23,10 @@ import org.locationtech.jts.geom.Geometry;
 
 class ShortbreadProfileTest {
 
-  private final Shortbread profile = new Shortbread(PlanetilerConfig.defaults());
+  // most tests exercise the profile with all beyond-spec experiments enabled; strict-spec defaults are covered by
+  // experimentsAreOffByDefault below
+  private final Shortbread profile =
+    new Shortbread(PlanetilerConfig.from(Arguments.of(Map.of("shortbread_experiments", "all"))));
 
   private List<FeatureCollector.Feature> process(Geometry geom, Map<String, Object> tags) {
     SourceFeature sf = SimpleFeature.create(geom, tags, Shortbread.OSM_SOURCE, null, 1);
@@ -94,7 +98,7 @@ class ShortbreadProfileTest {
     var b = onlyOne(features, "buildings");
     assertEquals(1, attrs(b).get("dummy"));
     assertEquals(14, b.getMinZoom());
-    // EXTENSION: untagged building gets the 5m default height, no min_height
+    // EXPERIMENT: untagged building gets the 5m default height, no min_height
     assertEquals(5, attrs(b).get("height"));
     assertNull(attrs(b).get("min_height"));
   }
@@ -145,7 +149,7 @@ class ShortbreadProfileTest {
 
   @Test
   void buildingPartWithHeightEmitted() {
-    // EXTENSION (Simple 3D Buildings): a building:part carrying height info is emitted into the buildings layer
+    // EXPERIMENT (Simple 3D Buildings): a building:part carrying height info is emitted into the buildings layer
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
       Map.of("building:part", "yes", "building:levels", "10"));
     var b = onlyOne(features, "buildings");
@@ -188,6 +192,35 @@ class ShortbreadProfileTest {
     var b = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "yes")),
       "buildings");
     assertNull(attrs(b).get("hide_3d"));
+  }
+
+  @Test
+  void experimentsAreOffByDefault() {
+    // default profile (no --shortbread_experiments) is strict spec: none of the beyond-spec extras are emitted
+    Shortbread strict = new Shortbread(PlanetilerConfig.defaults());
+
+    var building = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(
+      TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "yes", "building:levels", "5"),
+      Shortbread.OSM_SOURCE, null, 1), strict), "buildings");
+    assertEquals(1, attrs(building).get("dummy"));
+    assertNull(attrs(building).get("height")); // BUILDING_HEIGHTS off
+
+    // a height-bearing building:part is not emitted at all (BUILDING_PARTS off)
+    assertTrue(TestUtils.processSourceFeature(SimpleFeature.create(
+      TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building:part", "yes", "height", "10"),
+      Shortbread.OSM_SOURCE, null, 1), strict).stream().noneMatch(f -> f.getLayer().equals("buildings")));
+
+    // bridge gets no name (BRIDGE_NAMES off)
+    var bridge = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(
+      TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("man_made", "bridge", "name", "Tower Bridge"),
+      Shortbread.OSM_SOURCE, null, 1), strict), "bridges");
+    assertNull(attrs(bridge).get("name"));
+
+    // address gets no unit/block (ADDRESS_DETAILS off)
+    var addr = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(TestUtils.newPoint(0, 0),
+      Map.of("addr:housenumber", "5", "addr:unit", "B"), Shortbread.OSM_SOURCE, null, 1), strict), "addresses");
+    assertEquals("5", attrs(addr).get("housenumber"));
+    assertNull(attrs(addr).get("unit"));
   }
 
   @Test

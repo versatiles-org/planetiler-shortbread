@@ -51,9 +51,13 @@ public class Shortbread extends ForwardingProfile {
     this.options = ShortbreadOptions.from(config.arguments());
 
     // country -> default-language spatial index (Natural Earth admin_0, wired before OSM in ShortbreadMain), used by
-    // Names to geofence the `name` -> `name_<lang>` fallback. Registered as a handler so it consumes its source.
-    CountryLanguages countries = new CountryLanguages(options.languages());
-    registerHandler(countries);
+    // Names to geofence the `name` -> `name_<lang>` fallback. Only built when the locale-names experiment is enabled;
+    // otherwise the layers receive null and emit names from tags only (strict spec).
+    CountryLanguages countries = null;
+    if (options.has(Experiment.LOCALE_NAMES)) {
+      countries = new CountryLanguages(options.languages());
+      registerHandler(countries);
+    }
 
     // water
     registerHandler(new Ocean());
@@ -66,7 +70,7 @@ public class Shortbread extends ForwardingProfile {
     // land use / sites / buildings / addresses / pois
     registerHandler(new Land());
     registerHandler(new Sites());
-    registerHandler(new Buildings());
+    registerHandler(new Buildings(options));
     registerHandler(new Addresses(options));
     registerHandler(new Pois(options, countries));
 

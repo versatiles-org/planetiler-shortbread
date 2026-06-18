@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * source <em>before</em> the OSM source in {@code ShortbreadMain}, so the index is fully populated before any OSM
  * feature is processed — the same ordering OpenMapTiles relies on for its Natural Earth lookups).
  * <p>
- * EXTENSION (beyond Shortbread 1.0/1.1): lets {@link Names} fill {@code name_<lang>} for a feature tagged only with
+ * EXPERIMENT (beyond Shortbread 1.0/1.1): lets {@link Names} fill {@code name_<lang>} for a feature tagged only with
  * {@code name} when it lies in a country whose default language is {@code <lang>} (e.g. a German town tagged just
  * {@code name=Köln} gets {@code name_de=Köln}). This makes a frontend "show only language X" mode usable — the
  * unqualified local name is treated as language X inside X-speaking countries — without globally copying {@code name}

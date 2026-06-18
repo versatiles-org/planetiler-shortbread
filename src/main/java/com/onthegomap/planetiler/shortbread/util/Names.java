@@ -16,7 +16,7 @@ import java.util.List;
  * Following the Shortbread schema's test spec (and the previous Planetiler YAML schema) we instead emit each field from
  * its own tag only, leaving the translated fields unset when no translation exists.
  * <p>
- * EXTENSION: as a refinement of that reference behaviour, when a {@link CountryLanguages} index is supplied we copy a
+ * EXPERIMENT: as a refinement of that reference behaviour, when a {@link CountryLanguages} index is supplied we copy a
  * feature's unqualified {@code name} into {@code name_<lang>} <em>only</em> when the feature lies in a country whose
  * default language is {@code <lang>} (e.g. {@code name_de} inside Germany). This is the geofenced version of
  * Tilemaker's global copy: it makes a frontend "show only language X" mode show local names inside X-speaking

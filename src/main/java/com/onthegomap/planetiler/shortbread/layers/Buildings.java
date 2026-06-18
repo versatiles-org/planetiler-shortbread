@@ -6,7 +6,9 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
+import com.onthegomap.planetiler.shortbread.Experiment;
 import com.onthegomap.planetiler.shortbread.Shortbread;
+import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.util.Parse;
 import java.util.List;
 import java.util.Set;
@@ -17,13 +19,13 @@ import java.util.Set;
  * Mirrors Tilemaker {@code process_buildings}: any closed way/relation with a {@code building} tag other than
  * {@code building=no}. The schema carries a constant {@code dummy=1}.
  * <p>
- * EXTENSION (beyond Shortbread 1.0/1.1, which defines only {@code dummy=1} — see shortbread-docs #77): we also emit
+ * EXPERIMENT (beyond Shortbread 1.0/1.1, which defines only {@code dummy=1} — see shortbread-docs #77): we also emit
  * {@code height} (and {@code min_height} when non-zero) for 3D extrusion. The derivation follows OpenMapTiles
  * ({@code Building.java}): an explicit {@code height}/{@code building:height} tag, else {@code building:levels}
  * (or {@code levels}) × 3.66 m, else a 5 m default; {@code min_height} likewise from {@code min_height} or
  * {@code building:min_level} × 3.66. Absurd values (>= 3660 m, almost always tagging errors) are dropped.
  * <p>
- * EXTENSION (3D / OSM <a href="https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1">Simple 3D Buildings</a>): we
+ * EXPERIMENT (3D / OSM <a href="https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1">Simple 3D Buildings</a>): we
  * also emit {@code building:part} polygons so multi-part buildings can be extruded correctly, but <em>only</em> those
  * that carry height information (a bare {@code building:part} with no height adds overlapping-footprint noise to flat
  * 2D styles for no 3D benefit). To stop the parent footprint from being double-extruded under its parts, the
@@ -50,6 +52,12 @@ public class Buildings
   /** Marks the ways/relations of a {@code type=building} relation, so the {@code outline} member can be found. */
   record BuildingRelation(long id) implements OsmRelationInfo {}
 
+  private final ShortbreadOptions options;
+
+  public Buildings(ShortbreadOptions options) {
+    this.options = options;
+  }
+
   @Override
   public List<OsmRelationInfo> preprocessOsmRelation(OsmElement.Relation relation) {
     if (relation.hasTag("type", "building")) {
@@ -60,11 +68,12 @@ public class Buildings
 
   @Override
   public Expression filter() {
-    return Expression.and(
-      Expression.matchSource(Shortbread.OSM_SOURCE),
-      Expression.or(
-        Expression.matchField("building"),
-        Expression.matchField("building:part")));
+    Expression building = Expression.matchField("building");
+    // only look at building:part features when the Simple-3D-Buildings experiment is on
+    Expression keys = options.has(Experiment.BUILDING_PARTS)
+      ? Expression.or(building, Expression.matchField("building:part"))
+      : building;
+    return Expression.and(Expression.matchSource(Shortbread.OSM_SOURCE), keys);
   }
 
   @Override
@@ -74,13 +83,16 @@ public class Buildings
     }
     if (isBuildingValue(feature.getString("building"))) {
       var output = emit(features);
-      addHeights(feature, output);
+      if (options.has(Experiment.BUILDING_HEIGHTS)) {
+        addHeights(feature, output);
+      }
       // outline of a type=building relation: keep the 2D footprint but tell the renderer not to extrude it
-      if (isOutlineOfBuildingRelation(feature)) {
+      if (options.has(Experiment.BUILDING_PARTS) && isOutlineOfBuildingRelation(feature)) {
         output.setAttr("hide_3d", true);
       }
-    } else if (isBuildingValue(feature.getString("building:part")) && hasHeightInfo(feature)) {
-      // only 3D-relevant parts (those carrying height info) are emitted
+    } else if (options.has(Experiment.BUILDING_PARTS) &&
+      isBuildingValue(feature.getString("building:part")) && hasHeightInfo(feature)) {
+      // only 3D-relevant parts (those carrying height info) are emitted; parts imply BUILDING_HEIGHTS
       addHeights(feature, emit(features));
     }
   }

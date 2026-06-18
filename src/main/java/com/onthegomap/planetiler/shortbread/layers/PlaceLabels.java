@@ -4,6 +4,7 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import com.onthegomap.planetiler.shortbread.Experiment;
 import com.onthegomap.planetiler.shortbread.Shortbread;
 import com.onthegomap.planetiler.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.shortbread.util.Geo;
@@ -48,7 +49,10 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
     // Islands mapped as polygons (the common case for real islands) get an area-ranked label point; previously only
     // island *nodes* were labelled, so most islands had no label. Bigger islands appear at lower zoom, à la OMT.
     if (place.equals("island") && !f.isPoint() && Geo.isArea(f)) {
-      processIslandArea(f, features);
+      // EXPERIMENT: islands mapped as polygons are labelled only when the island_labels experiment is on
+      if (options.has(Experiment.ISLAND_LABELS)) {
+        processIslandArea(f, features);
+      }
       return;
     }
     if (!f.isPoint()) {

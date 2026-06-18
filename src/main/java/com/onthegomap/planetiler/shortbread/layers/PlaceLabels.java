@@ -92,7 +92,11 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setMaxZoom(14)
       .setAttr("kind", kind)
       .setAttr("population", pop)
-      .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get());
+      .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get())
+      // thin dense low/mid-zoom place labels: keep the most populous per 64px grid cell (~32/tile), à la OpenMapTiles.
+      // z13+ is left unthinned so all places appear when zoomed in; buffer must be >= grid size for edge consistency.
+      .setBufferPixels(64)
+      .setPointLabelGridSizeAndLimit(12, 64, 2);
     Names.setNames(feature, f, options.languages(), countries);
   }
 

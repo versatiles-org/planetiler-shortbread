@@ -534,6 +534,16 @@ class ShortbreadProfileTest {
     assertNull(attrs(poi).get("name_en"));
   }
 
+  @Test
+  void multiValueNameTakesFirstValue() {
+    // OSM uses ';' to join multiple names in one tag; we keep only the first for a clean label
+    var features = process(TestUtils.newPoint(0, 0),
+      Map.of("amenity", "bank", "name", "Mole Lake;Dewe'igan-madwewe", "name:de", "Köln;Cologne"));
+    var poi = onlyOne(features, "pois");
+    assertEquals("Mole Lake", attrs(poi).get("name"));
+    assertEquals("Köln", attrs(poi).get("name_de"));
+  }
+
   // a generous lon/lat box around Germany, fed to the profile's CountryLanguages handler to populate its index
   private static final Geometry GERMANY_BOX = TestUtils.newPolygon(6, 47, 15, 47, 15, 55, 6, 55, 6, 47);
 

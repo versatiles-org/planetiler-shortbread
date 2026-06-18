@@ -4,6 +4,7 @@ import com.onthegomap.planetiler.FeatureMerge;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.VectorTile;
 import com.onthegomap.planetiler.geo.GeometryException;
+import com.onthegomap.planetiler.geo.GeometryType;
 import java.util.List;
 
 /**
@@ -14,6 +15,10 @@ import java.util.List;
  * This generalizes dense area layers (notably {@code land}) at low/mid zoom: contiguous OSM landcover is usually split
  * into many adjacent polygons, which dominate overview-tile size. Coalescing them by {@code kind} cuts feature and
  * shared-boundary vertex counts. Register one instance per area layer to combine.
+ * <p>
+ * It also <em>drops any non-polygonal feature</em> first: at low zoom a thin polygon can snap to a degenerate ring that
+ * Planetiler types as a (multi)linestring. Such a feature would break a polygon-only layer (e.g. {@code ocean}, which a
+ * Shortbread validator rejects as "wrong geometry") and cannot be merged anyway. The valid polygons are kept.
  *
  * @param name    the output layer to post-process
  * @param minArea minimum area, in square tile pixels, of a merged polygon to keep
@@ -22,7 +27,11 @@ public record MergePolygons(String name, double minArea) implements ForwardingPr
 
   @Override
   public List<VectorTile.Feature> postProcess(int zoom, List<VectorTile.Feature> items) throws GeometryException {
-    // mergeOverlappingPolygons groups by attributes internally, so different `kind`s are kept separate
-    return FeatureMerge.mergeOverlappingPolygons(items, minArea);
+    // keep only polygon-typed features (drop degenerate slivers that snapped to lines), then merge — mergeOverlapping
+    // groups by attributes internally, so different `kind`s are kept separate
+    List<VectorTile.Feature> polygons = items.stream()
+      .filter(f -> f.geometry().geomType() == GeometryType.POLYGON)
+      .toList();
+    return FeatureMerge.mergeOverlappingPolygons(polygons, minArea);
   }
 }

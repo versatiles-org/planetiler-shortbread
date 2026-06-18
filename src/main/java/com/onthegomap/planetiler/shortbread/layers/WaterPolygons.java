@@ -95,7 +95,12 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
         .setMaxZoom(14)
         .setAttr("kind", kind)
         .setAttr("way_area", wayArea)
-        .setSortKeyDescending(sortKey);
+        .setSortKeyDescending(sortKey)
+        // thin dense low/mid-zoom water labels: keep the largest (sort key = area) per 64px grid cell (~16/tile) so a
+        // continent-sized z4 tile carries the few biggest seas/lakes, not thousands of points. z12+ is left unthinned.
+        // buffer must be >= grid size for consistent thinning across tile edges.
+        .setBufferPixels(64)
+        .setPointLabelGridSizeAndLimit(11, 64, 1);
       Names.setNames(label, f, options.languages(), countries);
     }
   }

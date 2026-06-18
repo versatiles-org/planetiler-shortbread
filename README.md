@@ -55,13 +55,50 @@ java -jar planetiler-dist/target/*-with-deps.jar custom \
   --schema=planetiler-custommap/src/main/resources/samples/shortbread.yml --area=monaco
 ```
 
+## Experimental features (beyond the spec)
+
+This profile can emit a few features that are **not part of the Shortbread schema**. They are *experiments* — useful for
+richer maps, possibly changing or proposed upstream, and explicitly opt-in so the default output stays conformant.
+
+They are **off by default** (a bare run produces strict-spec tiles). Enable them with `--shortbread_experiments`, a
+comma-separated list of `all`, `none` (the default), or specific tokens:
+
+```bash
+# everything on
+java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco --shortbread_experiments=all
+
+# just 3D buildings + localized names
+java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco \
+  --shortbread_experiments=building_heights,building_parts,locale_names
+
+# explicit strict spec (same as omitting the flag)
+java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco --shortbread_experiments=none
+```
+
+| Token              | Adds                                                                                                                                       | Notes                                                                                                                                                                                                                                                                                                                                                    |
+|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `building_heights` | `height` and `min_height` on the `buildings` layer                                                                                         | For 3D extrusion. OpenMapTiles derivation: `height`/`building:height` → `building:levels` × 3.66 m → 5 m default; `min_height` only when > 0; implausible (≥ 3660 m) values dropped. ([shortbread-docs #77](https://github.com/shortbread-tiles/shortbread-docs/issues/77))                                                                              |
+| `building_parts`   | OSM [Simple 3D Buildings](https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1) `building:part` polygons + a `hide_3d` flag on outlines | Only parts that carry height info are emitted (a bare part adds 2D noise). The `outline`-role member of a `type=building` relation is tagged `hide_3d=true` so a renderer extrudes the parts, not the parent footprint. **Implies `building_heights`.**                                                                                                  |
+| `locale_names`     | geofenced `name_<lang>` fallback                                                                                                           | A feature tagged only with `name`, inside a country whose default language is `<lang>`, also gets `name_<lang>` (e.g. `name_de` in Germany). Makes a "show only language X" style usable. **Adds a data source**: the Natural Earth `ne_10m_admin_0_countries` shapefile (a few MB, downloaded automatically when enabled). Respects `--name_languages`. |
+| `island_labels`    | `place_labels` for islands mapped as **polygons**                                                                                          | The base profile only labels island *nodes*; this area-ranks polygon islands so larger ones appear earlier.                                                                                                                                                                                                                                              |
+| `address_details`  | `addr:unit` and `addr:block` on the `addresses` layer                                                                                      | Beyond the spec's `housename`/`housenumber`.                                                                                                                                                                                                                                                                                                             |
+| `bridge_names`     | `name` (and `name_<lang>`) on `man_made=bridge` polygons                                                                                   | The spec defines no name for bridges. ([shortbread-docs #141](https://github.com/shortbread-tiles/shortbread-docs/issues/141))                                                                                                                                                                                                                           |
+
+All experiments are **additive**: they only add attributes/features to existing layers (the `buildings` layer still
+carries the spec's `dummy=1`, geometry and zoom ranges are unchanged), so a strict-spec consumer can ignore the extras.
+The registry of tokens lives in `Experiment.java`; new beyond-spec features (e.g. a future `mountain_peaks` layer)
+register there and stay off by default.
+
 ## Structure
 
 - `Shortbread` — the `ForwardingProfile` that registers all layer handlers and sets tileset metadata.
 - `ShortbreadMain` — the runnable entry point wiring the sources and output.
 - `layers/` — one handler per Tilemaker `process_*` function; each may emit to several output layers.
-- `util/` — shared helpers ported from the reference: `Names` (the three-field name fallback), `ZOrder`, `Zooms`
-  (size-based minimum zoom), `Poi` (POI whitelists), `Surface`, `Geo`, and `MergeLines`.
+- `Experiment` — the registry of beyond-spec [experimental features](#experimental-features-beyond-the-spec) and the
+  `--shortbread_experiments` parser.
+- `util/` — shared helpers ported from the reference: `Names` (name attributes + the optional geofenced fallback),
+  `CountryLanguages` (the country→language index backing `locale_names`), `ZOrder`, `Zooms` (size-based minimum zoom),
+  `Poi` (POI whitelists), `Surface`, `Geo`, `MergeLines`, and `MergePolygons`.
 
 ## Reference and deviations
 
@@ -77,7 +114,8 @@ deviation is marked with a `// DEVIATION:` comment in the code; the notable ones
 - `street_labels`: `tunnel` is computed from the tags (the reference always emitted `false`).
 - `public_transport`: uses the intended per-kind minimum zoom (the reference computed it, then hard-coded zoom 11).
 - `name` / `name_en` / `name_de` are taken from their own tags with no fallback (matching the schema's test spec and
-  the previous YAML schema), rather than Tilemaker's fallback chaining.
+  the previous YAML schema), rather than Tilemaker's fallback chaining. (The opt-in `locale_names`
+  [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback instead of Tilemaker's global one.)
 - `surface` is canonicalized to `paved` / `unpaved`; `way_area` is a full-precision number.
 - Empty string values are omitted rather than written as the empty-string NULL sentinel that Tilemaker uses.
 

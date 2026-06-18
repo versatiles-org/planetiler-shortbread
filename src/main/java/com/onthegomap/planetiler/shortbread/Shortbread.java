@@ -95,6 +95,9 @@ public class Shortbread extends ForwardingProfile {
 
     // coalesce adjacent same-kind area polygons to shrink dense overview tiles
     registerHandler(new MergePolygons(Land.LAYER, 1));
+    // union the split OSM ocean polygons per tile and drop sub-pixel slivers — at low zoom (z0-3) those slivers would
+    // otherwise be simplified into degenerate (line) geometry, which fails the schema's "ocean must be polygon" rule
+    registerHandler(new MergePolygons(Ocean.LAYER_NAME, 1));
   }
 
   @Override

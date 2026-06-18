@@ -144,6 +144,53 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void buildingPartWithHeightEmitted() {
+    // EXTENSION (Simple 3D Buildings): a building:part carrying height info is emitted into the buildings layer
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building:part", "yes", "building:levels", "10"));
+    var b = onlyOne(features, "buildings");
+    assertEquals(1, attrs(b).get("dummy"));
+    assertEquals(37, attrs(b).get("height")); // ceil(10 * 3.66) = ceil(36.6)
+  }
+
+  @Test
+  void bareBuildingPartWithoutHeightIsSkipped() {
+    // a building:part with no height info is not 3D-relevant → not emitted (keeps flat 2D styles clean)
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building:part", "yes"));
+    assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("buildings")));
+  }
+
+  @Test
+  void buildingPartNoIsSkipped() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building:part", "no", "height", "10"));
+    assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("buildings")));
+  }
+
+  @Test
+  void buildingOutlineOfRelationIsHidden3d() {
+    // the outline member of a type=building relation keeps its 2D footprint but is flagged hide_3d so its parts,
+    // not the outline, get extruded
+    var relation = new OsmElement.Relation(1);
+    relation.setTag("type", "building");
+    OsmRelationInfo info = profile.preprocessOsmRelation(relation).get(0);
+    var member = new OsmReader.RelationMember<>("outline", info);
+    SourceFeature way = SimpleFeature.createFakeOsmFeature(
+      TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "yes"), Shortbread.OSM_SOURCE, null, 2,
+      List.of(member));
+    var features = TestUtils.processSourceFeature(way, profile);
+    var b = onlyOne(features, "buildings");
+    assertEquals(true, attrs(b).get("hide_3d"));
+  }
+
+  @Test
+  void standaloneBuildingHasNoHide3d() {
+    var b = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "yes")),
+      "buildings");
+    assertNull(attrs(b).get("hide_3d"));
+  }
+
+  @Test
   void forestLand() {
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("natural", "wood"));
     assertEquals("forest", attrs(onlyOne(features, "land")).get("kind"));

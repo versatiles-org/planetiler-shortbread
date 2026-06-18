@@ -122,4 +122,27 @@ public class Shortbread extends ForwardingProfile {
   public String version() {
     return options.v11() ? "1.1" : "1.0";
   }
+
+  // Pre-flight resource estimates so Planetiler can warn about insufficient disk/RAM before a long planet build.
+  // The output ratio is from a measured Shortbread planet run; intermediate-disk and RAM have no measured figure yet,
+  // so they reuse OpenMapTiles' planet-measured ratios as a conservative upper bound (Shortbread is comparable or
+  // leaner: fewer layers, no Wikidata fetch, tiny in-memory relation state). Recalibrate those two once measured.
+
+  @Override
+  public long estimateIntermediateDiskBytes(long osmFileSize) {
+    // not yet measured for Shortbread; OpenMapTiles: a ~60 GB OSM file used ~200 GB of intermediate feature storage
+    return osmFileSize * 200 / 60;
+  }
+
+  @Override
+  public long estimateOutputBytes(long osmFileSize) {
+    // measured: an 88 GB planet.osm.pbf produced a ~66 GB shortbread.pmtiles (~0.75x), far below OpenMapTiles' ~1.67x
+    return osmFileSize * 66 / 88;
+  }
+
+  @Override
+  public long estimateRamRequired(long osmFileSize) {
+    // not yet measured for Shortbread; OpenMapTiles: ~20 GB heap is safe for a ~67 GB OSM file
+    return osmFileSize * 20 / 67;
+  }
 }

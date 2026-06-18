@@ -195,6 +195,23 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void resourceEstimatesScaleWithInput() {
+    long planet = 80_000_000_000L; // ~80 GB planet.osm.pbf
+    long output = profile.estimateOutputBytes(planet);
+    long intermediate = profile.estimateIntermediateDiskBytes(planet);
+    long ram = profile.estimateRamRequired(planet);
+    // all non-zero (the default Profile returns 0, which would silently disable the disk/RAM pre-check)
+    assertTrue(output > 0 && intermediate > 0 && ram > 0);
+    // intermediate feature storage is the dominant figure and exceeds both the input and the output
+    assertTrue(intermediate > planet);
+    assertTrue(intermediate > output);
+    // measured: Shortbread output (~0.8x) is smaller than the input pbf — much leaner than OpenMapTiles
+    assertTrue(output < planet);
+    // RAM estimate stays well under the input size (memory-mapped node cache keeps heap modest)
+    assertTrue(ram < planet / 2);
+  }
+
+  @Test
   void experimentsAreOffByDefault() {
     // default profile (no --shortbread_experiments) is strict spec: none of the beyond-spec extras are emitted
     Shortbread strict = new Shortbread(PlanetilerConfig.defaults());

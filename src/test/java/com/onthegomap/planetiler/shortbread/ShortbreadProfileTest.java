@@ -387,6 +387,13 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void aerialwayRopeTowMapsToDragLift() {
+    // rope_tow is not in the Shortbread aerialways kind enum → remapped to the generic drag_lift
+    var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("aerialway", "rope_tow"));
+    assertEquals("drag_lift", attrs(onlyOne(features, "aerialways")).get("kind"));
+  }
+
+  @Test
   void ferryLine() {
     var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("route", "ferry", "name", "Ferry"));
     var ferry = onlyOne(features, "ferries");

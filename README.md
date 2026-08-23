@@ -109,42 +109,29 @@ java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco
 
 - `Shortbread` — the `ForwardingProfile` that registers all layer handlers and sets tileset metadata.
 - `ShortbreadMain` — the runnable entry point wiring the sources and output.
-- `layers/` — one handler per Tilemaker `process_*` function; each may emit to several output layers.
+- `layers/` — one handler per group of related output layers.
 - `Experiment` — the registry of beyond-spec [experimental features](#experimental-features-beyond-the-spec) and the
   `--shortbread_experiments` parser.
-- `util/` — shared helpers ported from the reference: `Names` (name attributes + the optional geofenced fallback),
-  `CountryLanguages` (the country→language index backing `locale_names`), `ZOrder`, `Zooms` (size-based minimum zoom),
-  `Poi` (POI whitelists), `Surface`, `Geo`, `MergeLines`, and `MergePolygons`.
+- `util/` — shared helpers: `Names` (name attributes + the optional geofenced fallback), `CountryLanguages` (the
+  country→language index backing `locale_names`), `Access` (the 1.1 access attributes), `ZOrder`, `Zooms` (size-based
+  minimum zoom), `Poi` (POI whitelists), `Geo`, `MergeLines`, and `MergePolygons`.
 
-## Reference and deviations
+## Notable output details
 
-The behavioural reference is the Geofabrik
-[Tilemaker implementation](https://github.com/shortbread-tiles/shortbread-tilemaker) (`process.lua` / `config.json`).
-The goal is to reproduce the Shortbread v1.0 output while fixing a handful of clear bugs in the reference. Every such
-deviation is marked with a `// DEVIATION:` comment in the code; the notable ones are:
+Where the schema leaves room for interpretation, this implementation behaves as follows:
 
-- `surface`: the raw value of the OSM tag is emitted, as the schema defines it. Tilemaker instead collapses it to
-  `paved`/`unpaved` (and its `paved` branch wrongly returned `unpaved`), which also drops any surface outside its
-  two lists.
-- `pois`: the `man_made` attribute comes from `man_made` (not `historic`), `office` is validated against the office
-  whitelist (not the highway one), and `man_made` participates in the "is this a POI" decision.
-- `sites`: matches the correct `leisure=sports_centre` spelling.
-- `street_labels`: `tunnel` is computed from the tags (the reference always emitted `false`).
-- `public_transport`: uses the intended per-kind minimum zoom (the reference computed it, then hard-coded zoom 11).
-- `name` / `name_en` / `name_de` are taken from their own tags with no fallback (matching the schema's test spec and
-  the previous YAML schema), rather than Tilemaker's fallback chaining. (The opt-in `locale_names`
-  [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback instead of Tilemaker's global one.)
+- `surface` is the raw value of the OSM tag, as the schema defines it — not collapsed to `paved`/`unpaved`.
+- `name` and the `name_<code>` attributes each come from their own tag, with no fallback: a feature tagged only with
+  `name` gets no translated fields. (The opt-in `locale_names`
+  [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback.)
 - `way_area` is a full-precision number.
-- Empty string values are omitted rather than written as the empty-string NULL sentinel that Tilemaker uses.
+- Attributes with an empty value are omitted rather than emitted as an empty string.
+- `boundary_labels` are derived from administrative boundary polygons rather than a pre-built admin-points shapefile,
+  so no extra data source is required.
 
 ## Tests
 
-`ShortbreadSpecTest` runs the example-based specification in
-`src/test/resources/shortbread.spec.yml` (ported from the YAML schema's test spec) against the Java profile via
-`BaseSchemaValidator`. Each example lists an input feature and the vector-tile features it should produce. Where the
-Java output intentionally differs from the original YAML expectation, the spec entry is annotated with a
-`# DEVIATION` comment. `ShortbreadProfileTest` adds focused per-layer unit tests and `ShortbreadIntegrationTest` runs
-the whole pipeline over the bundled Monaco extract.
-
-`boundary_labels` are derived from administrative boundary polygons (matching the current Planetiler YAML schema) instead
-of Tilemaker's externally pre-built admin-points shapefile, so no extra data source is required.
+`ShortbreadSpecTest` runs the example-based specification in `src/test/resources/shortbread.spec.yml` against the
+profile via `BaseSchemaValidator`. Each example lists an input feature and the vector-tile features it should produce.
+`ShortbreadProfileTest` adds focused per-layer unit tests, `ShortbreadV11Test` covers the 1.0/1.1 differences, and
+`ShortbreadIntegrationTest` runs the whole pipeline over the bundled Monaco extract.

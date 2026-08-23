@@ -14,15 +14,12 @@ import org.versatiles.shortbread.util.ZOrder;
 
 /**
  * The {@code street_labels} line layer and the {@code street_labels_points} layer ({@code highway=motorway_junction}
- * nodes). Ports {@code process_street_labels} and the motorway-junction branch of {@code node_function}.
+ * nodes).
  * <p>
  * Per the Shortbread spec this carries named/ref'd highways <em>and</em> railways: {@code rail}, {@code narrow_gauge},
  * {@code tram}, {@code light_rail}, {@code funicular}, {@code subway} and {@code monorail} are labelled from zoom 10.
  * The {@code ref} tag is split on {@code ;} into a multi-line string, with {@code ref_rows}/{@code ref_cols} giving the
  * shield grid dimensions.
- * <p>
- * DEVIATION (bug fix): Tilemaker called {@code toTunnelBool()} with no arguments here, so {@code tunnel} was always
- * false; we compute it from the actual tags.
  */
 public class StreetLabels implements ForwardingProfile.FeatureProcessor {
 
@@ -116,7 +113,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, rail, true))
       .setAttr("kind", kind)
-      .setAttr("tunnel", ZOrder.isTunnel(f)); // DEVIATION: actually computed (Tilemaker always emitted false)
+      .setAttr("tunnel", ZOrder.isTunnel(f));
     if (rows > 0) {
       feature.setAttr("ref", joined.toString());
       feature.setAttr("ref_rows", rows);

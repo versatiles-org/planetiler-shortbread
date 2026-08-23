@@ -10,10 +10,7 @@ import org.versatiles.shortbread.util.Geo;
 
 /**
  * The {@code sites} layer (zoom 14): university/hospital/prison/parking grounds, sports centres, construction sites and
- * military danger areas. Ports {@code process_sites}.
- * <p>
- * DEVIATION (bug fix): Tilemaker matched {@code leisure=sports_center} (a misspelling that never matches real OSM
- * data); here we match the correct {@code leisure=sports_centre}.
+ * military danger areas.
  */
 public class Sites implements ForwardingProfile.FeatureProcessor {
 

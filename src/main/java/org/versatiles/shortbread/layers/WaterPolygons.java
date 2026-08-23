@@ -14,8 +14,8 @@ import org.versatiles.shortbread.util.Zooms;
 
 /**
  * The {@code water_polygons} layer (and its {@code water_polygons_labels} centroids): lakes, reservoirs, rivers, docks,
- * canals and glaciers. Ports {@code process_water_polygons} from the Tilemaker reference: the minimum zoom scales with
- * the polygon's on-screen area so small water bodies only appear when large enough.
+ * canals and glaciers. The minimum zoom scales with the polygon's on-screen area so small water bodies only appear when
+ * large enough.
  */
 public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
 

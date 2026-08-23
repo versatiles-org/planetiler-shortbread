@@ -1,15 +1,13 @@
 package org.versatiles.shortbread.util;
 
 /**
- * Size-based minimum-zoom helpers ported from the Tilemaker reference ({@code zmin_for_area} / {@code zmin_for_length}
- * in {@code process.lua}). They return the lowest zoom level at which a feature reaches the requested on-screen size in
- * tile pixels, so small features are dropped at low zooms.
+ * Size-based minimum-zoom helpers. They return the lowest zoom level at which a feature reaches the requested on-screen
+ * size in tile pixels, so small features are dropped at low zooms.
  * <p>
  * Inputs are taken directly from Planetiler's {@link com.onthegomap.planetiler.geo.WithGeometry#area()} /
  * {@link com.onthegomap.planetiler.geo.WithGeometry#length()}, i.e. fractions of the whole planet in Web-Mercator world
- * coordinates ({@code 1} = the entire planet area / circumference). Tilemaker works in Web-Mercator square meters, but
- * its earth-circumference constant cancels out exactly against the projected area, so these formulas reduce to the
- * world-fraction forms below and produce identical zoom levels.
+ * coordinates ({@code 1} = the entire planet area / circumference), which is why no earth-circumference constant
+ * appears in the formulas below.
  */
 public final class Zooms {
 

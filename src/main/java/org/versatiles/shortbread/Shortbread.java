@@ -30,9 +30,7 @@ import org.versatiles.shortbread.util.MergePolygons;
  * profile.
  * <p>
  * This is a native re-implementation of the schema that previously shipped as a {@code custommap} YAML config
- * ({@code planetiler-custommap/.../shortbread.yml}). The behavioural reference is the Geofabrik Tilemaker
- * implementation ({@code process.lua} / {@code config.json}); deviations from it are intentional bug-fixes marked with
- * {@code // DEVIATION:} comments.
+ * ({@code planetiler-custommap/.../shortbread.yml}).
  * <p>
  * Each output layer is implemented by a handler in the {@code layers} package, registered below and wired together by
  * {@link ForwardingProfile}.
@@ -85,7 +83,7 @@ public class Shortbread extends ForwardingProfile {
     registerHandler(new Boundaries(options, countries));
     registerHandler(new PlaceLabels(options, countries));
 
-    // line layers with `combine_below` in the Tilemaker config
+    // line layers whose short segments are merged below the maximum zoom
     registerHandler(new MergeLines(WaterLines.LAYER));
     registerHandler(new MergeLines(WaterLines.LABELS));
     registerHandler(new MergeLines(Dams.LINES));

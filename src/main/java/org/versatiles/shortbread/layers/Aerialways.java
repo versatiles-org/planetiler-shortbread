@@ -29,8 +29,8 @@ public class Aerialways implements ForwardingProfile.FeatureProcessor {
       return;
     }
     String kind = f.getString("aerialway");
-    // DEVIATION: OSM (and the Tilemaker/YAML reference) use `rope_tow`, but the Shortbread `aerialways` kind enum omits
-    // it; map it to the generic surface-lift kind `drag_lift` (a rope tow is a type of drag lift) to stay in-schema.
+    // OSM tags rope tows as `rope_tow`, but the Shortbread `aerialways` kind enum has no such value; map it to the
+    // generic surface-lift kind `drag_lift` (a rope tow is a type of drag lift) to stay in-schema.
     if ("rope_tow".equals(kind)) {
       kind = "drag_lift";
     }

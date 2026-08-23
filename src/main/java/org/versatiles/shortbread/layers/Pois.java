@@ -12,14 +12,11 @@ import org.versatiles.shortbread.util.Names;
 import org.versatiles.shortbread.util.Poi;
 
 /**
- * The {@code pois} layer (zoom 14): points of interest. Ports {@code process_pois} from the Tilemaker reference. Each
- * accepted OSM key (amenity, shop, tourism, man_made, historic, leisure, emergency, highway, office) keeps its own
- * attribute holding the whitelisted value, plus a number of conditional extras (cuisine, sport, recycling flags, …),
- * the name fields and the address.
+ * The {@code pois} layer (zoom 14): points of interest. Each accepted OSM key (amenity, shop, tourism, man_made,
+ * historic, leisure, emergency, highway, office) keeps its own attribute holding the whitelisted value, plus a number
+ * of conditional extras (cuisine, sport, recycling flags, …), the name fields and the address.
  * <p>
- * DEVIATIONS (bug fixes) vs {@code process.lua}: the {@code man_made} attribute is filled from the {@code man_made}
- * value (Tilemaker used {@code historic}); {@code office} is validated against the office whitelist; and empty values
- * are omitted instead of being written as the empty-string NULL sentinel (see {@link Poi}).
+ * Attributes with an empty value are omitted rather than emitted as an empty string.
  */
 public class Pois implements ForwardingProfile.FeatureProcessor {
 
@@ -97,7 +94,7 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
     setIfPresent(feature, "amenity", amenity);
     setIfPresent(feature, "shop", shop);
     setIfPresent(feature, "tourism", tourism);
-    setIfPresent(feature, "man_made", manMade); // DEVIATION: from man_made, not historic
+    setIfPresent(feature, "man_made", manMade);
     setIfPresent(feature, "historic", historic);
     setIfPresent(feature, "leisure", leisure);
     setIfPresent(feature, "emergency", emergency);

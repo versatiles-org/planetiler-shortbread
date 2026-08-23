@@ -14,14 +14,12 @@ import org.versatiles.shortbread.util.Names;
 import org.versatiles.shortbread.util.ZOrder;
 
 /**
- * The {@code streets} line layer plus the {@code street_polygons} / {@code streets_polygons_labels} area layers. Ports
- * {@code process_streets} and {@code process_street_polygons} from the Tilemaker reference.
+ * The {@code streets} line layer plus the {@code street_polygons} / {@code streets_polygons_labels} area layers.
  * <p>
- * Tilemaker emits three line layers (streets_low z5-10, streets_med z11-13, streets z14) merged into {@code streets}
- * via {@code write_to}, each carrying progressively more attributes. Here a single {@code streets} feature reproduces
- * those tiers using {@link FeatureCollector.Feature#setAttrWithMinzoom}: {@code kind}/{@code rail} from the feature's
- * minimum zoom, the mid-tier attributes from z11, and {@code oneway(_reverse)} from z14. Access attributes follow the
- * schema version: raw {@code bicycle}/{@code horse} from z14 in 1.0, normalized
+ * The schema makes a street's attributes available in tiers, each from its own zoom. A single {@code streets} feature
+ * carries all of them using {@link FeatureCollector.Feature#setAttrWithMinzoom}: {@code kind}/{@code rail} from the
+ * feature's minimum zoom, the mid-tier attributes from z11, and {@code oneway(_reverse)} from z14. Access attributes
+ * follow the schema version: raw {@code bicycle}/{@code horse} from z14 in 1.0, normalized
  * {@code motorcar}/{@code bicycle}/{@code foot}/{@code horse} from z13 in 1.1 (see {@link Access}).
  */
 public class Streets implements ForwardingProfile.FeatureProcessor {
@@ -223,7 +221,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       feature.setAttr("service", service);
     }
 
-    // DEVIATION: emit the label only for named polygons (process.lua emitted it unconditionally)
+    // only named polygons get a label
     if (f.hasTag("name")) {
       var label = features.pointOnSurface(POLYGON_LABELS)
         .setZoomRange(14, 14)

@@ -5,9 +5,8 @@ import com.onthegomap.planetiler.util.Parse;
 import java.util.Set;
 
 /**
- * Ports the boolean tag helpers and {@code setZOrder} draw-order computation from the Tilemaker reference
- * ({@code process.lua}). The computed z-order is used as a Planetiler sort key (higher value = drawn on top / kept when
- * features are dropped).
+ * Boolean tag helpers and the draw-order computation. The computed z-order is used as a Planetiler sort key (higher
+ * value = drawn on top / kept when features are dropped).
  */
 public final class ZOrder {
 
@@ -47,8 +46,8 @@ public final class ZOrder {
   }
 
   /**
-   * Computes the integer draw order, mirroring {@code setZOrder(is_rail, ignore_bridge)} in {@code process.lua}: a
-   * bridge raises it, a tunnel lowers it, the {@code layer} tag scales it, and a per-class rank is added on top.
+   * Computes the integer draw order: a bridge raises it, a tunnel lowers it, the {@code layer} tag scales it, and a
+   * per-class rank is added on top.
    */
   public static int zOrder(SourceFeature f, boolean isRail, boolean ignoreBridge) {
     int z = 0;

@@ -262,7 +262,7 @@ examples:
     geometry: point
     min_zoom: 14
     tags:
-      # DEVIATION: house numbers are emitted as strings (the example wrote an unquoted number)
+      # house numbers are strings
       housenumber: "123"
 
 - name: address point with house name
@@ -376,7 +376,7 @@ examples:
   output:
     layer: streets
     geometry: line
-    # DEVIATION: Tilemaker shows main rail (no service) at z8 and service rail at z10; the YAML had these swapped
+    # main rail (no service) from z8, service rail from z10
     min_zoom: 10
     allow_extra_tags: false
     min_size: 0
@@ -399,7 +399,7 @@ examples:
   output:
     layer: streets
     geometry: line
-    # DEVIATION: Tilemaker shows main rail (no service) at z8; the YAML used z10
+    # main rail (no service) from z8
     min_zoom: 8
     allow_extra_tags: false
     tags:
@@ -564,7 +564,7 @@ examples:
     tags:
       aeroway: taxiway
       ref: N
-  # DEVIATION: Tilemaker emits street_labels only for highways, not aeroways, so no street_labels feature here
+  # street_labels covers highways, not aeroways, so there is no street_labels feature here
   output:
     - layer: streets
       geometry: line
@@ -587,7 +587,7 @@ examples:
       aeroway: runway
       ref: 07/25
       surface: concrete:lanes
-  # DEVIATION: Tilemaker emits street_labels only for highways, not aeroways, so no street_labels feature here
+  # street_labels covers highways, not aeroways, so there is no street_labels feature here
   output:
   - layer: streets
     geometry: line
@@ -635,7 +635,7 @@ examples:
       name_en: 'Name (en)'
 
 - name: 'pedestrian polygon without area=yes is treated as linear (not an area)'
-  # DEVIATION: like Tilemaker, a closed highway way is only an area when tagged area=yes (etc.); without it a
+  # a closed highway way is only an area when tagged area=yes (etc.); without it a
   # pedestrian way is linear, so this polygon-only input produces no street_polygons feature. With area=yes it does
   # (see the 'pedestrian polygon' example).
   input:

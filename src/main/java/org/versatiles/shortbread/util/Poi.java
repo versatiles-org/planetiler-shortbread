@@ -4,21 +4,10 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import java.util.Set;
 
 /**
- * Whitelists of OSM key/value pairs accepted into the {@code pois} layer, ported from the {@code Set{...}} tables and
- * {@code valueAcceptedOrNil} in the Tilemaker reference ({@code process.lua}).
+ * Whitelists of OSM key/value pairs accepted into the {@code pois} layer, one per POI key of the schema.
  * <p>
  * Shared by the {@code Pois} and {@code Addresses} layers: a feature that qualifies as a POI is not also emitted to
  * {@code addresses}.
- * <p>
- * DEVIATIONS (bug fixes) relative to {@code process.lua}:
- * <ul>
- * <li>{@code office} is validated against {@link #OFFICE} (Tilemaker mistakenly validated it against the highway
- * whitelist).</li>
- * <li>{@code man_made} participates in the "is this a POI" decision so that standalone man_made features (tower,
- * lighthouse, …) can appear, as the Shortbread spec lists {@code man_made} as a POI key (Tilemaker omitted it from the
- * gate, making the attribute unreachable). The {@code man_made} output attribute is set from the {@code man_made}
- * value, not from {@code historic}.</li>
- * </ul>
  */
 public final class Poi {
 
@@ -28,7 +17,6 @@ public final class Poi {
     "police", "fire_station", "post_box", "post_office", "telephone", "library", "townhall", "courthouse", "prison",
     "embassy", "community_centre", "nursing_home", "arts_centre", "grave_yard", "marketplace", "recycling",
     "university", "school", "college", "public_building", "pharmacy", "hospital", "clinic", "doctors", "dentist",
-    // DEVIATION (bug fix): process.lua misspells food_court as "foot_court", so no food court ever matched.
     "veterinary", "theatre", "nightclub", "cinema", "restaurant", "fast_food", "cafe", "pub", "bar", "food_court",
     "biergarten", "shelter", "car_rental", "car_wash", "car_sharing", "bicycle_rental", "vending_machine", "bank",
     "atm", "toilets", "bench", "drinking_water", "fountain", "hunting_stand", "waste_basket", "place_of_worship");

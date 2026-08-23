@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
  * {@code name} when it lies in a country whose default language is {@code <lang>} (e.g. a German town tagged just
  * {@code name=Köln} gets {@code name_de=Köln}). This makes a frontend "show only language X" mode usable — the
  * unqualified local name is treated as language X inside X-speaking countries — without globally copying {@code name}
- * into every {@code name_<lang>} (which the Tilemaker reference does, and which would mislabel a French town's name as
- * German). Multilingual countries (CH, BE, LU, CA, ...) are intentionally omitted to avoid guessing.
+ * into every {@code name_<lang>}, which would mislabel a French town's name as German). Multilingual countries (CH, BE,
+ * LU, CA, ...) are intentionally omitted to avoid guessing.
  * <p>
  * The index uses (Web-Mercator) {@link SourceFeature#worldGeometry() world geometry}, matching the query point. Natural
  * Earth 10m is coarse near borders; that is acceptable for a name-language heuristic.

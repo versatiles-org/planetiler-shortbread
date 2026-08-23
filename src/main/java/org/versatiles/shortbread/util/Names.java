@@ -11,18 +11,15 @@ import java.util.List;
  * Shortbread 1.0 fixes the set to {@code name_en} / {@code name_de}; Shortbread 1.1 generalizes this to an
  * implementation-defined {@code name_<code>} list (see {@link org.versatiles.shortbread.ShortbreadOptions}).
  * <p>
- * DEVIATION: the Tilemaker reference ({@code setNameAttributes}) fills each field with a fallback chain (e.g.
- * {@code name_en} = name:en → name → name:de), so a feature tagged only with {@code name} gets identical name fields.
- * Following the Shortbread schema's test spec (and the previous Planetiler YAML schema) we instead emit each field from
- * its own tag only, leaving the translated fields unset when no translation exists.
+ * Each field comes from its own tag only: a feature tagged with {@code name} alone gets no {@code name_<code>}
+ * attributes, rather than copies of {@code name}.
  * <p>
  * OSM allows several values in one tag separated by {@code ;} (e.g. {@code name=Mole Lake;Dewe'igan-...}); we keep only
  * the first so a label is a single clean name rather than a concatenated list.
  * <p>
- * EXPERIMENT: as a refinement of that reference behaviour, when a {@link CountryLanguages} index is supplied we copy a
- * feature's unqualified {@code name} into {@code name_<lang>} <em>only</em> when the feature lies in a country whose
- * default language is {@code <lang>} (e.g. {@code name_de} inside Germany). This is the geofenced version of
- * Tilemaker's global copy: it makes a frontend "show only language X" mode show local names inside X-speaking
+ * EXPERIMENT: when a {@link CountryLanguages} index is supplied, a feature's unqualified {@code name} is copied into
+ * {@code name_<lang>} <em>only</em> when the feature lies in a country whose default language is {@code <lang>} (e.g.
+ * {@code name_de} inside Germany). This makes a frontend "show only language X" mode show local names inside X-speaking
  * countries, without mislabelling foreign names. See {@link CountryLanguages}.
  */
 public final class Names {

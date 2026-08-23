@@ -14,8 +14,7 @@ import org.versatiles.shortbread.util.Zooms;
 
 /**
  * The {@code water_lines} layer (and its {@code water_lines_labels}): rivers, canals, streams, drains and ditches as
- * lines. Ports {@code process_water_lines} from the Tilemaker reference. Rivers and canals use a length-based minimum
- * zoom; smaller waterways have fixed minimum zooms.
+ * lines. Rivers and canals use a length-based minimum zoom; smaller waterways have fixed minimum zooms.
  */
 public class WaterLines implements ForwardingProfile.FeatureProcessor {
 
@@ -45,7 +44,6 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
     String kind = f.getString("waterway", "");
     int mz;
     int mzLabel;
-    // note: process.lua has an unreachable second "canal" branch; canal follows the river branch
     if (kind.equals("river") || kind.equals("canal")) {
       int byLength = Zooms.zminForLength(0.25, Geo.worldLength(f));
       mz = Math.max(9, byLength);

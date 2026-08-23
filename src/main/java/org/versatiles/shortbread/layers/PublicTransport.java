@@ -12,11 +12,9 @@ import org.versatiles.shortbread.util.Names;
 
 /**
  * The {@code public_transport} layer (zoom 11+): stations, stops, terminals, airports and aerialway stations, as points
- * or area centroids. Ports {@code process_public_transport_layer}.
+ * or area centroids.
  * <p>
- * DEVIATION (bug fix): Tilemaker computed a per-kind minimum zoom but then hard-coded {@code MinZoom(11)}, discarding
- * it. Here the computed per-kind minimum zoom is used (e.g. stations at z13, aerodromes at z11), matching the apparent
- * intent and the schema's per-kind expectations.
+ * The minimum zoom is per kind, as the schema specifies: aerodromes from z11, stations from z13, and so on.
  */
 public class PublicTransport implements ForwardingProfile.FeatureProcessor {
 

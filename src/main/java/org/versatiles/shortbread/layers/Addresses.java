@@ -14,8 +14,7 @@ import org.versatiles.shortbread.util.Poi;
  * The {@code addresses} layer (zoom 14): house numbers/names from {@code addr:housenumber} / {@code addr:housename}.
  * Ports {@code process_addresses}.
  * <p>
- * As in Tilemaker, a feature that already qualifies for the {@code pois} layer is not also emitted here (see
- * {@link Poi#matches}).
+ * A feature that already qualifies for the {@code pois} layer is not also emitted here (see {@link Poi#matches}).
  */
 public class Addresses implements ForwardingProfile.FeatureProcessor {
 
@@ -50,7 +49,7 @@ public class Addresses implements ForwardingProfile.FeatureProcessor {
       return;
     }
     feature.setZoomRange(14, 14)
-      // DEVIATION: cap address density to keep dense-city tiles lean. A single z14 tile over central Amsterdam
+      // Cap address density to keep dense-city tiles lean. A single z14 tile over central Amsterdam
       // otherwise carries 30k+ housenumbers (~750 KB, the bulk of a ~450 KB compressed tile). This per-cell cap
       // (<=8 per 8px grid) only thins cells that exceed it, so sparse areas keep every address; but it does drop
       // housenumbers in the densest cells, so the base output is not strictly "all addresses at z14". Buffer >= grid

@@ -279,7 +279,6 @@ class ShortbreadProfileTest {
 
   @Test
   void officePoiUsesOfficeWhitelist() {
-    // DEVIATION: office validated against office whitelist, not highway
     var features = process(TestUtils.newPoint(0, 0), Map.of("office", "diplomatic"));
     assertEquals("diplomatic", attrs(onlyOne(features, "pois")).get("office"));
   }
@@ -407,7 +406,7 @@ class ShortbreadProfileTest {
     var features = process(TestUtils.newPoint(0, 0), Map.of("railway", "station", "name", "Hbf"));
     var pt = onlyOne(features, "public_transport");
     assertEquals("station", attrs(pt).get("kind"));
-    // DEVIATION: per-kind zoom (13) instead of the hard-coded 11
+    // per-kind minimum zoom
     assertEquals(13, pt.getMinZoom());
   }
 

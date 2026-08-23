@@ -16,8 +16,8 @@ import org.versatiles.shortbread.ShortbreadOptions;
 /**
  * The {@code buildings} layer: building footprints (and 3D building parts) at zoom 14.
  * <p>
- * Mirrors Tilemaker {@code process_buildings}: any closed way/relation with a {@code building} tag other than
- * {@code building=no}. The schema carries a constant {@code dummy=1}.
+ * Any closed way/relation with a {@code building} tag other than {@code building=no}. The schema carries a constant
+ * {@code dummy=1}.
  * <p>
  * EXPERIMENT (beyond Shortbread 1.0/1.1, which defines only {@code dummy=1} — see shortbread-docs #77): we also emit
  * {@code height} (and {@code min_height} when non-zero) for 3D extrusion. The derivation follows OpenMapTiles

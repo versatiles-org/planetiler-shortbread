@@ -5,9 +5,9 @@ import com.onthegomap.planetiler.geo.Unit;
 import com.onthegomap.planetiler.reader.SourceFeature;
 
 /**
- * Geometry helpers, including the area-vs-line decision ported from {@code way_function} in the Tilemaker reference
- * ({@code process.lua}). Planetiler's {@link SourceFeature#canBePolygon()} treats any closed way as a potential polygon
- * regardless of the {@code area} tag, so the OSM area conventions are reproduced here.
+ * Geometry helpers, including the area-vs-line decision. Planetiler's {@link SourceFeature#canBePolygon()} treats any
+ * closed way as a potential polygon regardless of the {@code area} tag, so the OSM area conventions are reproduced
+ * here.
  */
 public final class Geo {
 
@@ -15,7 +15,7 @@ public final class Geo {
 
   /**
    * Tags that force a closed way to be treated as an area: {@code area=yes}, {@code type=multipolygon|boundary}, or
-   * {@code area:aeroway=runway|taxiway}. Mirrors {@code area_yes_multi_boundary} in {@code process.lua}.
+   * {@code area:aeroway=runway|taxiway}.
    */
   public static boolean areaYesMultiBoundary(SourceFeature f) {
     return f.hasTag("area", "yes") ||
@@ -24,8 +24,7 @@ public final class Geo {
   }
 
   /**
-   * Whether a feature should be treated as an area (polygon by default unless tagged {@code area=no}). Mirrors
-   * {@code is_area} in {@code process.lua}.
+   * Whether a feature should be treated as an area (polygon by default unless tagged {@code area=no}). Mirrors an area.
    */
   public static boolean isArea(SourceFeature f) {
     return f.canBePolygon() && (areaYesMultiBoundary(f) || !f.hasTag("area", "no"));

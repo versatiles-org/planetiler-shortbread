@@ -16,13 +16,11 @@ import org.versatiles.shortbread.util.Names;
 
 /**
  * The {@code boundaries} line layer and the {@code boundary_labels} layer. Ports {@code process_boundary_lines} /
- * {@code relation_scan_function} from the Tilemaker reference.
  * <p>
  * Boundary lines come from the member ways of administrative ({@code admin_level} 2-4) or disputed boundary relations:
  * the relation's admin level / disputed flag is captured in {@link #preprocessOsmRelation} and read back on each member
  * way. {@code boundary_labels} are derived directly from administrative boundary polygons (admin_level 2 or 4) as an
- * interior label point, following the current Planetiler YAML schema rather than Tilemaker's pre-built admin-points
- * shapefile, so no external data source is needed.
+ * interior label point, rather than a pre-built admin-points shapefile, so no external data source is needed.
  */
 public class Boundaries implements ForwardingProfile.FeatureProcessor, ForwardingProfile.OsmRelationPreprocessor {
 

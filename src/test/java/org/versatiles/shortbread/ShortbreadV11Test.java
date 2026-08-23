@@ -72,6 +72,66 @@ class ShortbreadV11Test {
     assertNull(attrs(place).get("name_en"));
   }
 
+  private Map<String, Object> street(Shortbread profile, Map<String, Object> tags, int zoom) {
+    return layer(process(profile, TestUtils.newLineString(0, 0, 1, 1), tags), "streets").getAttrsAtZoom(zoom);
+  }
+
+  @Test
+  void accessAttributesAreMappedAndAvailableFromZoom13In11() {
+    var tags = Map.<String, Object>of("highway", "residential", "motorcar", "destination",
+      "bicycle", "designated", "foot", "yes", "horse", "private");
+
+    // 1.0: the raw bicycle/horse values, from z14, and no motorcar/foot at all
+    assertNull(street(v10, tags, 13).get("bicycle"));
+    var v10z14 = street(v10, tags, 14);
+    assertEquals("designated", v10z14.get("bicycle"));
+    assertEquals("private", v10z14.get("horse"));
+    assertNull(v10z14.get("motorcar"));
+    assertNull(v10z14.get("foot"));
+
+    // 1.1: all four, normalized, from z13
+    var v11z13 = street(v11, tags, 13);
+    assertEquals("limited", v11z13.get("motorcar"));
+    assertEquals("yes", v11z13.get("bicycle"));
+    assertEquals("yes", v11z13.get("foot"));
+    assertEquals("no", v11z13.get("horse"));
+    assertNull(street(v11, tags, 12).get("bicycle"));
+  }
+
+  @Test
+  void accessFallsBackAlongTheTagChainIn11() {
+    // no specific tags: everything comes from access
+    var fromAccess = street(v11, Map.of("highway", "track", "access", "permissive"), 13);
+    assertEquals("yes", fromAccess.get("motorcar"));
+    assertEquals("yes", fromAccess.get("bicycle"));
+    assertEquals("yes", fromAccess.get("foot"));
+    assertEquals("yes", fromAccess.get("horse"));
+
+    // motor_vehicle covers motorcar, vehicle covers bicycle, and the more specific tag wins
+    var mixed = street(v11, Map.of("highway", "track", "access", "yes", "vehicle", "no", "motor_vehicle", "forestry"),
+      13);
+    assertEquals("limited", mixed.get("motorcar"));
+    assertEquals("no", mixed.get("bicycle"));
+    assertEquals("yes", mixed.get("foot"));
+
+    // unrecognized values are skipped, falling through to the next tag in the chain
+    var exotic = street(v11, Map.of("highway", "track", "bicycle", "unknown_value", "access", "private"), 13);
+    assertEquals("no", exotic.get("bicycle"));
+  }
+
+  @Test
+  void accessIsAbsentWithoutTagsAndOnRailwaysIn11() {
+    var plain = street(v11, Map.of("highway", "residential"), 13);
+    for (String attribute : List.of("motorcar", "bicycle", "foot", "horse")) {
+      assertNull(plain.get(attribute), attribute + " should be absent when no access tag is present");
+    }
+    // railways carry no access attributes even when tagged
+    var rail = street(v11, Map.of("railway", "rail", "access", "private"), 13);
+    for (String attribute : List.of("motorcar", "bicycle", "foot", "horse")) {
+      assertNull(rail.get(attribute), attribute + " should be absent on railways");
+    }
+  }
+
   @Test
   void metadataReportsVersion() {
     assertEquals("1.0", v10.version());

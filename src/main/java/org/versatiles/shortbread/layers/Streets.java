@@ -7,6 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
+import org.versatiles.shortbread.util.Access;
 import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
@@ -20,7 +21,9 @@ import org.versatiles.shortbread.util.ZOrder;
  * Tilemaker emits three line layers (streets_low z5-10, streets_med z11-13, streets z14) merged into {@code streets}
  * via {@code write_to}, each carrying progressively more attributes. Here a single {@code streets} feature reproduces
  * those tiers using {@link FeatureCollector.Feature#setAttrWithMinzoom}: {@code kind}/{@code rail} from the feature's
- * minimum zoom, the mid-tier attributes from z11, and {@code bicycle}/{@code horse}/{@code oneway(_reverse)} from z14.
+ * minimum zoom, the mid-tier attributes from z11, and {@code oneway(_reverse)} from z14. Access attributes follow the
+ * schema version: raw {@code bicycle}/{@code horse} from z14 in 1.0, normalized
+ * {@code motorcar}/{@code bicycle}/{@code foot}/{@code horse} from z13 in 1.1 (see {@link Access}).
  */
 public class Streets implements ForwardingProfile.FeatureProcessor {
 
@@ -169,8 +172,19 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     // full tier (z14)
     feature.setAttrWithMinzoom("oneway", oneway, FULL_TIER_MINZOOM);
     feature.setAttrWithMinzoom("oneway_reverse", onewayReverse, FULL_TIER_MINZOOM);
-    setIfPresent(feature, "bicycle", f.getString("bicycle"), FULL_TIER_MINZOOM);
-    setIfPresent(feature, "horse", f.getString("horse"), FULL_TIER_MINZOOM);
+
+    if (options.v11()) {
+      // 1.1: motorcar/bicycle/foot/horse, normalized to yes/limited/no, from z13, highways only
+      if (!highway.isEmpty()) {
+        for (String attribute : Access.ATTRIBUTES) {
+          setIfPresent(feature, attribute, Access.of(f, attribute), Access.MINZOOM);
+        }
+      }
+    } else {
+      // 1.0: the raw bicycle/horse tag values, from z14
+      setIfPresent(feature, "bicycle", f.getString("bicycle"), FULL_TIER_MINZOOM);
+      setIfPresent(feature, "horse", f.getString("horse"), FULL_TIER_MINZOOM);
+    }
   }
 
   private void processStreetPolygon(SourceFeature f, FeatureCollector features) {

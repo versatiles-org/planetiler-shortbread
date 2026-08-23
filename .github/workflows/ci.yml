@@ -60,3 +60,48 @@ jobs:
         with:
           name: planetiler-shortbread-jar
           path: target/*with-deps.jar
+
+  submodule:
+    name: Planetiler submodule
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout the planetiler fork that wires this module in
+        uses: actions/checkout@v6
+        with:
+          repository: versatiles-org/planetiler
+          ref: shortbread-submodule
+          path: planetiler
+          submodules: false
+      - name: Checkout this branch
+        uses: actions/checkout@v6
+        with:
+          path: planetiler-shortbread
+      - name: Move this branch into the planetiler checkout
+        run: |
+          rm -rf planetiler/planetiler-shortbread
+          mv planetiler-shortbread planetiler/
+      - name: Check out the planetiler-openmaptiles submodule
+        working-directory: planetiler
+        run: git submodule update --init planetiler-openmaptiles
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: 'maven'
+      - name: Build and test the whole reactor
+        working-directory: planetiler
+        run: ./mvnw -Dspotless.check.skip --batch-mode -no-transfer-progress verify --file pom.xml
+      # Asking for an unknown task makes Main print every registered task and exit,
+      # so this checks the wiring without starting a pipeline or downloading sources.
+      - name: Check the distribution jar registers the shortbread tasks
+        working-directory: planetiler
+        run: |
+          output=$(java -jar planetiler-dist/target/*with-deps.jar no-such-task 2>&1 || true)
+          echo "$output"
+          registered=$(echo "$output" | sed -n 's/.*possibilities: \[\(.*\)\].*/\1/p' | tr ',' '\n' | tr -d ' ')
+          test -n "$registered" || { echo "could not read the task list"; exit 1; }
+          for task in shortbread shortbread-1.1 generate-shortbread generate-shortbread-1.1; do
+            echo "$registered" | grep -qx "$task" || { echo "task '$task' is not registered"; exit 1; }
+          done

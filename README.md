@@ -124,7 +124,9 @@ The behavioural reference is the Geofabrik
 The goal is to reproduce the Shortbread v1.0 output while fixing a handful of clear bugs in the reference. Every such
 deviation is marked with a `// DEVIATION:` comment in the code; the notable ones are:
 
-- `surface`: `paved` surfaces map to `paved` (the reference's `paved` branch wrongly returned `unpaved`).
+- `surface`: the raw value of the OSM tag is emitted, as the schema defines it. Tilemaker instead collapses it to
+  `paved`/`unpaved` (and its `paved` branch wrongly returned `unpaved`), which also drops any surface outside its
+  two lists.
 - `pois`: the `man_made` attribute comes from `man_made` (not `historic`), `office` is validated against the office
   whitelist (not the highway one), and `man_made` participates in the "is this a POI" decision.
 - `sites`: matches the correct `leisure=sports_centre` spelling.
@@ -133,7 +135,7 @@ deviation is marked with a `// DEVIATION:` comment in the code; the notable ones
 - `name` / `name_en` / `name_de` are taken from their own tags with no fallback (matching the schema's test spec and
   the previous YAML schema), rather than Tilemaker's fallback chaining. (The opt-in `locale_names`
   [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback instead of Tilemaker's global one.)
-- `surface` is canonicalized to `paved` / `unpaved`; `way_area` is a full-precision number.
+- `way_area` is a full-precision number.
 - Empty string values are omitted rather than written as the empty-string NULL sentinel that Tilemaker uses.
 
 ## Tests

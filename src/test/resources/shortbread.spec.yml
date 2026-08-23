@@ -308,8 +308,7 @@ examples:
       kind: primary
       link: false
       rail: false
-      # DEVIATION: surface is canonicalized to paved/unpaved (the YAML emitted the raw value)
-      surface: paved
+      surface: asphalt
       tunnel: false
   - layer: street_labels
     geometry: line
@@ -352,8 +351,7 @@ examples:
       kind: primary
       link: true
       rail: false
-      # DEVIATION: surface is canonicalized to paved/unpaved (the YAML emitted the raw value)
-      surface: paved
+      surface: asphalt
       tunnel: false
       oneway: true
       oneway_reverse: false
@@ -597,8 +595,7 @@ examples:
     allow_extra_tags: false
     tags:
       kind: runway
-      # DEVIATION: surface is canonicalized to paved/unpaved (the YAML emitted the raw value)
-      surface: paved
+      surface: concrete:lanes
       bridge: false
       tunnel: false
       link: false

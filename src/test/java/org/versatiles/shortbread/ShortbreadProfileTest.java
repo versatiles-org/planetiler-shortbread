@@ -325,7 +325,7 @@ class ShortbreadProfileTest {
     assertNull(z5.get("oneway"));
     // mid tier (z11): surface/tunnel/bridge appear
     var z11 = street.getAttrsAtZoom(11);
-    assertEquals("paved", z11.get("surface"));
+    assertEquals("asphalt", z11.get("surface"));
     assertEquals(false, z11.get("tunnel"));
     assertNull(z11.get("oneway"));
     // full tier (z14): oneway appears

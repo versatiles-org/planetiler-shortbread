@@ -11,7 +11,6 @@ import org.versatiles.shortbread.util.Access;
 import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
-import org.versatiles.shortbread.util.Surface;
 import org.versatiles.shortbread.util.ZOrder;
 
 /**
@@ -140,7 +139,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       return;
     }
     boolean link = LINK_HIGHWAYS.contains(highway);
-    String surface = Surface.canonicalize(f.getString("surface"));
+    String surface = f.getString("surface");
     String tracktype = f.getString("tracktype");
     boolean tunnel = ZOrder.isTunnel(f);
     boolean bridge = ZOrder.isBridge(f);
@@ -159,7 +158,8 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     feature.setAttrWithMinzoom("link", link, MED_TIER_MINZOOM);
     feature.setAttrWithMinzoom("tunnel", tunnel, MED_TIER_MINZOOM);
     feature.setAttrWithMinzoom("bridge", bridge, MED_TIER_MINZOOM);
-    if (surface != null) {
+    if (surface != null && !surface.isEmpty()) {
+      // the schema defines surface as the raw value of the OSM tag, like street_polygons below
       feature.setAttrWithMinzoom("surface", surface, MED_TIER_MINZOOM);
     }
     if (tracktype != null && !tracktype.isEmpty()) {
@@ -216,7 +216,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       .setAttr("bridge", ZOrder.isBridge(f));
     String surface = f.getString("surface");
     if (surface != null && !surface.isEmpty()) {
-      feature.setAttr("surface", surface); // raw, as in process.lua (not canonicalized)
+      feature.setAttr("surface", surface);
     }
     String service = f.getString("service");
     if (service != null && !service.isEmpty()) {

@@ -2,7 +2,6 @@ package org.versatiles.shortbread.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.onthegomap.planetiler.TestUtils;
@@ -17,17 +16,6 @@ class ShortbreadUtilTest {
     return SimpleFeature.create(TestUtils.newPoint(0, 0), tags);
   }
 
-  @Test
-  void surfaceCanonicalization() {
-    assertEquals("unpaved", Surface.canonicalize("gravel"));
-    assertEquals("unpaved", Surface.canonicalize("unpaved"));
-    // DEVIATION from Tilemaker bug: paved surfaces map to "paved", not "unpaved"
-    assertEquals("paved", Surface.canonicalize("asphalt"));
-    assertEquals("paved", Surface.canonicalize("paved"));
-    assertNull(Surface.canonicalize("something_else"));
-    assertNull(Surface.canonicalize(""));
-    assertNull(Surface.canonicalize(null));
-  }
 
   @Test
   void zminDecreasesWithSize() {

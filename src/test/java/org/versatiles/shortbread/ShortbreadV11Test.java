@@ -53,9 +53,10 @@ class ShortbreadV11Test {
   }
 
   @Test
-  void drainMovesToZoom14In11() {
+  void drainIsOnlyInTheOutputIn11() {
     var tags = Map.<String, Object>of("waterway", "drain");
-    assertEquals(13, layer(process(v10, TestUtils.newLineString(0, 0, 1, 1), tags), "water_lines").getMinZoom());
+    // 1.0 defines no drain kind at all
+    assertNull(layer(process(v10, TestUtils.newLineString(0, 0, 1, 1), tags), "water_lines"));
     assertEquals(14, layer(process(v11, TestUtils.newLineString(0, 0, 1, 1), tags), "water_lines").getMinZoom());
   }
 

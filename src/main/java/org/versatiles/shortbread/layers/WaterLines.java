@@ -54,7 +54,11 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
       mz = 14; // spec: streams from z14
       mzLabel = 14;
     } else if (kind.equals("drain")) {
-      mz = options.v11() ? 14 : 13; // Shortbread 1.1 documents drain at z14
+      // drain is new in Shortbread 1.1 (at z14); 1.0 defines no such kind, so emit nothing
+      if (!options.v11()) {
+        return;
+      }
+      mz = 14;
       mzLabel = 14;
     } else if (kind.equals("ditch")) {
       mz = 14;

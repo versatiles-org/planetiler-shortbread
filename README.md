@@ -46,7 +46,7 @@ Inside a Planetiler checkout (see [below](#use-inside-planetiler)) the same is r
 
 Differences applied for 1.1:
 
-- `water_lines` / `water_lines_labels`: `waterway=drain` moves to zoom 14.
+- `water_lines` / `water_lines_labels`: `waterway=drain` is added, at zoom 14 (1.0 defines no `drain` kind).
 - `pois`: adds `amenity=fuel` (`kind=fuel`) and `leisure=park` (`kind=park`).
 - Names: instead of the fixed `name_en` / `name_de`, any IETF-coded `name_<code>` is emitted from `name:<code>` for the
   configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). This flag also works for 1.0.

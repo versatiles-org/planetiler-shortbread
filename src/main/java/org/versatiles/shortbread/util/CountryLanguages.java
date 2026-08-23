@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
  * into every {@code name_<lang>} (which the Tilemaker reference does, and which would mislabel a French town's name as
  * German). Multilingual countries (CH, BE, LU, CA, ...) are intentionally omitted to avoid guessing.
  * <p>
- * The index uses (Web-Mercator) {@link SourceFeature#worldGeometry() world geometry}, matching the query point.
- * Natural Earth 10m is coarse near borders; that is acceptable for a name-language heuristic.
+ * The index uses (Web-Mercator) {@link SourceFeature#worldGeometry() world geometry}, matching the query point. Natural
+ * Earth 10m is coarse near borders; that is acceptable for a name-language heuristic.
  */
 public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
 

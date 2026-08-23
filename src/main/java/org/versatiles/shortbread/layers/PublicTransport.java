@@ -6,16 +6,16 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
-import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.CountryLanguages;
+import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
 
 /**
  * The {@code public_transport} layer (zoom 11+): stations, stops, terminals, airports and aerialway stations, as points
  * or area centroids. Ports {@code process_public_transport_layer}.
  * <p>
- * DEVIATION (bug fix): Tilemaker computed a per-kind minimum zoom but then hard-coded {@code MinZoom(11)}, discarding it.
- * Here the computed per-kind minimum zoom is used (e.g. stations at z13, aerodromes at z11), matching the apparent
+ * DEVIATION (bug fix): Tilemaker computed a per-kind minimum zoom but then hard-coded {@code MinZoom(11)}, discarding
+ * it. Here the computed per-kind minimum zoom is used (e.g. stations at z13, aerodromes at z11), matching the apparent
  * intent and the schema's per-kind expectations.
  */
 public class PublicTransport implements ForwardingProfile.FeatureProcessor {

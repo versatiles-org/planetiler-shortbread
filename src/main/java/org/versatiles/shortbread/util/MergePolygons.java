@@ -9,8 +9,8 @@ import java.util.List;
 
 /**
  * A reusable {@link ForwardingProfile.LayerPostProcessor} that merges overlapping/touching polygons sharing identical
- * attributes (e.g. the same {@code kind}) into one multipolygon, and drops merged polygons smaller than
- * {@code minArea} square tile pixels.
+ * attributes (e.g. the same {@code kind}) into one multipolygon, and drops merged polygons smaller than {@code minArea}
+ * square tile pixels.
  * <p>
  * This generalizes dense area layers (notably {@code land}) at low/mid zoom: contiguous OSM landcover is usually split
  * into many adjacent polygons, which dominate overview-tile size. Coalescing them by {@code kind} cuts feature and

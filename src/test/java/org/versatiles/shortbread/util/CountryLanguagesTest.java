@@ -46,7 +46,7 @@ class CountryLanguagesTest {
   void ignoresUnknownOrMissingIso() {
     var countries = new CountryLanguages(List.of("en", "de"));
     countries.processFeature(country("ISO_A2", "-99", GERMANY_BOX), null); // NE "no data" sentinel
-    countries.processFeature(country("ISO_A2", "CH", GERMANY_BOX), null);  // multilingual, intentionally unmapped
+    countries.processFeature(country("ISO_A2", "CH", GERMANY_BOX), null); // multilingual, intentionally unmapped
 
     assertNull(countries.languageAt(point(10, 51)));
   }

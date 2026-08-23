@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 /**
  * Registry of the optional, <em>beyond-spec</em> features the {@link Shortbread} profile can emit. Each value is one
- * deviation from Shortbread 1.0/1.1; none is produced unless explicitly enabled via the {@code --shortbread_experiments}
- * argument (default: strict spec, no experiments). This is the single place that documents every deviation and its CLI
- * token.
+ * deviation from Shortbread 1.0/1.1; none is produced unless explicitly enabled via the
+ * {@code --shortbread_experiments} argument (default: strict spec, no experiments). This is the single place that
+ * documents every deviation and its CLI token.
  *
  * @see ShortbreadOptions
  */

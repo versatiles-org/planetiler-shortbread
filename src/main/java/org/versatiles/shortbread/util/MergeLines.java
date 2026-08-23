@@ -8,8 +8,8 @@ import java.util.List;
 
 /**
  * A reusable {@link ForwardingProfile.LayerPostProcessor} that merges connected line segments sharing identical
- * attributes, approximating the {@code combine_below} setting of the Tilemaker reference ({@code config.json}). Register
- * one instance per line layer that should be combined.
+ * attributes, approximating the {@code combine_below} setting of the Tilemaker reference ({@code config.json}).
+ * Register one instance per line layer that should be combined.
  */
 public record MergeLines(String name) implements ForwardingProfile.LayerPostProcessor {
 

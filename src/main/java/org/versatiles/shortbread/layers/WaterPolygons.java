@@ -4,13 +4,13 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import com.onthegomap.planetiler.util.SortKey;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
-import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.CountryLanguages;
+import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
 import org.versatiles.shortbread.util.Zooms;
-import com.onthegomap.planetiler.util.SortKey;
 
 /**
  * The {@code water_polygons} layer (and its {@code water_polygons_labels} centroids): lakes, reservoirs, rivers, docks,

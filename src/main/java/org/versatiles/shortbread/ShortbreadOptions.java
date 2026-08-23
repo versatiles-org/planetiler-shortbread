@@ -8,8 +8,8 @@ import java.util.Set;
  * Schema-variant options for the {@link Shortbread} profile, controlling which version of the Shortbread schema is
  * produced, which name translations are emitted, and which beyond-spec {@link Experiment}s are enabled.
  *
- * @param v11        whether to produce Shortbread 1.1 (vs the default 1.0)
- * @param languages  IETF language codes for the {@code name_<code>} attributes, sourced from {@code name:<code>} tags
+ * @param v11         whether to produce Shortbread 1.1 (vs the default 1.0)
+ * @param languages   IETF language codes for the {@code name_<code>} attributes, sourced from {@code name:<code>} tags
  * @param experiments the enabled beyond-spec experiments (empty = strict spec)
  */
 public record ShortbreadOptions(boolean v11, List<String> languages, Set<Experiment> experiments) {
@@ -21,7 +21,8 @@ public record ShortbreadOptions(boolean v11, List<String> languages, Set<Experim
     List<String> languages =
       args.getList("name_languages", "IETF language codes to emit as name_<code> attributes", List.of("en", "de"));
     // beyond-spec features are opt-in; default is strict spec (no experiments)
-    Set<Experiment> experiments = Experiment.parse(args.getList("shortbread_experiments", Experiment.help(), List.of()));
+    Set<Experiment> experiments =
+      Experiment.parse(args.getList("shortbread_experiments", Experiment.help(), List.of()));
     return new ShortbreadOptions(v11, languages, experiments);
   }
 

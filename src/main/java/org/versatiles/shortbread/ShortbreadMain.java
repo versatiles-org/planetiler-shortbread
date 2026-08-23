@@ -2,8 +2,8 @@ package org.versatiles.shortbread;
 
 import com.onthegomap.planetiler.Planetiler;
 import com.onthegomap.planetiler.config.Arguments;
-import org.versatiles.shortbread.util.CountryLanguages;
 import java.nio.file.Path;
+import org.versatiles.shortbread.util.CountryLanguages;
 
 /**
  * Entry point that generates Shortbread vector tiles using the {@link Shortbread} profile.
@@ -40,7 +40,8 @@ public class ShortbreadMain {
     // source is processed (the same Natural-Earth-before-OSM ordering OpenMapTiles relies on). Only needed — and only
     // downloaded — when the locale-names experiment is enabled.
     if (ShortbreadOptions.from(args).has(Experiment.LOCALE_NAMES)) {
-      planetiler.addShapefileSource(CountryLanguages.SOURCE, Path.of("data", "sources", CountryLanguages.SOURCE + ".zip"),
+      planetiler.addShapefileSource(CountryLanguages.SOURCE,
+        Path.of("data", "sources", CountryLanguages.SOURCE + ".zip"),
         NATURAL_EARTH_BASE_URL + "10m/cultural/" + CountryLanguages.SOURCE + ".zip");
     }
 

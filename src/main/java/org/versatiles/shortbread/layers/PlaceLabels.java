@@ -4,20 +4,20 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import com.onthegomap.planetiler.util.Parse;
+import com.onthegomap.planetiler.util.SortKey;
 import org.versatiles.shortbread.Experiment;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
-import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.CountryLanguages;
+import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
-import com.onthegomap.planetiler.util.Parse;
-import com.onthegomap.planetiler.util.SortKey;
 
 /**
  * The {@code place_labels} layer (zoom 3+): cities, towns, villages and other named places. Ports
  * {@code process_place_layer}. Each place type has a fixed minimum zoom and a default population used when the OSM
- * {@code population} tag is missing; {@code capital=yes} / {@code capital=4} promote the kind to
- * {@code capital} / {@code state_capital} at zoom 4. Population drives the label priority (sort key).
+ * {@code population} tag is missing; {@code capital=yes} / {@code capital=4} promote the kind to {@code capital} /
+ * {@code state_capital} at zoom 4. Population drives the label priority (sort key).
  */
 public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
 
@@ -61,16 +61,45 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
     int mz;
     long defaultPopulation;
     switch (place) {
-      case "city" -> { mz = 6; defaultPopulation = 100_000; }
-      case "town" -> { mz = 7; defaultPopulation = 5_000; }
-      case "village" -> { mz = 10; defaultPopulation = 100; }
-      case "hamlet" -> { mz = 10; defaultPopulation = 50; }
-      case "suburb" -> { mz = 10; defaultPopulation = 1_000; }
-      case "quarter" -> { mz = 10; defaultPopulation = 500; }
-      case "neighbourhood" -> { mz = 10; defaultPopulation = 100; }
-      case "isolated_dwelling", "farm" -> { mz = 10; defaultPopulation = 5; }
-      case "locality", "island" -> { mz = 10; defaultPopulation = 0; }
-      default -> { return; }
+      case "city" -> {
+        mz = 6;
+        defaultPopulation = 100_000;
+      }
+      case "town" -> {
+        mz = 7;
+        defaultPopulation = 5_000;
+      }
+      case "village" -> {
+        mz = 10;
+        defaultPopulation = 100;
+      }
+      case "hamlet" -> {
+        mz = 10;
+        defaultPopulation = 50;
+      }
+      case "suburb" -> {
+        mz = 10;
+        defaultPopulation = 1_000;
+      }
+      case "quarter" -> {
+        mz = 10;
+        defaultPopulation = 500;
+      }
+      case "neighbourhood" -> {
+        mz = 10;
+        defaultPopulation = 100;
+      }
+      case "isolated_dwelling", "farm" -> {
+        mz = 10;
+        defaultPopulation = 5;
+      }
+      case "locality", "island" -> {
+        mz = 10;
+        defaultPopulation = 0;
+      }
+      default -> {
+        return;
+      }
     }
 
     String kind = place;

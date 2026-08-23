@@ -16,8 +16,8 @@ import java.util.Set;
  * whitelist).</li>
  * <li>{@code man_made} participates in the "is this a POI" decision so that standalone man_made features (tower,
  * lighthouse, …) can appear, as the Shortbread spec lists {@code man_made} as a POI key (Tilemaker omitted it from the
- * gate, making the attribute unreachable). The {@code man_made} output attribute is set from the {@code man_made} value,
- * not from {@code historic}.</li>
+ * gate, making the attribute unreachable). The {@code man_made} output attribute is set from the {@code man_made}
+ * value, not from {@code historic}.</li>
  * </ul>
  */
 public final class Poi {

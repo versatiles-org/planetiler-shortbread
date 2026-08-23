@@ -12,7 +12,6 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
-import org.versatiles.shortbread.util.CountryLanguages;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmReader;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
+import org.versatiles.shortbread.util.CountryLanguages;
 
 class ShortbreadProfileTest {
 
@@ -248,7 +248,8 @@ class ShortbreadProfileTest {
 
   @Test
   void landGaragesMinZoom() {
-    var land = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("landuse", "garages")), "land");
+    var land =
+      onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("landuse", "garages")), "land");
     assertEquals("garages", attrs(land).get("kind"));
     assertEquals(10, land.getMinZoom()); // spec: garages from z10 (was z12)
   }

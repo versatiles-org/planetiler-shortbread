@@ -6,12 +6,12 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
-import org.versatiles.shortbread.Experiment;
-import org.versatiles.shortbread.Shortbread;
-import org.versatiles.shortbread.ShortbreadOptions;
 import com.onthegomap.planetiler.util.Parse;
 import java.util.List;
 import java.util.Set;
+import org.versatiles.shortbread.Experiment;
+import org.versatiles.shortbread.Shortbread;
+import org.versatiles.shortbread.ShortbreadOptions;
 
 /**
  * The {@code buildings} layer: building footprints (and 3D building parts) at zoom 14.
@@ -21,8 +21,8 @@ import java.util.Set;
  * <p>
  * EXPERIMENT (beyond Shortbread 1.0/1.1, which defines only {@code dummy=1} — see shortbread-docs #77): we also emit
  * {@code height} (and {@code min_height} when non-zero) for 3D extrusion. The derivation follows OpenMapTiles
- * ({@code Building.java}): an explicit {@code height}/{@code building:height} tag, else {@code building:levels}
- * (or {@code levels}) × 3.66 m, else a 5 m default; {@code min_height} likewise from {@code min_height} or
+ * ({@code Building.java}): an explicit {@code height}/{@code building:height} tag, else {@code building:levels} (or
+ * {@code levels}) × 3.66 m, else a 5 m default; {@code min_height} likewise from {@code min_height} or
  * {@code building:min_level} × 3.66. Absurd values (>= 3660 m, almost always tagging errors) are dropped.
  * <p>
  * EXPERIMENT (3D / OSM <a href="https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1">Simple 3D Buildings</a>): we
@@ -70,9 +70,8 @@ public class Buildings
   public Expression filter() {
     Expression building = Expression.matchField("building");
     // only look at building:part features when the Simple-3D-Buildings experiment is on
-    Expression keys = options.has(Experiment.BUILDING_PARTS)
-      ? Expression.or(building, Expression.matchField("building:part"))
-      : building;
+    Expression keys = options.has(Experiment.BUILDING_PARTS) ?
+      Expression.or(building, Expression.matchField("building:part")) : building;
     return Expression.and(Expression.matchSource(Shortbread.OSM_SOURCE), keys);
   }
 
@@ -129,12 +128,15 @@ public class Buildings
   private static void addHeights(SourceFeature f, FeatureCollector.Feature output) {
     Double height = Parse.meters(coalesce(str(f, "height"), str(f, "building:height")));
     Double minHeight = Parse.meters(coalesce(str(f, "min_height"), str(f, "building:min_height")));
-    Double levels = coalesce(Parse.parseDoubleOrNull(str(f, "building:levels")), Parse.parseDoubleOrNull(str(f, "levels")));
+    Double levels =
+      coalesce(Parse.parseDoubleOrNull(str(f, "building:levels")), Parse.parseDoubleOrNull(str(f, "levels")));
     Double minLevels =
       coalesce(Parse.parseDoubleOrNull(str(f, "building:min_level")), Parse.parseDoubleOrNull(str(f, "min_level")));
 
-    int renderHeight = (int) Math.ceil(height != null ? height : levels != null ? levels * METERS_PER_LEVEL : DEFAULT_HEIGHT);
-    int renderMinHeight = (int) Math.floor(minHeight != null ? minHeight : minLevels != null ? minLevels * METERS_PER_LEVEL : 0);
+    int renderHeight =
+      (int) Math.ceil(height != null ? height : levels != null ? levels * METERS_PER_LEVEL : DEFAULT_HEIGHT);
+    int renderMinHeight =
+      (int) Math.floor(minHeight != null ? minHeight : minLevels != null ? minLevels * METERS_PER_LEVEL : 0);
     if (renderHeight >= MAX_HEIGHT || renderMinHeight >= MAX_HEIGHT) {
       return; // implausible height, likely a tagging error
     }

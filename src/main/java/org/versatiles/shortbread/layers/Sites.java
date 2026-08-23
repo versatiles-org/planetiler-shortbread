@@ -4,16 +4,16 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.util.Geo;
-import java.util.Set;
 
 /**
  * The {@code sites} layer (zoom 14): university/hospital/prison/parking grounds, sports centres, construction sites and
  * military danger areas. Ports {@code process_sites}.
  * <p>
- * DEVIATION (bug fix): Tilemaker matched {@code leisure=sports_center} (a misspelling that never matches real OSM data);
- * here we match the correct {@code leisure=sports_centre}.
+ * DEVIATION (bug fix): Tilemaker matched {@code leisure=sports_center} (a misspelling that never matches real OSM
+ * data); here we match the correct {@code leisure=sports_centre}.
  */
 public class Sites implements ForwardingProfile.FeatureProcessor {
 

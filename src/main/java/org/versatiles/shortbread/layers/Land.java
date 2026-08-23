@@ -1,11 +1,10 @@
 package org.versatiles.shortbread.layers;
 
-import java.util.Set;
-
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.util.Geo;
 
@@ -27,7 +26,8 @@ public class Land implements ForwardingProfile.FeatureProcessor {
   private static final Set<String> NATURAL_Z11 = Set.of(
     "heath", "scrub", "grassland", "bare_rock", "scree", "shingle");
   private static final Set<String> WETLAND_Z11 = Set.of("swamp", "bog", "string_bog", "wet_meadow", "marsh");
-  private static final Set<String> LEISURE_Z11 = Set.of("golf_course", "park", "garden", "playground", "miniature_golf");
+  private static final Set<String> LEISURE_Z11 =
+    Set.of("golf_course", "park", "garden", "playground", "miniature_golf");
 
   @Override
   public Expression filter() {

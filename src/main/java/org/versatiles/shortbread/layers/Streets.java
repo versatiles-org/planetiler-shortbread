@@ -4,23 +4,23 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
-import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.CountryLanguages;
+import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
 import org.versatiles.shortbread.util.Surface;
 import org.versatiles.shortbread.util.ZOrder;
-import java.util.Set;
 
 /**
  * The {@code streets} line layer plus the {@code street_polygons} / {@code streets_polygons_labels} area layers. Ports
  * {@code process_streets} and {@code process_street_polygons} from the Tilemaker reference.
  * <p>
- * Tilemaker emits three line layers (streets_low z5-10, streets_med z11-13, streets z14) merged into {@code streets} via
- * {@code write_to}, each carrying progressively more attributes. Here a single {@code streets} feature reproduces those
- * tiers using {@link FeatureCollector.Feature#setAttrWithMinzoom}: {@code kind}/{@code rail} from the feature's minimum
- * zoom, the mid-tier attributes from z11, and {@code bicycle}/{@code horse}/{@code oneway(_reverse)} from z14.
+ * Tilemaker emits three line layers (streets_low z5-10, streets_med z11-13, streets z14) merged into {@code streets}
+ * via {@code write_to}, each carrying progressively more attributes. Here a single {@code streets} feature reproduces
+ * those tiers using {@link FeatureCollector.Feature#setAttrWithMinzoom}: {@code kind}/{@code rail} from the feature's
+ * minimum zoom, the mid-tier attributes from z11, and {@code bicycle}/{@code horse}/{@code oneway(_reverse)} from z14.
  */
 public class Streets implements ForwardingProfile.FeatureProcessor {
 
@@ -76,16 +76,44 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     boolean rail = false;
     if (!highway.isEmpty()) {
       switch (highway) {
-        case "motorway", "motorway_link" -> { kind = "motorway"; mz = 5; }
-        case "trunk", "trunk_link" -> { kind = "trunk"; mz = 6; }
-        case "primary", "primary_link" -> { kind = "primary"; mz = 8; }
-        case "secondary", "secondary_link" -> { kind = "secondary"; mz = 9; }
-        case "tertiary", "tertiary_link" -> { kind = "tertiary"; mz = 10; }
-        case "unclassified", "residential", "bus_guideway", "busway" -> { kind = highway; mz = 12; }
-        case "living_street", "pedestrian", "track" -> { kind = highway; mz = 13; }
-        case "service" -> { kind = highway; mz = 13; }
-        case "footway", "steps", "path", "cycleway" -> { kind = highway; mz = 13; }
-        default -> { /* not a street */ }
+        case "motorway", "motorway_link" -> {
+          kind = "motorway";
+          mz = 5;
+        }
+        case "trunk", "trunk_link" -> {
+          kind = "trunk";
+          mz = 6;
+        }
+        case "primary", "primary_link" -> {
+          kind = "primary";
+          mz = 8;
+        }
+        case "secondary", "secondary_link" -> {
+          kind = "secondary";
+          mz = 9;
+        }
+        case "tertiary", "tertiary_link" -> {
+          kind = "tertiary";
+          mz = 10;
+        }
+        case "unclassified", "residential", "bus_guideway", "busway" -> {
+          kind = highway;
+          mz = 12;
+        }
+        case "living_street", "pedestrian", "track" -> {
+          kind = highway;
+          mz = 13;
+        }
+        case "service" -> {
+          kind = highway;
+          mz = 13;
+        }
+        case "footway", "steps", "path", "cycleway" -> {
+          kind = highway;
+          mz = 13;
+        }
+        default -> {
+          /* not a street */ }
       }
     } else if ((railway.equals("rail") || railway.equals("narrow_gauge")) && service.isEmpty()) {
       kind = railway;

@@ -14,9 +14,10 @@ import org.junit.jupiter.api.TestFactory;
  * Runs the example-based specification ported from {@code shortbread.spec.yml} (originally the test spec for the YAML
  * {@code custommap} implementation) against the Java {@link Shortbread} profile.
  * <p>
- * Each example describes an input feature and the vector-tile features it is expected to produce. Where the Java profile
- * intentionally diverges from the original YAML output (bug fixes, Tilemaker-faithful behaviour, omitting empty-string
- * NULL sentinels), the expectation in our copy of the spec has been adjusted with an inline {@code # DEVIATION} comment.
+ * Each example describes an input feature and the vector-tile features it is expected to produce. Where the Java
+ * profile intentionally diverges from the original YAML output (bug fixes, Tilemaker-faithful behaviour, omitting
+ * empty-string NULL sentinels), the expectation in our copy of the spec has been adjusted with an inline
+ * {@code # DEVIATION} comment.
  */
 class ShortbreadSpecTest {
 

@@ -12,8 +12,8 @@ import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import java.util.List;
 import java.util.Map;
-import org.locationtech.jts.geom.Geometry;
 import org.junit.jupiter.api.Test;
+import org.locationtech.jts.geom.Geometry;
 
 /** Verifies the Shortbread 1.1 deltas, and that the 1.0 default is unaffected by them. */
 class ShortbreadV11Test {

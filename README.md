@@ -8,16 +8,22 @@ YAML engine could not express several things the schema needs — size-based min
 relation membership for administrative boundaries, and per-zoom attribute tiers — so the schema is implemented here as a
 hand-written profile instead.
 
-## Running
+## Building and running
 
-From a packaged Planetiler distribution jar:
+This repo builds standalone against a released `planetiler-core` from Maven Central:
+
+```bash
+./mvnw clean package
+```
+
+That produces an executable `target/*-with-deps.jar`:
 
 ```bash
 # small extract
-java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco
+java -jar target/*-with-deps.jar --area=monaco
 
 # whole planet
-java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=planet
+java -jar target/*-with-deps.jar --area=planet
 ```
 
 Two input sources are used and downloaded automatically if missing:
@@ -33,10 +39,10 @@ Output is written to `data/shortbread.mbtiles` by default (override with `--outp
 The profile produces Shortbread **1.0** by default. The **1.1** draft is available via a flag or a dedicated task:
 
 ```bash
-java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco --shortbread_version=1.1
-# or the shorthand task:
-java -jar planetiler-dist/target/*-with-deps.jar shortbread-1.1 --area=monaco
+java -jar target/*-with-deps.jar --area=monaco --shortbread_version=1.1
 ```
+
+Inside a Planetiler checkout (see [below](#use-inside-planetiler)) the same is reachable as the `shortbread-1.1` task.
 
 Differences applied for 1.1:
 
@@ -48,7 +54,7 @@ Differences applied for 1.1:
 (The `dog_park` / `playground` POI tagging "fix" in 1.1 — moving them from `amenity` to `leisure` — already matches this
 implementation, which follows Tilemaker's `leisure` classification.)
 
-The previous YAML schema is still runnable for comparison:
+The previous YAML schema is still runnable for comparison, from a Planetiler distribution jar:
 
 ```bash
 java -jar planetiler-dist/target/*-with-deps.jar custom \
@@ -65,14 +71,14 @@ comma-separated list of `all`, `none` (the default), or specific tokens:
 
 ```bash
 # everything on
-java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco --shortbread_experiments=all
+java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=all
 
 # just 3D buildings + localized names
-java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco \
+java -jar target/*-with-deps.jar --area=monaco \
   --shortbread_experiments=building_heights,building_parts,locale_names
 
 # explicit strict spec (same as omitting the flag)
-java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco --shortbread_experiments=none
+java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=none
 ```
 
 |       Token        |                                                                    Adds                                                                    |                                                                                                                                                                          Notes                                                                                                                                                                           |
@@ -88,6 +94,17 @@ All experiments are **additive**: they only add attributes/features to existing 
 carries the spec's `dummy=1`, geometry and zoom ranges are unchanged), so a strict-spec consumer can ignore the extras.
 The registry of tokens lives in `Experiment.java`; new beyond-spec features (e.g. a future `mountain_peaks` layer)
 register there and stay off by default.
+
+## Use inside Planetiler
+
+This repo doubles as a Planetiler submodule, the same way
+[planetiler-openmaptiles](https://github.com/openmaptiles/planetiler-openmaptiles) does. When it is checked out inside a
+Planetiler working copy, `submodule.pom.xml` is used instead of `pom.xml` so the module builds against the sibling
+`planetiler-core` rather than a released one, and the profile is reachable from the distribution jar:
+
+```bash
+java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco
+```
 
 ## Structure
 

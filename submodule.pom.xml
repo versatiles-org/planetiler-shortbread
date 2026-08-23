@@ -3,10 +3,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <!-- Native Java implementation of the Shortbread v1.0 vector tile schema (https://shortbread-tiles.org/). -->
+  <!-- This pom.xml gets used when this repo is loaded as a submodule within https://github.com/onthegomap/planetiler -->
 
   <modelVersion>4.0.0</modelVersion>
 
+  <groupId>org.versatiles</groupId>
   <artifactId>planetiler-shortbread</artifactId>
 
   <parent>
@@ -19,14 +20,14 @@
     <dependency>
       <groupId>com.onthegomap.planetiler</groupId>
       <artifactId>planetiler-core</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- To use test utilities: -->
     <dependency>
       <groupId>com.onthegomap.planetiler</groupId>
       <artifactId>planetiler-core</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

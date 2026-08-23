@@ -1,0 +1,5 @@
+# Revisions to skip in "git blame". Configure once with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: apply spotless Java formatting (first formatting pass after extraction)
+22b52bc4f3e3c24dc48764b37805b2860bb10f0c

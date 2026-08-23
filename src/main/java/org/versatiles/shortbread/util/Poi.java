@@ -28,7 +28,8 @@ public final class Poi {
     "police", "fire_station", "post_box", "post_office", "telephone", "library", "townhall", "courthouse", "prison",
     "embassy", "community_centre", "nursing_home", "arts_centre", "grave_yard", "marketplace", "recycling",
     "university", "school", "college", "public_building", "pharmacy", "hospital", "clinic", "doctors", "dentist",
-    "veterinary", "theatre", "nightclub", "cinema", "restaurant", "fast_food", "cafe", "pub", "bar", "foot_court",
+    // DEVIATION (bug fix): process.lua misspells food_court as "foot_court", so no food court ever matched.
+    "veterinary", "theatre", "nightclub", "cinema", "restaurant", "fast_food", "cafe", "pub", "bar", "food_court",
     "biergarten", "shelter", "car_rental", "car_wash", "car_sharing", "bicycle_rental", "vending_machine", "bank",
     "atm", "toilets", "bench", "drinking_water", "fountain", "hunting_stand", "waste_basket", "place_of_worship");
 

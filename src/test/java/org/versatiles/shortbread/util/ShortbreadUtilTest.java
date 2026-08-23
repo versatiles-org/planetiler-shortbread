@@ -69,5 +69,8 @@ class ShortbreadUtilTest {
     // DEVIATION: man_made participates in the POI gate
     assertTrue(Poi.matches(point(Map.of("man_made", "lighthouse"))));
     assertFalse(Poi.matches(point(Map.of("building", "yes"))));
+    // DEVIATION: the schema spells this food_court; process.lua's "foot_court" matched nothing
+    assertTrue(Poi.matches(point(Map.of("amenity", "food_court"))));
+    assertFalse(Poi.matches(point(Map.of("amenity", "foot_court"))));
   }
 }

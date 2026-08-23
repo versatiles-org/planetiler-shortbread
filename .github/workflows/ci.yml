@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+# every job here only reads the repository; nothing publishes or writes back
+permissions:
+  contents: read
+
 jobs:
   # When spotless:check fails the error message is a bit cryptic, so keep it in its own job
   # to make it obvious that formatting - not the build - is the problem.

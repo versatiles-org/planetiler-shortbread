@@ -16,7 +16,7 @@
 
     <mainClass>org.versatiles.shortbread.ShortbreadMain</mainClass>
     <image.version>${project.version}</image.version>
-    <image>versatiles/planetiler-shortbread:${image.version}</image>
+    <image>ghcr.io/versatiles-org/planetiler-shortbread:${image.version}</image>
     <assembly-phase>package</assembly-phase>
     <jib.platform-arch>amd64</jib.platform-arch>
     <jib.platform-os>linux</jib.platform-os>

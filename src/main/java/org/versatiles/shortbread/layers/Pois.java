@@ -57,6 +57,15 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
     String manMade = Poi.accepted(Poi.MAN_MADE, f.getString("man_made"));
     String historic = Poi.accepted(Poi.HISTORIC, f.getString("historic"));
     String leisure = Poi.accepted(Poi.LEISURE, f.getString("leisure"));
+    // playground / dog_park: an amenity in 1.0, a leisure value in 1.1
+    String moved = Poi.movedToLeisure(f, options.v11());
+    if (moved != null) {
+      if (options.v11()) {
+        leisure = leisure == null ? moved : leisure;
+      } else {
+        amenity = amenity == null ? moved : amenity;
+      }
+    }
     // Shortbread 1.1 additions
     if (options.v11()) {
       if (amenity == null && f.hasTag("amenity", "fuel")) {

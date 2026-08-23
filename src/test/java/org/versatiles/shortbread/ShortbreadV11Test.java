@@ -73,6 +73,21 @@ class ShortbreadV11Test {
     assertNull(attrs(place).get("name_en"));
   }
 
+  @Test
+  void playgroundAndDogParkChangeKeyIn11() {
+    for (String value : List.of("playground", "dog_park")) {
+      // 1.0 lists them as amenity values
+      var asAmenity = Map.<String, Object>of("amenity", value);
+      assertEquals(value, attrs(layer(process(v10, TestUtils.newPoint(0, 0), asAmenity), "pois")).get("amenity"));
+      assertNull(layer(process(v11, TestUtils.newPoint(0, 0), asAmenity), "pois"));
+
+      // 1.1 moved them to leisure
+      var asLeisure = Map.<String, Object>of("leisure", value);
+      assertEquals(value, attrs(layer(process(v11, TestUtils.newPoint(0, 0), asLeisure), "pois")).get("leisure"));
+      assertNull(layer(process(v10, TestUtils.newPoint(0, 0), asLeisure), "pois"));
+    }
+  }
+
   private Map<String, Object> street(Shortbread profile, Map<String, Object> tags, int zoom) {
     return layer(process(profile, TestUtils.newLineString(0, 0, 1, 1), tags), "streets").getAttrsAtZoom(zoom);
   }

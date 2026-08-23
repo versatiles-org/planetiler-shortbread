@@ -48,11 +48,10 @@ Differences applied for 1.1:
 
 - `water_lines` / `water_lines_labels`: `waterway=drain` is added, at zoom 14 (1.0 defines no `drain` kind).
 - `pois`: adds `amenity=fuel` (`kind=fuel`) and `leisure=park` (`kind=park`).
+- `pois`: `dog_park` and `playground` move from `amenity` to `leisure`, so they are read from — and emitted under —
+  whichever key the selected version uses.
 - Names: instead of the fixed `name_en` / `name_de`, any IETF-coded `name_<code>` is emitted from `name:<code>` for the
   configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). This flag also works for 1.0.
-
-(The `dog_park` / `playground` POI tagging "fix" in 1.1 — moving them from `amenity` to `leisure` — already matches this
-implementation, which follows Tilemaker's `leisure` classification.)
 
 The previous YAML schema is still runnable for comparison, from a Planetiler distribution jar:
 

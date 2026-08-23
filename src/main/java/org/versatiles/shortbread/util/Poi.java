@@ -52,8 +52,13 @@ public final class Poi {
     "fort");
 
   public static final Set<String> LEISURE = Set.of(
-    "playground", "dog_park", "sports_centre", "pitch", "swimming_pool", "water_park", "golf_course", "stadium",
-    "ice_rink");
+    "sports_centre", "pitch", "swimming_pool", "water_park", "golf_course", "stadium", "ice_rink");
+
+  /**
+   * Values 1.1 moved from {@code amenity} to {@code leisure}: they are read from {@code amenity} in 1.0 and from
+   * {@code leisure} in 1.1.
+   */
+  public static final Set<String> MOVED_TO_LEISURE = Set.of("playground", "dog_park");
 
   public static final Set<String> EMERGENCY = Set.of("phone", "fire_hydrant", "defibrillator");
 
@@ -78,7 +83,8 @@ public final class Poi {
 
   /**
    * Returns true if the feature is a POI. When {@code v11} is set, the Shortbread 1.1 additions ({@code amenity=fuel}
-   * and {@code leisure=park}) are also accepted.
+   * and {@code leisure=park}) are also accepted, and {@code playground}/{@code dog_park} are read from {@code leisure}
+   * rather than {@code amenity}.
    */
   public static boolean matches(SourceFeature f, boolean v11) {
     return accepted(AMENITY, f.getString("amenity")) != null ||
@@ -90,6 +96,15 @@ public final class Poi {
       accepted(EMERGENCY, f.getString("emergency")) != null ||
       accepted(HIGHWAY, f.getString("highway")) != null ||
       accepted(OFFICE, f.getString("office")) != null ||
+      movedToLeisure(f, v11) != null ||
       (v11 && (f.hasTag("amenity", "fuel") || f.hasTag("leisure", "park")));
+  }
+
+  /**
+   * Returns {@code playground} / {@code dog_park} when the feature carries it under the key the given schema version
+   * uses ({@code leisure} in 1.1, {@code amenity} in 1.0), otherwise {@code null}.
+   */
+  public static String movedToLeisure(SourceFeature f, boolean v11) {
+    return accepted(MOVED_TO_LEISURE, f.getString(v11 ? "leisure" : "amenity"));
   }
 }

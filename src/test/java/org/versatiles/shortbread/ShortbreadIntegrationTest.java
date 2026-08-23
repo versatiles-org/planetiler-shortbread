@@ -26,7 +26,7 @@ class ShortbreadIntegrationTest {
     Path dbPath = tmpDir.resolve("shortbread.mbtiles");
     Planetiler.create(Arguments.of("tmpdir", tmpDir.resolve("tmp").toString()))
       .setProfile(p -> new Shortbread(p.config()))
-      .addOsmSource(Shortbread.OSM_SOURCE, TestUtils.pathToResource("monaco-latest.osm.pbf"))
+      .addOsmSource(Shortbread.OSM_SOURCE, TestUtils.extractPathToResource(tmpDir, "monaco-latest.osm.pbf"))
       .overwriteOutput(dbPath)
       .run();
 

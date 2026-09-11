@@ -25,7 +25,9 @@ public enum Experiment {
     "geofenced name_<lang> fallback inside matching countries (adds the Natural Earth admin_0 source)"),
   ISLAND_LABELS("island_labels", "place_labels for islands mapped as polygons (not just nodes)"),
   ADDRESS_DETAILS("address_details", "addr:unit and addr:block attributes on the addresses layer"),
-  BRIDGE_NAMES("bridge_names", "name attribute on bridge polygons");
+  BRIDGE_NAMES("bridge_names", "name attribute on bridge polygons"),
+  EARLY_ATTRIBUTES("early_attributes",
+    "link and service on streets from each feature's min zoom, 1.0 bicycle/horse from z13 (shortbread-docs #184)");
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Experiment.class);
 

@@ -367,6 +367,47 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void earlyAttributesArriveWithTheFeature() {
+    // EXPERIMENT early_attributes: link and service from the feature's min zoom, other mid-tier attributes stay at z11
+    var link = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "motorway_link", "surface", "asphalt", "bridge", "yes")), "streets");
+    assertEquals(true, link.getAttrsAtZoom(5).get("link"));
+    assertNull(link.getAttrsAtZoom(10).get("surface"));
+    assertNull(link.getAttrsAtZoom(10).get("bridge"));
+
+    var siding = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("railway", "rail", "service", "siding")), "streets");
+    assertEquals(10, siding.getMinZoom());
+    assertEquals("siding", siding.getAttrsAtZoom(10).get("service"));
+
+    // 1.0: bicycle/horse from z13, where paths enter the layer
+    var path = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "path", "bicycle", "designated", "horse", "no")), "streets");
+    assertEquals("designated", path.getAttrsAtZoom(13).get("bicycle"));
+    assertEquals("no", path.getAttrsAtZoom(13).get("horse"));
+  }
+
+  @Test
+  void specAttributeZoomsWithoutEarlyAttributes() {
+    Shortbread strict = new Shortbread(PlanetilerConfig.defaults());
+
+    var link = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "motorway_link"), Shortbread.OSM_SOURCE, null, 1), strict), "streets");
+    assertNull(link.getAttrsAtZoom(10).get("link"));
+    assertEquals(true, link.getAttrsAtZoom(11).get("link"));
+
+    var siding = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("railway", "rail", "service", "siding"), Shortbread.OSM_SOURCE, null, 1), strict), "streets");
+    assertNull(siding.getAttrsAtZoom(10).get("service"));
+    assertEquals("siding", siding.getAttrsAtZoom(11).get("service"));
+
+    var path = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "path", "bicycle", "designated"), Shortbread.OSM_SOURCE, null, 1), strict), "streets");
+    assertNull(path.getAttrsAtZoom(13).get("bicycle"));
+    assertEquals("designated", path.getAttrsAtZoom(14).get("bicycle"));
+  }
+
+  @Test
   void streetLabelWithRefGrid() {
     var features = process(TestUtils.newLineString(0, 0, 1, 1),
       Map.of("highway", "motorway", "ref", "A1;A2;A3"));

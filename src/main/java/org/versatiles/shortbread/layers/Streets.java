@@ -5,6 +5,7 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import java.util.Set;
+import org.versatiles.shortbread.Experiment;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
 import org.versatiles.shortbread.util.Access;
@@ -21,6 +22,11 @@ import org.versatiles.shortbread.util.ZOrder;
  * feature's minimum zoom, the mid-tier attributes from z11, and {@code oneway(_reverse)} from z14. Access attributes
  * follow the schema version: raw {@code bicycle}/{@code horse} from z14 in 1.0, normalized
  * {@code motorcar}/{@code bicycle}/{@code foot}/{@code horse} from z13 in 1.1 (see {@link Access}).
+ * <p>
+ * EXPERIMENT {@code early_attributes} (shortbread-docs #184): {@code link} and {@code service} identify a feature, so
+ * they are emitted from the feature's own minimum zoom instead of z11, and in 1.0 {@code bicycle}/{@code horse} from
+ * z13, where paths enter the layer. The other mid-tier attributes stay at z11, because features only merge at low zoom
+ * when their attributes are identical.
  */
 public class Streets implements ForwardingProfile.FeatureProcessor {
 
@@ -30,6 +36,8 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
 
   private static final int MED_TIER_MINZOOM = 11;
   private static final int FULL_TIER_MINZOOM = 14;
+  // with early_attributes: 1.0 bicycle/horse from the zoom where paths enter the layer
+  private static final int EARLY_ACCESS_MINZOOM = 13;
 
   private static final Set<String> LINK_HIGHWAYS =
     Set.of("motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link");
@@ -143,6 +151,9 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     boolean bridge = ZOrder.isBridge(f);
     boolean oneway = !rail && ZOrder.isOneway(f);
     boolean onewayReverse = !rail && ZOrder.isReverseOneway(f);
+    boolean early = options.has(Experiment.EARLY_ATTRIBUTES);
+    // link and service identify the feature: with early_attributes they arrive with it rather than at z11
+    int identifyingMinzoom = early ? Math.min(mz, MED_TIER_MINZOOM) : MED_TIER_MINZOOM;
 
     var feature = features.line(STREETS)
       .setMinZoom(mz)
@@ -153,7 +164,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       .setAttr("rail", rail);
 
     // mid tier (z11+)
-    feature.setAttrWithMinzoom("link", link, MED_TIER_MINZOOM);
+    feature.setAttrWithMinzoom("link", link, identifyingMinzoom);
     feature.setAttrWithMinzoom("tunnel", tunnel, MED_TIER_MINZOOM);
     feature.setAttrWithMinzoom("bridge", bridge, MED_TIER_MINZOOM);
     if (surface != null && !surface.isEmpty()) {
@@ -164,7 +175,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       feature.setAttrWithMinzoom("tracktype", tracktype, MED_TIER_MINZOOM);
     }
     if (!service.isEmpty()) {
-      feature.setAttrWithMinzoom("service", service, MED_TIER_MINZOOM);
+      feature.setAttrWithMinzoom("service", service, identifyingMinzoom);
     }
 
     // full tier (z14)
@@ -179,9 +190,10 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
         }
       }
     } else {
-      // 1.0: the raw bicycle/horse tag values, from z14
-      setIfPresent(feature, "bicycle", f.getString("bicycle"), FULL_TIER_MINZOOM);
-      setIfPresent(feature, "horse", f.getString("horse"), FULL_TIER_MINZOOM);
+      // 1.0: the raw bicycle/horse tag values, from z14 (z13 with early_attributes)
+      int accessMinzoom = early ? EARLY_ACCESS_MINZOOM : FULL_TIER_MINZOOM;
+      setIfPresent(feature, "bicycle", f.getString("bicycle"), accessMinzoom);
+      setIfPresent(feature, "horse", f.getString("horse"), accessMinzoom);
     }
   }
 

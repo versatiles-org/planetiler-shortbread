@@ -415,49 +415,122 @@ class ShortbreadProfileTest {
     assertEquals(13, pt.getMinZoom());
   }
 
-  @Test
-  void boundaryRelationIsCaptured() {
-    var relation = new OsmElement.Relation(1);
+  /** Runs a {@code type=boundary} relation through pass 1 and returns the info its member ways carry. */
+  private OsmRelationInfo boundaryRelation(long id, String boundary, String adminLevel) {
+    var relation = new OsmElement.Relation(id);
     relation.setTag("type", "boundary");
-    relation.setTag("boundary", "administrative");
-    relation.setTag("admin_level", "2");
+    relation.setTag("boundary", boundary);
+    if (adminLevel != null) {
+      relation.setTag("admin_level", adminLevel);
+    }
     var infos = profile.preprocessOsmRelation(relation);
     assertEquals(1, infos.size());
+    return infos.get(0);
+  }
+
+  private List<FeatureCollector.Feature> processMemberWay(Map<String, Object> tags, OsmRelationInfo... relations) {
+    List<OsmReader.RelationMember<OsmRelationInfo>> members =
+      List.of(relations).stream().map(info -> new OsmReader.RelationMember<>("outer", info)).toList();
+    SourceFeature way = SimpleFeature.createFakeOsmFeature(
+      TestUtils.newLineString(0, 0, 1, 1), tags, Shortbread.OSM_SOURCE, null, 100, members);
+    return TestUtils.processSourceFeature(way, profile);
+  }
+
+  private static boolean hasLayer(List<FeatureCollector.Feature> features, String layer) {
+    return features.stream().anyMatch(f -> f.getLayer().equals(layer));
   }
 
   @Test
   void boundaryLineFromMemberWay() {
-    var relation = new OsmElement.Relation(1);
-    relation.setTag("type", "boundary");
-    relation.setTag("boundary", "administrative");
-    relation.setTag("admin_level", "2");
-    OsmRelationInfo info = profile.preprocessOsmRelation(relation).get(0);
-    var member = new OsmReader.RelationMember<>("outer", info);
-    SourceFeature way = SimpleFeature.createFakeOsmFeature(
-      TestUtils.newLineString(0, 0, 1, 1), Map.of(), Shortbread.OSM_SOURCE, null, 2, List.of(member));
-
-    var features = TestUtils.processSourceFeature(way, profile);
-    var line = onlyOne(features, "boundaries");
+    var line = onlyOne(processMemberWay(Map.of(), boundaryRelation(1, "administrative", "2")), "boundaries");
     assertEquals(2, attrs(line).get("admin_level"));
     assertEquals(0, line.getMinZoom());
+    assertEquals(false, attrs(line).get("maritime"));
     assertEquals(false, attrs(line).get("disputed"));
   }
 
   @Test
-  void adminLevel3BoundaryIsDropped() {
-    // Shortbread boundaries only has admin_level 2 and 4; level-3 relations must not be captured...
-    var relation = new OsmElement.Relation(1);
-    relation.setTag("type", "boundary");
-    relation.setTag("boundary", "administrative");
-    relation.setTag("admin_level", "3");
-    assertNull(profile.preprocessOsmRelation(relation));
+  void stateBoundaryFromMemberWay() {
+    var line = onlyOne(processMemberWay(Map.of(), boundaryRelation(1, "administrative", "4")), "boundaries");
+    assertEquals(4, attrs(line).get("admin_level"));
+    assertEquals(7, line.getMinZoom());
+  }
 
-    // ...and a directly-tagged admin_level=3 way produces no boundaries line
+  @Test
+  void boundaryIsMaritimeFromWayTags() {
+    for (var tags : List.<Map<String, Object>>of(Map.of("maritime", "yes"), Map.of("natural", "coastline"))) {
+      var line = onlyOne(processMemberWay(tags, boundaryRelation(1, "administrative", "2")), "boundaries");
+      assertEquals(true, attrs(line).get("maritime"), () -> "maritime for " + tags);
+    }
+  }
+
+  @Test
+  void boundaryTakesLowestAdminLevelOfItsRelations() {
+    var line = onlyOne(processMemberWay(Map.of(),
+      boundaryRelation(1, "administrative", "4"), boundaryRelation(2, "administrative", "2")), "boundaries");
+    assertEquals(2, attrs(line).get("admin_level"));
+    assertEquals(0, line.getMinZoom());
+  }
+
+  @Test
+  void directlyTaggedWayIsNotABoundaryLine() {
+    // only members of boundary relations are boundary lines, not ways carrying the boundary tags themselves
     var features = process(TestUtils.newLineString(0, 0, 1, 1),
-      Map.of("boundary", "administrative", "admin_level", "3"));
-    assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("boundaries")),
+      Map.of("boundary", "administrative", "admin_level", "2"));
+    assertFalse(hasLayer(features, "boundaries"),
       () -> "expected no boundaries feature, got " +
         features.stream().map(FeatureCollector.Feature::getLayer).toList());
+  }
+
+  @Test
+  void administrativeRelationOutsideLevels2And4IsDropped() {
+    // Shortbread boundaries only has admin_level 2 and 4; a multi-value 2;4 is neither
+    for (String level : List.of("3", "5", "2;4")) {
+      var relation = new OsmElement.Relation(1);
+      relation.setTag("type", "boundary");
+      relation.setTag("boundary", "administrative");
+      relation.setTag("admin_level", level);
+      assertNull(profile.preprocessOsmRelation(relation), () -> "admin_level=" + level);
+    }
+  }
+
+  @Test
+  void disputedFromDisputedRelation() {
+    var line = onlyOne(processMemberWay(Map.of(),
+      boundaryRelation(1, "administrative", "2"), boundaryRelation(2, "disputed", null)), "boundaries");
+    assertEquals(true, attrs(line).get("disputed"));
+    assertEquals(2, attrs(line).get("admin_level"));
+  }
+
+  @Test
+  void disputedFromDisputedYesOnWay() {
+    var line = onlyOne(processMemberWay(Map.of("disputed", "yes"), boundaryRelation(1, "administrative", "2")),
+      "boundaries");
+    assertEquals(true, attrs(line).get("disputed"));
+  }
+
+  @Test
+  void boundaryDisputedTagOnWayIsNotDisputed() {
+    // only disputed=yes on the way or a parent disputed relation count, not the way's own boundary tag
+    var line = onlyOne(processMemberWay(Map.of("boundary", "disputed"), boundaryRelation(1, "administrative", "2")),
+      "boundaries");
+    assertEquals(false, attrs(line).get("disputed"));
+  }
+
+  @Test
+  void disputedOnlyWayIsNotDrawn() {
+    assertFalse(hasLayer(processMemberWay(Map.of(), boundaryRelation(1, "disputed", null)), "boundaries"));
+  }
+
+  @Test
+  void boundaryLabelsSortByWayAreaDescending() {
+    var big = onlyOne(process(TestUtils.newPolygon(0, 0, 10, 0, 10, 10, 0, 10, 0, 0),
+      Map.of("boundary", "administrative", "admin_level", "2", "name", "Big")), "boundary_labels");
+    var small = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("boundary", "administrative", "admin_level", "2", "name", "Small")), "boundary_labels");
+    // a lower sort key comes first in the tile, so the larger area must have the lower one
+    assertTrue(big.getSortKey() < small.getSortKey(),
+      () -> "big sortKey " + big.getSortKey() + " should be < small " + small.getSortKey());
   }
 
   @Test

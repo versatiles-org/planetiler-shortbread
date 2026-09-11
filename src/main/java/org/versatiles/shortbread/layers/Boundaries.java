@@ -6,7 +6,7 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
-import com.onthegomap.planetiler.util.Parse;
+import com.onthegomap.planetiler.util.SortKey;
 import java.util.List;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
@@ -15,12 +15,14 @@ import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
 
 /**
- * The {@code boundaries} line layer and the {@code boundary_labels} layer. Ports {@code process_boundary_lines} /
+ * The {@code boundaries} line layer and the {@code boundary_labels} layer.
  * <p>
- * Boundary lines come from the member ways of administrative ({@code admin_level} 2-4) or disputed boundary relations:
- * the relation's admin level / disputed flag is captured in {@link #preprocessOsmRelation} and read back on each member
- * way. {@code boundary_labels} are derived directly from administrative boundary polygons (admin_level 2 or 4) as an
- * interior label point, rather than a pre-built admin-points shapefile, so no external data source is needed.
+ * Boundary lines come only from the member ways of boundary relations: administrative relations with
+ * {@code admin_level} 2 or 4, and disputed relations. The relation's admin level / disputed flag is captured in
+ * {@link #preprocessOsmRelation} and read back on each member way; a way tagged {@code boundary=administrative} without
+ * a parent relation is not a boundary line. {@code boundary_labels} are derived directly from administrative boundary
+ * polygons (admin_level 2 or 4) as an interior label point, rather than a pre-built admin-points shapefile, so no
+ * external data source is needed.
  */
 public class Boundaries implements ForwardingProfile.FeatureProcessor, ForwardingProfile.OsmRelationPreprocessor {
 
@@ -44,16 +46,43 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       return null;
     }
     String boundary = relation.getString("boundary");
-    Integer adminLevel = Parse.parseIntOrNull(relation.getTag("admin_level"));
+    String adminLevelTag = relation.getString("admin_level");
+    Integer adminLevel = parseAdminLevel(adminLevelTag);
     if ("administrative".equals(boundary)) {
       // Shortbread boundaries are only country (2) and state (4) lines; admin_level=3 (and 5+) are not in the schema
       if (adminLevel != null && (adminLevel == 2 || adminLevel == 4)) {
         return List.of(new BoundaryRelation(relation.id(), adminLevel, false));
       }
-    } else if ("disputed".equals(boundary) && (adminLevel == null || (adminLevel >= 2 && adminLevel <= 4))) {
+    } else if ("disputed".equals(boundary) && (adminLevelTag == null || isDisputedLevel(adminLevel))) {
       return List.of(new BoundaryRelation(relation.id(), 99, true));
     }
     return null;
+  }
+
+  /**
+   * Whether a disputed relation's {@code admin_level} makes its member ways disputed: 1.0 accepts 2 to 4, 1.1 only 2
+   * and 4. A value that is set but not an integer (e.g. {@code 2;4}) matches neither.
+   */
+  private boolean isDisputedLevel(Integer adminLevel) {
+    if (adminLevel == null) {
+      return false;
+    }
+    return options.v11() ? adminLevel == 2 || adminLevel == 4 : adminLevel >= 2 && adminLevel <= 4;
+  }
+
+  /**
+   * Parses {@code admin_level} as a plain integer, or returns {@code null}. Stricter than {@code Parse.parseIntOrNull},
+   * which reads the leading number of a value, so a multi-value {@code 2;4} is not taken as 2.
+   */
+  private static Integer parseAdminLevel(Object tag) {
+    if (tag == null) {
+      return null;
+    }
+    try {
+      return Integer.parseInt(tag.toString());
+    } catch (NumberFormatException e) {
+      return null;
+    }
   }
 
   @Override
@@ -70,26 +99,15 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (f.hasTag("type") || !f.canBeLine()) {
       return;
     }
+    // the way's own boundary tags don't count: admin level and the disputed flag come from its parent relations
     int minAdminLevel = 99;
     boolean disputed = false;
-    // the way's own boundary tags (covers directly tagged ways, as the previous YAML schema relied on)
-    if (f.hasTag("boundary", "administrative")) {
-      Integer ownLevel = Parse.parseIntOrNull(f.getTag("admin_level"));
-      if (ownLevel != null && (ownLevel == 2 || ownLevel == 4)) {
-        minAdminLevel = Math.min(minAdminLevel, ownLevel);
-      }
-    }
-    if (f.hasTag("boundary", "disputed")) {
-      disputed = true;
-    }
-    // plus any parent boundary relations (covers untagged member ways)
     for (var member : f.relationInfo(BoundaryRelation.class)) {
       BoundaryRelation info = member.relation();
-      if (!info.disputed() && info.adminLevel() >= 2) {
-        minAdminLevel = Math.min(minAdminLevel, info.adminLevel());
-      }
       if (info.disputed()) {
         disputed = true;
+      } else {
+        minAdminLevel = Math.min(minAdminLevel, info.adminLevel());
       }
     }
     int mz;
@@ -98,7 +116,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     } else if (minAdminLevel == 4) {
       mz = 7;
     } else {
-      return; // disputed-only ways with no administrative parent are not drawn
+      return; // ways without an administrative parent relation, including disputed-only ones, are not drawn
     }
     if (f.hasTag("disputed", "yes")) {
       disputed = true;
@@ -118,7 +136,7 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (!f.canBePolygon() || !f.hasTag("boundary", "administrative")) {
       return;
     }
-    Integer adminLevel = Parse.parseIntOrNull(f.getTag("admin_level"));
+    Integer adminLevel = parseAdminLevel(f.getTag("admin_level"));
     if (adminLevel == null || (adminLevel != 2 && adminLevel != 4)) {
       return;
     }
@@ -144,7 +162,9 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setAttr("admin_level", adminLevel)
-      .setAttr("way_area", mercatorM2 / 1e4); // hectares (Mercator projection), per the spec
+      .setAttr("way_area", mercatorM2 / 1e4) // hectares (Mercator projection), per the spec
+      // spec: labels are sorted by way_area in descending order
+      .setSortKeyDescending(SortKey.orderByLog(mercatorM2, 1, 1e15).get());
     Names.setNames(label, f, options.languages(), countries);
   }
 }

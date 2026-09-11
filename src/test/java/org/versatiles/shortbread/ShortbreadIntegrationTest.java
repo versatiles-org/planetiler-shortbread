@@ -43,8 +43,8 @@ class ShortbreadIntegrationTest {
         .map(TestUtils.ComparableFeature::layer)
         .collect(Collectors.toSet());
 
-      // layers that Monaco data is guaranteed to populate
-      assertTrue(layers.containsAll(Set.of("buildings", "streets", "land", "pois", "place_labels")),
+      // layers that Monaco data is guaranteed to populate; boundaries come from the Monaco–France border relation
+      assertTrue(layers.containsAll(Set.of("buildings", "streets", "land", "pois", "place_labels", "boundaries")),
         () -> "missing expected layers, found: " + layers);
     }
   }

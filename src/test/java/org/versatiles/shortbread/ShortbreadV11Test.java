@@ -1,6 +1,7 @@
 package org.versatiles.shortbread;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,6 +11,7 @@ import com.onthegomap.planetiler.config.Arguments;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import com.onthegomap.planetiler.reader.osm.OsmElement;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,35 @@ class ShortbreadV11Test {
 
   private FeatureCollector.Feature layer(List<FeatureCollector.Feature> features, String layer) {
     return features.stream().filter(f -> f.getLayer().equals(layer)).findFirst().orElse(null);
+  }
+
+  private static OsmElement.Relation disputedRelation(String adminLevel) {
+    var relation = new OsmElement.Relation(1);
+    relation.setTag("type", "boundary");
+    relation.setTag("boundary", "disputed");
+    if (adminLevel != null) {
+      relation.setTag("admin_level", adminLevel);
+    }
+    return relation;
+  }
+
+  @Test
+  void disputedRelationWithAdminLevel3OnlyIn10() {
+    // 1.0: admin_level unset or between 2 and 4; 1.1: admin_level unset, 2 or 4
+    assertNotNull(v10.preprocessOsmRelation(disputedRelation("3")));
+    assertNull(v11.preprocessOsmRelation(disputedRelation("3")));
+  }
+
+  @Test
+  void disputedRelationAdminLevelsInBothVersions() {
+    for (Shortbread version : List.of(v10, v11)) {
+      assertNotNull(version.preprocessOsmRelation(disputedRelation(null)));
+      assertNotNull(version.preprocessOsmRelation(disputedRelation("2")));
+      assertNotNull(version.preprocessOsmRelation(disputedRelation("4")));
+      assertNull(version.preprocessOsmRelation(disputedRelation("5")));
+      // a value that is set but not an integer is not the same as an unset admin_level
+      assertNull(version.preprocessOsmRelation(disputedRelation("2;4")));
+    }
   }
 
   @Test

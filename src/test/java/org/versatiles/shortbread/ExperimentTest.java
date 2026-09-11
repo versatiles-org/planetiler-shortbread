@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -47,5 +50,14 @@ class ExperimentTest {
   @Test
   void unknownTokenThrows() {
     assertThrows(IllegalArgumentException.class, () -> Experiment.parse(List.of("teleporter")));
+  }
+
+  @Test
+  void everyTokenIsDocumented() throws IOException {
+    String docs = Files.readString(Path.of("docs", "extensions.md"));
+    for (Experiment experiment : Experiment.values()) {
+      assertTrue(docs.contains("\n## `" + experiment.token() + "`\n"),
+        () -> "docs/extensions.md has no section \"## `" + experiment.token() + "`\"");
+    }
   }
 }

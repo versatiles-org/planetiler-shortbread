@@ -26,10 +26,11 @@ import org.versatiles.shortbread.util.MergePolygons;
 
 /**
  * A {@link com.onthegomap.planetiler.Profile} that implements the
- * <a href="https://shortbread-tiles.org/schema/1.0/">Shortbread v1.0</a> vector tile schema as a hand-written Java
- * profile.
+ * <a href="https://shortbread-tiles.org/">Shortbread</a> vector tile schema, versions 1.0 (default) and 1.1, as a
+ * hand-written Java profile; see {@link ShortbreadOptions} for the version, name languages and beyond-spec
+ * {@link Experiment}s.
  * <p>
- * This is a native re-implementation of the schema that previously shipped as a {@code custommap} YAML config
+ * It replaces the schema that previously shipped as a {@code custommap} YAML config
  * ({@code planetiler-custommap/.../shortbread.yml}).
  * <p>
  * Each output layer is implemented by a handler in the {@code layers} package, registered below and wired together by

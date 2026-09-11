@@ -1,7 +1,8 @@
 # planetiler-shortbread
 
 A native Java [Planetiler](https://github.com/onthegomap/planetiler) profile that generates vector tiles in the
-[Shortbread v1.0](https://shortbread-tiles.org/schema/1.0/) schema.
+[Shortbread](https://shortbread-tiles.org/) schema, versions [1.0](https://shortbread-tiles.org/schema/1.0/) and
+[1.1](https://shortbread-tiles.org/schema/1.1/).
 
 This replaces the previous YAML/`custommap` implementation (`planetiler-custommap/.../shortbread.yml`). The declarative
 YAML engine could not express several things the schema needs — size-based minimum zoom, sort keys / draw order,
@@ -26,30 +27,60 @@ java -jar target/*-with-deps.jar --area=monaco
 java -jar target/*-with-deps.jar --area=planet
 ```
 
-Two input sources are used and downloaded automatically if missing:
+These input sources are used and downloaded automatically if missing:
 
-- `osm` — an OpenStreetMap `.osm.pbf` extract (Geofabrik by default; override with `--osm_url` / `--osm_path`)
+- `osm` — an OpenStreetMap `.osm.pbf` extract (Geofabrik by default)
 - `ocean` — the OSM water polygons shapefile
   ([water-polygons-split-3857](https://osmdata.openstreetmap.de/data/water-polygons.html)) used for the `ocean` layer
+- `ne_10m_admin_0_countries` — the [Natural Earth](https://www.naturalearthdata.com/) country polygons, a few MB, only
+  when the `locale_names` [experiment](#experimental-features-beyond-the-spec) is enabled
 
-Output is written to `data/shortbread.mbtiles` by default (override with `--output`).
+Output is written to `data/shortbread.mbtiles` by default.
+
+## Command-line reference
+
+|                               Argument                               |                                 Default                                 |                                                                                                              Description                                                                                                              |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--area`                                                             | `monaco`                                                                | Geofabrik extract to download as OSM input; `planet` downloads the latest planet file (`aws:latest`)                                                                                                                                  |
+| `--output`                                                           | `data/shortbread.mbtiles`                                               | output archive                                                                                                                                                                                                                        |
+| `--shortbread_version`                                               | `1.0`                                                                   | schema version, `1.0` or `1.1`; any other value fails at startup                                                                                                                                                                      |
+| `--name_languages`                                                   | `en,de`                                                                 | IETF language codes emitted as `name_<code>`; with 1.0 only `en,de` is accepted                                                                                                                                                       |
+| `--shortbread_experiments`                                           | `none`                                                                  | `all`, `none`, or a comma-separated list of [experiment tokens](docs/extensions.md), case-insensitive; an unknown token fails at startup, the deprecated `building_heights` and `building_parts` enable `3d_buildings` with a warning |
+| `--osm_path` / `--osm_url`                                           | `data/sources/<area>.osm.pbf` / `geofabrik:<area>`                      | OSM input file and its download URL                                                                                                                                                                                                   |
+| `--ocean_path` / `--ocean_url`                                       | `data/sources/water-polygons-split-3857.zip` / osmdata.openstreetmap.de | ocean shapefile and its download URL                                                                                                                                                                                                  |
+| `--ne_10m_admin_0_countries_path` / `--ne_10m_admin_0_countries_url` | `data/sources/ne_10m_admin_0_countries.zip` / Natural Earth             | country polygons for `locale_names`                                                                                                                                                                                                   |
+
+All other [Planetiler arguments](https://github.com/onthegomap/planetiler) work as usual, for example `--download`,
+`--force`, `--tmpdir` or `--output_layerstats`.
+
+Inside a Planetiler checkout (see [below](#use-inside-planetiler)) the profile is reachable as the tasks `shortbread` /
+`generate-shortbread` (1.0 unless `--shortbread_version` says otherwise) and `shortbread-1.1` /
+`generate-shortbread-1.1`.
 
 ## Schema version (1.0 / 1.1)
 
-The profile produces Shortbread **1.0** by default. The **1.1** draft is available via a flag or a dedicated task:
+The profile produces Shortbread **1.0** by default. Shortbread **1.1** (released 2026-08-17) is produced with a flag or
+the dedicated task; VersaTiles builds use 1.1:
 
 ```bash
 java -jar target/*-with-deps.jar --area=monaco --shortbread_version=1.1
 ```
 
-Inside a Planetiler checkout (see [below](#use-inside-planetiler)) the same is reachable as the `shortbread-1.1` task.
+The archive metadata's `version` is `1.0` or `1.1` accordingly. Differences applied for 1.1:
 
-Differences applied for 1.1:
-
+- `streets`: instead of the raw `bicycle` / `horse` tag values from z14, the access attributes `motorcar`, `bicycle`,
+  `foot` and `horse`, normalized to `yes` / `limited` / `no`, from z13, on highways only. Each takes the first
+  recognized value along a chain of tags: `motorcar` ← `motorcar`, `motor_vehicle`, `vehicle`, `access`; `bicycle` ←
+  `bicycle`, `vehicle`, `access`; `foot` ← `foot`, `access`; `horse` ← `horse`, `access`. `yes`, `designated` and
+  `permissive` become `yes`; `customers`, `destination`, `agricultural`, `forestry`, `delivery`, `discouraged` and
+  `permit` become `limited`; `dismount`, `military`, `private` and `no` become `no`; other values are skipped.
 - `water_lines` / `water_lines_labels`: `waterway=drain` is added, at zoom 14 (1.0 defines no `drain` kind).
 - `pois`: adds `amenity=fuel` (`kind=fuel`) and `leisure=park` (`kind=park`).
 - `pois`: `dog_park` and `playground` move from `amenity` to `leisure`, so they are read from — and emitted under —
-  whichever key the selected version uses.
+  whichever key the selected version uses. A feature that qualifies for `pois` is not also emitted in `addresses`, so
+  the address layer follows the same version.
+- `boundaries`: a disputed boundary relation marks its lines `disputed` when its `admin_level` is unset or `2` / `4`;
+  1.0 also accepts `3`.
 - Names: instead of the fixed `name_en` / `name_de`, any IETF-coded `name_<code>` is emitted from `name:<code>` for the
   configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). 1.0 defines only `name_en`
   and `name_de`, so with 1.0 the flag accepts only `en,de`.
@@ -64,10 +95,10 @@ java -jar planetiler-dist/target/*-with-deps.jar custom \
 ## Experimental features (beyond the spec)
 
 This profile can emit a few features that are **not part of the Shortbread schema**. They are *experiments* — useful for
-richer maps, possibly changing or proposed upstream, and explicitly opt-in so the default output stays conformant.
+richer maps, possibly changing or proposed upstream, and explicitly opt-in.
 
-They are **off by default** (a bare run produces strict-spec tiles). Enable them with `--shortbread_experiments`, a
-comma-separated list of `all`, `none` (the default), or specific tokens:
+They are **off by default**. Enable them with `--shortbread_experiments`, a comma-separated list of `all`, `none` (the
+default), or specific tokens:
 
 ```bash
 # everything on
@@ -77,23 +108,29 @@ java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=all
 java -jar target/*-with-deps.jar --area=monaco \
   --shortbread_experiments=3d_buildings,locale_names
 
-# explicit strict spec (same as omitting the flag)
+# explicit default (same as omitting the flag)
 java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=none
 ```
 
-|       Token        |                                                                                                         Adds                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                       Notes                                                                                                                                                                                                                                                                                                                                                                       |
-|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `3d_buildings`     | `height` and `min_height` on the `buildings` layer, OSM [Simple 3D Buildings](https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1) `building:part` polygons marked `part=true`, and a `hide_3d` flag on outlines | `height` only when tagged, derived as in OpenMapTiles: `height`/`building:height` → `building:levels` × 3.66 m. There is no default, so a style needs a fallback such as `["coalesce", ["get", "height"], 5]`. `min_height` only when > 0 and below `height`; implausible (≥ 3660 m) values dropped. Only parts with a height or levels tag are emitted; a 2D style leaves them out with `["!", ["has", "part"]]`. The `outline`-role member of a `type=building` relation is tagged `hide_3d=true` so a renderer extrudes the parts, not the parent footprint. Replaces `building_heights` and `building_parts`, which are still accepted with a warning. ([shortbread-docs #77](https://github.com/shortbread-tiles/shortbread-docs/issues/77)) |
-| `locale_names`     | geofenced `name_<lang>` fallback                                                                                                                                                                                     | A feature tagged only with `name`, inside a country whose default language is `<lang>`, also gets `name_<lang>` (e.g. `name_de` in Germany). Makes a "show only language X" style usable. **Adds a data source**: the Natural Earth `ne_10m_admin_0_countries` shapefile (a few MB, downloaded automatically when enabled). Respects `--name_languages`.                                                                                                                                                                                                                                                                                                                                                                                          |
-| `island_labels`    | `place_labels` for islands mapped as **polygons**                                                                                                                                                                    | The base profile only labels island *nodes*; this area-ranks polygon islands so larger ones appear earlier.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `address_details`  | `addr:unit` and `addr:block` on the `addresses` layer                                                                                                                                                                | Beyond the spec's `housename`/`housenumber`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `bridge_names`     | `name` (and `name_<lang>`) on `man_made=bridge` polygons                                                                                                                                                             | The spec defines no name for bridges. ([shortbread-docs #141](https://github.com/shortbread-tiles/shortbread-docs/issues/141))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `early_attributes` | `link` and `service` on `streets` from each feature's own minimum zoom; with 1.0 also `bicycle`/`horse` from z13                                                                                                     | The spec emits `link` and `service` from z11 (1.0 `bicycle`/`horse` from z14), so link roads look like main roads from z5 to z10 and service railways like main lines at z10. The other attribute tiers stay as specified, so features still merge at low zoom. Measured on Estonia and Berlin: about +2% `streets` layer bytes at z10 and no measurable change in whole tiles. Proposed upstream in [shortbread-docs #184](https://github.com/shortbread-tiles/shortbread-docs/issues/184).                                                                                                                                                                                                                                                      |
+|       Token        |     Layers      |                                             Adds                                              |
+|--------------------|-----------------|-----------------------------------------------------------------------------------------------|
+| `3d_buildings`     | `buildings`     | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true`                |
+| `locale_names`     | all name layers | `name_<lang>` from `name` inside countries whose language is `<lang>`                         |
+| `island_labels`    | `place_labels`  | label points for islands mapped as polygons                                                   |
+| `address_details`  | `addresses`     | `unit`, `block`                                                                               |
+| `bridge_names`     | `bridges`       | `name`, `name_<code>`                                                                         |
+| `early_attributes` | `streets`       | `link` and `service` from each feature's minimum zoom; with 1.0, `bicycle` / `horse` from z13 |
 
-All experiments are **additive**: they only add attributes/features to existing layers (the `buildings` layer still
-carries the spec's `dummy=1`, geometry and zoom ranges are unchanged), so a strict-spec consumer can ignore the extras.
-The registry of tokens lives in `Experiment.java`; new beyond-spec features (e.g. a future `mountain_peaks` layer)
-register there and stay off by default.
+The full contract of each experiment — attributes, when they are present, how they are derived, style snippets,
+caveats, how to detect it in a tileset, and its upstream status — is in [docs/extensions.md](docs/extensions.md).
+
+Most experiments only add attributes that a strict-spec consumer can ignore. Three change what such a consumer sees:
+`3d_buildings` adds `building:part` polygons to `buildings`, `island_labels` adds `place_labels` points from z8, and
+`locale_names` fills the spec's `name_<lang>` attributes from `name`. `early_attributes` makes spec attributes available
+at lower zooms than the spec defines.
+
+The registry of tokens lives in `Experiment.java`. A new token must also get a section in `docs/extensions.md`; a test
+checks that.
 
 ## Use inside Planetiler
 
@@ -110,29 +147,59 @@ java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco
 
 - `Shortbread` — the `ForwardingProfile` that registers all layer handlers and sets tileset metadata.
 - `ShortbreadMain` — the runnable entry point wiring the sources and output.
+- `ShortbreadOptions` — the schema version, name languages and enabled experiments, validated at startup.
 - `layers/` — one handler per group of related output layers.
 - `Experiment` — the registry of beyond-spec [experimental features](#experimental-features-beyond-the-spec) and the
   `--shortbread_experiments` parser.
 - `util/` — shared helpers: `Names` (name attributes + the optional geofenced fallback), `CountryLanguages` (the
   country→language index backing `locale_names`), `Access` (the 1.1 access attributes), `ZOrder`, `Zooms` (size-based
   minimum zoom), `Poi` (POI whitelists), `Geo`, `MergeLines`, and `MergePolygons`.
+- `docs/extensions.md` — the contract of the experiments.
 
 ## Notable output details
 
-Where the schema leaves room for interpretation, this implementation behaves as follows:
+These apply to every build, with or without experiments.
 
+### Deviations from the spec
+
+- **Density limits.** Three layers cap the number of points per grid cell to keep dense tiles small, so they drop spec
+  features where the data is densest:
+  - `addresses`: at most 8 per 8 px cell at z14. Addresses have no ranking, so which ones survive a full cell is not
+    defined. Measured on Noord-Holland: the worst central Amsterdam z14 tile went from 32,502 to 8,021 housenumbers and
+    from 452 KB to 322 KB compressed.
+  - `place_labels`: at most 2 per 64 px cell up to z12, most populous first.
+  - `water_polygons_labels`: at most 1 per 64 px cell up to z11, largest first.
+- **Sub-pixel geometry.** `land` polygons of the same `kind` are merged per tile and merged pieces smaller than 1 px²
+  dropped; `water_polygons` smaller than 1 px are dropped; `ocean` polygons are merged per tile and slivers that
+  collapse to lines at low zoom are dropped.
+
+### Interpretation choices
+
+- `boundaries` lines come only from the member ways of `type=boundary` relations, as OpenStreetMap Carto draws them; a
+  way tagged `boundary=administrative` without a relation is not a boundary line. `admin_level` is read as a plain
+  integer, so a value like `2;4` matches neither 2 nor 4.
+- `boundary_labels` are derived from administrative boundary polygons rather than a pre-built admin-points shapefile, so
+  no extra data source is required. They are sorted by `way_area`, largest first.
+- `way_area` is a full-precision number in Web-Mercator units: m² on `water_polygons` and `water_polygons_labels`,
+  hectares on `boundary_labels`.
 - `surface` is the raw value of the OSM tag, as the schema defines it — not collapsed to `paved`/`unpaved`.
 - `name` and the `name_<code>` attributes each come from their own tag, with no fallback: a feature tagged only with
   `name` gets no translated fields. (The opt-in `locale_names`
   [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback.)
-- `way_area` is a full-precision number.
+- Name values are emitted as tagged. A multi-value tag such as `name=Mole Lake;Dewe’igan-madwewe-agaaming-zaaga’igan`
+  stays one string; a style that wants a single name can split it at `;`.
 - Attributes with an empty value are omitted rather than emitted as an empty string.
-- `boundary_labels` are derived from administrative boundary polygons rather than a pre-built admin-points shapefile,
-  so no extra data source is required.
+- In `streets`, `street_labels`, `water_lines`, `water_lines_labels`, `dam_lines` and `boundaries`, connected lines with
+  identical attributes are merged per tile, and pieces shorter than half a pixel are dropped.
 
 ## Tests
 
-`ShortbreadSpecTest` runs the example-based specification in `src/test/resources/shortbread.spec.yml` against the
-profile via `BaseSchemaValidator`. Each example lists an input feature and the vector-tile features it should produce.
-`ShortbreadProfileTest` adds focused per-layer unit tests, `ShortbreadV11Test` covers the 1.0/1.1 differences, and
-`ShortbreadIntegrationTest` runs the whole pipeline over the bundled Monaco extract.
+- `ShortbreadSpecTest` runs the example-based specification in `src/test/resources/shortbread.spec.yml` against the
+  profile via `BaseSchemaValidator`. Each example lists an input feature and the vector-tile features it should produce.
+- `ShortbreadProfileTest` adds focused per-layer unit tests, mostly with all experiments enabled.
+- `ShortbreadV11Test` covers the 1.0/1.1 differences.
+- `ShortbreadOptionsTest` covers the validation of the version and language options.
+- `ExperimentTest` covers the experiment tokens and checks that each one is documented in `docs/extensions.md`.
+- `ShortbreadIntegrationTest` runs the whole pipeline over the bundled Monaco extract.
+- `util/CountryLanguagesTest`, `util/MergePolygonsTest` and `util/ShortbreadUtilTest` cover the helpers.
+

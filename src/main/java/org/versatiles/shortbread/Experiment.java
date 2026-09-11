@@ -27,7 +27,9 @@ public enum Experiment {
   ADDRESS_DETAILS("address_details", "addr:unit and addr:block attributes on the addresses layer"),
   BRIDGE_NAMES("bridge_names", "name attribute on bridge polygons"),
   EARLY_ATTRIBUTES("early_attributes",
-    "link and service on streets from each feature's min zoom, 1.0 bicycle/horse from z13 (shortbread-docs #184)");
+    "link and service on streets from each feature's min zoom, 1.0 bicycle/horse from z13 (shortbread-docs #184)"),
+  MOUNTAIN_PEAKS("mountain_peaks",
+    "mountain_peaks layer: peak, volcano and saddle nodes with kind, name and ele (shortbread-docs #137)");
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Experiment.class);
 

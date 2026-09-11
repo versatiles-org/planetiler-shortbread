@@ -10,6 +10,7 @@ import org.versatiles.shortbread.layers.Buildings;
 import org.versatiles.shortbread.layers.Dams;
 import org.versatiles.shortbread.layers.Ferries;
 import org.versatiles.shortbread.layers.Land;
+import org.versatiles.shortbread.layers.MountainPeaks;
 import org.versatiles.shortbread.layers.Ocean;
 import org.versatiles.shortbread.layers.Piers;
 import org.versatiles.shortbread.layers.PlaceLabels;
@@ -83,6 +84,10 @@ public class Shortbread extends ForwardingProfile {
     // boundaries and places
     registerHandler(new Boundaries(options, countries));
     registerHandler(new PlaceLabels(options, countries));
+    // EXPERIMENT: a layer beyond the schema, so it is only registered (and only appears in the metadata) when enabled
+    if (options.has(Experiment.MOUNTAIN_PEAKS)) {
+      registerHandler(new MountainPeaks(options, countries));
+    }
 
     // line layers whose short segments are merged below the maximum zoom
     registerHandler(new MergeLines(WaterLines.LAYER));

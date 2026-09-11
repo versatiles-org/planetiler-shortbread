@@ -467,6 +467,61 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void mountainPeakWithElevation() {
+    // EXPERIMENT mountain_peaks
+    var peak = onlyOne(process(TestUtils.newPoint(0, 0),
+      Map.of("natural", "peak", "name", "Dom", "ele", "4545.4")), "mountain_peaks");
+    assertEquals("peak", attrs(peak).get("kind"));
+    assertEquals("Dom", attrs(peak).get("name"));
+    assertEquals(4545, attrs(peak).get("ele"));
+    // OpenStreetMap Carto draws peaks from its raster z11, which is the scale of vector z10
+    assertEquals(10, peak.getMinZoom());
+  }
+
+  @Test
+  void volcanoAndSaddleKindsAndZooms() {
+    var volcano = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "volcano")), "mountain_peaks");
+    assertEquals("volcano", attrs(volcano).get("kind"));
+    assertEquals(10, volcano.getMinZoom());
+
+    // OpenStreetMap Carto draws saddles from its raster z15, the scale of vector z14
+    var saddle = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "saddle")), "mountain_peaks");
+    assertEquals("saddle", attrs(saddle).get("kind"));
+    assertEquals(14, saddle.getMinZoom());
+  }
+
+  @Test
+  void peakElevationOnlyFromPlainNumbers() {
+    // like OpenStreetMap Carto: a plain number of meters, rounded half away from zero; no units, lists or ranges
+    for (String ele : List.of("4545 m", "14911'", "4545;4546", "12345", "")) {
+      var peak = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "peak", "ele", ele)), "mountain_peaks");
+      assertNull(attrs(peak).get("ele"), () -> "ele=" + ele);
+    }
+    var rounded =
+      onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "peak", "ele", "-2.5")), "mountain_peaks");
+    assertEquals(-3, attrs(rounded).get("ele"));
+  }
+
+  @Test
+  void higherPeaksComeFirst() {
+    var high = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "peak", "ele", "4000")), "mountain_peaks");
+    var low = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "peak", "ele", "1000")), "mountain_peaks");
+    var unknown = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "peak")), "mountain_peaks");
+    assertTrue(high.getSortKey() < low.getSortKey());
+    assertTrue(low.getSortKey() < unknown.getSortKey());
+  }
+
+  @Test
+  void mountainPeaksOnlyFromNodesAndOnlyWithTheExperiment() {
+    assertFalse(hasLayer(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("natural", "peak")),
+      "mountain_peaks"));
+
+    Shortbread strict = new Shortbread(PlanetilerConfig.defaults());
+    assertFalse(hasLayer(TestUtils.processSourceFeature(SimpleFeature.create(TestUtils.newPoint(0, 0),
+      Map.of("natural", "peak", "ele", "4000"), Shortbread.OSM_SOURCE, null, 1), strict), "mountain_peaks"));
+  }
+
+  @Test
   void ferryLine() {
     var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("route", "ferry", "name", "Ferry"));
     var ferry = onlyOne(features, "ferries");

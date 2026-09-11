@@ -17,25 +17,27 @@ java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=3d_build
 The published VersaTiles tiles are generated with all of them: the `versatiles-planetiler` image defaults to
 `EXPERIMENTS=all` and `LANGUAGES=en,fr,es,de,ar,el,it,nl,pl,pt,uk`.
 
-|                  Token                  |        Layers         |                                      Adds                                      |              A strict-spec consumer…               |
-|-----------------------------------------|-----------------------|--------------------------------------------------------------------------------|----------------------------------------------------|
-| [`3d_buildings`](#3d_buildings)         | `buildings`           | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true` | draws the part polygons unless it filters `part`   |
-| [`locale_names`](#locale_names)         | all layers with names | `name_<lang>` filled from `name` inside countries whose language is `<lang>`   | sees spec attributes filled from a different tag   |
-| [`island_labels`](#island_labels)       | `place_labels`        | label points for islands mapped as polygons                                    | sees additional points, some before z10            |
-| [`address_details`](#address_details)   | `addresses`           | `unit`, `block`                                                                | can ignore them                                    |
-| [`bridge_names`](#bridge_names)         | `bridges`             | `name`, `name_<code>`                                                          | can ignore them                                    |
-| [`early_attributes`](#early_attributes) | `streets`             | `link` and `service` from each feature's minimum zoom; 1.0 access from z13     | sees spec attributes at lower zooms than specified |
+|                  Token                  |            Layers             |                                      Adds                                      |              A strict-spec consumer…               |
+|-----------------------------------------|-------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------|
+| [`3d_buildings`](#3d_buildings)         | `buildings`                   | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true` | draws the part polygons unless it filters `part`   |
+| [`locale_names`](#locale_names)         | all layers with names         | `name_<lang>` filled from `name` inside countries whose language is `<lang>`   | sees spec attributes filled from a different tag   |
+| [`island_labels`](#island_labels)       | `place_labels`                | label points for islands mapped as polygons                                    | sees additional points, some before z10            |
+| [`address_details`](#address_details)   | `addresses`                   | `unit`, `block`                                                                | can ignore them                                    |
+| [`bridge_names`](#bridge_names)         | `bridges`                     | `name`, `name_<code>`                                                          | can ignore them                                    |
+| [`early_attributes`](#early_attributes) | `streets`                     | `link` and `service` from each feature's minimum zoom; 1.0 access from z13     | sees spec attributes at lower zooms than specified |
+| [`mountain_peaks`](#mountain_peaks)     | `mountain_peaks`, a new layer | peaks, volcanoes and saddles with `kind`, names and `ele`                      | can ignore the layer                               |
 
 ## Detecting experiments
 
 The archive metadata does not list the enabled experiments. The `vector_layers` in the metadata reveal some of them,
-because they add fields:
+because they add fields or layers:
 
-|                 Field in `vector_layers`                 |    Experiment     |
+|                    In `vector_layers`                    |    Experiment     |
 |----------------------------------------------------------|-------------------|
 | `height`, `min_height`, `hide_3d`, `part` on `buildings` | `3d_buildings`    |
 | `unit`, `block` on `addresses`                           | `address_details` |
 | `name` on `bridges`                                      | `bridge_names`    |
+| a `mountain_peaks` layer                                 | `mountain_peaks`  |
 
 `locale_names`, `island_labels` and `early_attributes` add no fields and cannot be detected from the metadata. The
 Shortbread validator in versatiles-rs reports extension attributes as `unknown_attribute` warnings.
@@ -125,7 +127,7 @@ when all of these hold:
 
 It applies to every layer with names: `boundary_labels`, `place_labels`, `water_polygons_labels`,
 `water_lines_labels`, `street_labels`, `street_labels_points`, `streets_polygons_labels`, `pois`, `ferries`,
-`public_transport`, and `bridges` when `bridge_names` is enabled too.
+`public_transport`, and `bridges` or `mountain_peaks` when `bridge_names` or `mountain_peaks` is enabled too.
 
 |    Label mode     |                     Expression                     |
 |-------------------|----------------------------------------------------|
@@ -200,6 +202,47 @@ whole tiles. Emitting all mid-tier attributes from the feature's minimum zoom wo
 
 **Upstream:** [shortbread-docs #184](https://github.com/shortbread-tiles/shortbread-docs/issues/184) proposes these zooms
 for the schema. If it is accepted, the behavior becomes the default for the version that includes it.
+
+## `mountain_peaks`
+
+A point layer the schema does not have, for orientation in mountain areas. It follows OpenStreetMap Carto, which draws
+peaks and volcanoes from z11 and saddles from z15. Carto's zooms refer to 256 px raster tiles, and the same map scale
+is one zoom lower in 512 px vector tiles, so the layer starts at z10 and z14. Only nodes are used, as in Carto.
+
+|   Kind    |       From        | Zoom |
+|-----------|-------------------|------|
+| `peak`    | `natural=peak`    | 10+  |
+| `volcano` | `natural=volcano` | 10+  |
+| `saddle`  | `natural=saddle`  | 14   |
+
+|       Attribute       |      Type       |                        Present                        |
+|-----------------------|-----------------|-------------------------------------------------------|
+| `kind`                | string          | always                                                |
+| `name`, `name_<code>` | string          | when tagged, as on the other layers                   |
+| `ele`                 | integer, meters | when `ele` is a plain number, rounded to whole meters |
+
+- **`ele`** is read like Carto reads it: up to four digits with optional decimals and an optional minus sign. Values
+  with units (`4545 m`), feet, lists or ranges are left out.
+- **Order:** features are sorted by `ele`, highest first; features without `ele` come last. There is no density limit.
+- **Density**, measured on a Switzerland extract (2026-09-11): 9,227 peaks and 2,676 saddles, 87% of the peaks named
+  and 93% with a plain `ele`; at most 348 peaks in a z10 tile, 116 in a z11 tile and 11 in a z14 tile.
+- **Cost**, on the same extract: the archive grows by 0.5% (334,184 KiB to 335,944 KiB). z10 tiles grow the most, by
+  6.7% in total, but the largest z10 tile only from 125.0 KiB to 126.8 KiB; from z12 on the largest tiles are unchanged.
+
+```json
+{
+  "type": "symbol",
+  "source-layer": "mountain_peaks",
+  "filter": ["!=", ["get", "kind"], "saddle"],
+  "layout": {
+    "text-field": ["concat", ["get", "name"], "\n", ["get", "ele"]],
+    "symbol-sort-key": ["-", 0, ["coalesce", ["get", "ele"], 0]]
+  }
+}
+```
+
+**Upstream:** [shortbread-docs #137](https://github.com/shortbread-tiles/shortbread-docs/issues/137) asks for peaks and
+volcanoes in a future schema version.
 
 ## Stability
 

@@ -112,14 +112,15 @@ java -jar target/*-with-deps.jar --area=monaco \
 java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=none
 ```
 
-|       Token        |     Layers      |                                             Adds                                              |
-|--------------------|-----------------|-----------------------------------------------------------------------------------------------|
-| `3d_buildings`     | `buildings`     | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true`                |
-| `locale_names`     | all name layers | `name_<lang>` from `name` inside countries whose language is `<lang>`                         |
-| `island_labels`    | `place_labels`  | label points for islands mapped as polygons                                                   |
-| `address_details`  | `addresses`     | `unit`, `block`                                                                               |
-| `bridge_names`     | `bridges`       | `name`, `name_<code>`                                                                         |
-| `early_attributes` | `streets`       | `link` and `service` from each feature's minimum zoom; with 1.0, `bicycle` / `horse` from z13 |
+|       Token        |            Layers            |                                             Adds                                              |
+|--------------------|------------------------------|-----------------------------------------------------------------------------------------------|
+| `3d_buildings`     | `buildings`                  | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true`                |
+| `locale_names`     | all name layers              | `name_<lang>` from `name` inside countries whose language is `<lang>`                         |
+| `island_labels`    | `place_labels`               | label points for islands mapped as polygons                                                   |
+| `address_details`  | `addresses`                  | `unit`, `block`                                                                               |
+| `bridge_names`     | `bridges`                    | `name`, `name_<code>`                                                                         |
+| `early_attributes` | `streets`                    | `link` and `service` from each feature's minimum zoom; with 1.0, `bicycle` / `horse` from z13 |
+| `mountain_peaks`   | `mountain_peaks` (new layer) | peaks and volcanoes from z10, saddles at z14, with `kind`, names and `ele`                    |
 
 The full contract of each experiment — attributes, when they are present, how they are derived, style snippets,
 caveats, how to detect it in a tileset, and its upstream status — is in [docs/extensions.md](docs/extensions.md).

@@ -711,6 +711,32 @@ examples:
     tags:
       kind: gondola
 
+- name: 'goods cable car'
+  input:
+    source: osm
+    geometry: line
+    tags:
+      aerialway: goods
+  output:
+    layer: aerialways
+    geometry: line
+    min_zoom: 12
+    tags:
+      kind: goods
+
+- name: 'rope tow'
+  input:
+    source: osm
+    geometry: line
+    tags:
+      aerialway: rope_tow
+  output:
+    layer: aerialways
+    geometry: line
+    min_zoom: 12
+    tags:
+      kind: rope-tow
+
 - name: ferry without motor at z12
   input:
     source: osm

@@ -14,7 +14,7 @@ public class Aerialways implements ForwardingProfile.FeatureProcessor {
   public static final String LAYER = "aerialways";
 
   private static final String[] KINDS =
-    {"cable_car", "gondola", "chair_lift", "drag_lift", "t-bar", "j-bar", "platter", "rope_tow"};
+    {"cable_car", "gondola", "goods", "chair_lift", "drag_lift", "t-bar", "j-bar", "platter", "rope_tow"};
 
   @Override
   public Expression filter() {
@@ -29,10 +29,9 @@ public class Aerialways implements ForwardingProfile.FeatureProcessor {
       return;
     }
     String kind = f.getString("aerialway");
-    // OSM tags rope tows as `rope_tow`, but the Shortbread `aerialways` kind enum has no such value; map it to the
-    // generic surface-lift kind `drag_lift` (a rope tow is a type of drag lift) to stay in-schema.
+    // OSM tags rope tows as `rope_tow`, but the schema spells the kind with a hyphen, like `t-bar` and `j-bar`
     if ("rope_tow".equals(kind)) {
-      kind = "drag_lift";
+      kind = "rope-tow";
     }
     features.line(LAYER)
       .setMinZoom(12)

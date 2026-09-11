@@ -387,10 +387,15 @@ class ShortbreadProfileTest {
   }
 
   @Test
-  void aerialwayRopeTowMapsToDragLift() {
-    // rope_tow is not in the Shortbread aerialways kind enum → remapped to the generic drag_lift
+  void aerialwayRopeTowUsesHyphenatedKind() {
     var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("aerialway", "rope_tow"));
-    assertEquals("drag_lift", attrs(onlyOne(features, "aerialways")).get("kind"));
+    assertEquals("rope-tow", attrs(onlyOne(features, "aerialways")).get("kind"));
+  }
+
+  @Test
+  void aerialwayGoods() {
+    var features = process(TestUtils.newLineString(0, 0, 1, 1), Map.of("aerialway", "goods"));
+    assertEquals("goods", attrs(onlyOne(features, "aerialways")).get("kind"));
   }
 
   @Test

@@ -1,6 +1,7 @@
 package org.versatiles.shortbread;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -24,10 +25,17 @@ class ExperimentTest {
   }
 
   @Test
-  void buildingPartsImpliesBuildingHeights() {
-    var set = Experiment.parse(List.of("building_parts"));
-    assertTrue(set.contains(Experiment.BUILDING_PARTS));
-    assertTrue(set.contains(Experiment.BUILDING_HEIGHTS));
+  void oldBuildingTokensEnable3dBuildings() {
+    assertEquals(Set.of(Experiment.BUILDINGS_3D), Experiment.parse(List.of("building_heights")));
+    assertEquals(Set.of(Experiment.BUILDINGS_3D), Experiment.parse(List.of("Building_Parts")));
+    assertEquals(Set.of(Experiment.BUILDINGS_3D), Experiment.parse(List.of("3d_buildings", "building_parts")));
+  }
+
+  @Test
+  void helpListsOnlyCurrentTokens() {
+    assertTrue(Experiment.help().contains("3d_buildings"));
+    assertFalse(Experiment.help().contains("building_heights"));
+    assertFalse(Experiment.help().contains("building_parts"));
   }
 
   @Test

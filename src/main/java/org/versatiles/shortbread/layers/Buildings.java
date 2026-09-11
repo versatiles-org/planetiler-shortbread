@@ -19,20 +19,22 @@ import org.versatiles.shortbread.ShortbreadOptions;
  * Any closed way/relation with a {@code building} tag other than {@code building=no}. The schema carries a constant
  * {@code dummy=1}.
  * <p>
- * EXPERIMENT (beyond Shortbread 1.0/1.1, which defines only {@code dummy=1} — see shortbread-docs #77): we also emit
- * {@code height} (and {@code min_height} when non-zero) for 3D extrusion. The derivation follows OpenMapTiles
+ * EXPERIMENT {@code 3d_buildings} (beyond Shortbread 1.0/1.1, which defines only {@code dummy=1} — see shortbread-docs
+ * #77):
+ * <ul>
+ * <li>{@code height} (and {@code min_height} when non-zero) for 3D extrusion. The derivation follows OpenMapTiles
  * ({@code Building.java}): an explicit {@code height}/{@code building:height} tag, else {@code building:levels} (or
  * {@code levels}) × 3.66 m, else a 5 m default; {@code min_height} likewise from {@code min_height} or
- * {@code building:min_level} × 3.66. Absurd values (>= 3660 m, almost always tagging errors) are dropped.
- * <p>
- * EXPERIMENT (3D / OSM <a href="https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1">Simple 3D Buildings</a>): we
- * also emit {@code building:part} polygons so multi-part buildings can be extruded correctly, but <em>only</em> those
- * that carry height information (a bare {@code building:part} with no height adds overlapping-footprint noise to flat
- * 2D styles for no 3D benefit). To stop the parent footprint from being double-extruded under its parts, the
- * {@code outline}-role member of a {@code type=building} relation is tagged {@code hide_3d=true} (OpenMapTiles
- * convention): a renderer extrudes every {@code buildings} feature except those. Known gap (as in OpenMapTiles): parts
- * that merely overlap an outline with no {@code type=building} relation cannot be detected cheaply, so such outlines do
- * not get {@code hide_3d}.
+ * {@code building:min_level} × 3.66. Absurd values (>= 3660 m, almost always tagging errors) are dropped.</li>
+ * <li>OSM <a href="https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1">Simple 3D Buildings</a>
+ * {@code building:part} polygons, so multi-part buildings can be extruded correctly, but <em>only</em> those that carry
+ * height information. They are marked {@code part=true}, so a 2D style can leave them out and draw only the
+ * footprints.</li>
+ * <li>{@code hide_3d=true} on the {@code outline}-role member of a {@code type=building} relation, so the parent
+ * footprint is not extruded under its parts (OpenMapTiles convention): a renderer extrudes every {@code buildings}
+ * feature except those. Known gap (as in OpenMapTiles): parts that merely overlap an outline with no
+ * {@code type=building} relation cannot be detected cheaply, so such outlines do not get {@code hide_3d}.</li>
+ * </ul>
  */
 public class Buildings
   implements ForwardingProfile.FeatureProcessor, ForwardingProfile.OsmRelationPreprocessor {
@@ -69,8 +71,8 @@ public class Buildings
   @Override
   public Expression filter() {
     Expression building = Expression.matchField("building");
-    // only look at building:part features when the Simple-3D-Buildings experiment is on
-    Expression keys = options.has(Experiment.BUILDING_PARTS) ?
+    // only look at building:part features when the 3D buildings experiment is on
+    Expression keys = options.has(Experiment.BUILDINGS_3D) ?
       Expression.or(building, Expression.matchField("building:part")) : building;
     return Expression.and(Expression.matchSource(Shortbread.OSM_SOURCE), keys);
   }
@@ -80,19 +82,19 @@ public class Buildings
     if (!feature.canBePolygon()) {
       return;
     }
+    boolean buildings3d = options.has(Experiment.BUILDINGS_3D);
     if (isBuildingValue(feature.getString("building"))) {
       var output = emit(features);
-      if (options.has(Experiment.BUILDING_HEIGHTS)) {
+      if (buildings3d) {
         addHeights(feature, output);
+        // outline of a type=building relation: keep the 2D footprint but tell the renderer not to extrude it
+        if (isOutlineOfBuildingRelation(feature)) {
+          output.setAttr("hide_3d", true);
+        }
       }
-      // outline of a type=building relation: keep the 2D footprint but tell the renderer not to extrude it
-      if (options.has(Experiment.BUILDING_PARTS) && isOutlineOfBuildingRelation(feature)) {
-        output.setAttr("hide_3d", true);
-      }
-    } else if (options.has(Experiment.BUILDING_PARTS) &&
-      isBuildingValue(feature.getString("building:part")) && hasHeightInfo(feature)) {
-      // only 3D-relevant parts (those carrying height info) are emitted; parts imply BUILDING_HEIGHTS
-      addHeights(feature, emit(features));
+    } else if (buildings3d && isBuildingValue(feature.getString("building:part")) && hasHeightInfo(feature)) {
+      // only 3D-relevant parts (those carrying height info) are emitted; the marker lets a 2D style skip them
+      addHeights(feature, emit(features).setAttr("part", true));
     }
   }
 

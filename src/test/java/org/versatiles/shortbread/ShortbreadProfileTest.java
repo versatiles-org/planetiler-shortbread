@@ -149,12 +149,14 @@ class ShortbreadProfileTest {
 
   @Test
   void buildingPartWithHeightEmitted() {
-    // EXPERIMENT (Simple 3D Buildings): a building:part carrying height info is emitted into the buildings layer
+    // EXPERIMENT (3d_buildings): a building:part carrying height info is emitted into the buildings layer, marked
+    // part=true so a 2D style can leave it out
     var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
       Map.of("building:part", "yes", "building:levels", "10"));
     var b = onlyOne(features, "buildings");
     assertEquals(1, attrs(b).get("dummy"));
     assertEquals(37, attrs(b).get("height")); // ceil(10 * 3.66) = ceil(36.6)
+    assertEquals(true, attrs(b).get("part"));
   }
 
   @Test
@@ -185,13 +187,16 @@ class ShortbreadProfileTest {
     var features = TestUtils.processSourceFeature(way, profile);
     var b = onlyOne(features, "buildings");
     assertEquals(true, attrs(b).get("hide_3d"));
+    // the outline is a footprint, not a part
+    assertNull(attrs(b).get("part"));
   }
 
   @Test
-  void standaloneBuildingHasNoHide3d() {
+  void standaloneBuildingHasNoHide3dAndNoPartMarker() {
     var b = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "yes")),
       "buildings");
     assertNull(attrs(b).get("hide_3d"));
+    assertNull(attrs(b).get("part"));
   }
 
   @Test
@@ -220,9 +225,9 @@ class ShortbreadProfileTest {
       TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building", "yes", "building:levels", "5"),
       Shortbread.OSM_SOURCE, null, 1), strict), "buildings");
     assertEquals(1, attrs(building).get("dummy"));
-    assertNull(attrs(building).get("height")); // BUILDING_HEIGHTS off
+    assertNull(attrs(building).get("height")); // 3d_buildings off
 
-    // a height-bearing building:part is not emitted at all (BUILDING_PARTS off)
+    // a height-bearing building:part is not emitted at all (3d_buildings off)
     assertTrue(TestUtils.processSourceFeature(SimpleFeature.create(
       TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("building:part", "yes", "height", "10"),
       Shortbread.OSM_SOURCE, null, 1), strict).stream().noneMatch(f -> f.getLayer().equals("buildings")));

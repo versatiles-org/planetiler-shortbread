@@ -117,13 +117,13 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
       setIfPresent(feature, "tower:type", f.getString("tower:type"));
     }
     if ("recycling".equals(amenity)) {
-      feature.setAttr("recycling:glass_bottles", isYes(f, "recycling:glass_bottles"));
-      feature.setAttr("recycling:paper", isYes(f, "recycling:paper"));
-      feature.setAttr("recycling:clothes", isYes(f, "recycling:clothes"));
-      feature.setAttr("recycling:scrap_metal", isYes(f, "recycling:scrap_metal"));
+      setIfYes(feature, f, "recycling:glass_bottles");
+      setIfYes(feature, f, "recycling:paper");
+      setIfYes(feature, f, "recycling:clothes");
+      setIfYes(feature, f, "recycling:scrap_metal");
     }
     if ("bank".equals(amenity)) {
-      feature.setAttr("atm", isYes(f, "atm"));
+      setIfYes(feature, f, "atm");
     }
     if ("place_of_worship".equals(amenity)) {
       setIfPresent(feature, "religion", f.getString("religion"));
@@ -135,8 +135,11 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
     setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
   }
 
-  private static boolean isYes(SourceFeature f, String key) {
-    return "yes".equals(f.getString(key, ""));
+  /** Writes {@code key=true} when the tag is {@code yes}; the schema's default for these flags is false. */
+  private static void setIfYes(FeatureCollector.Feature feature, SourceFeature f, String key) {
+    if ("yes".equals(f.getString(key, ""))) {
+      feature.setAttr(key, true);
+    }
   }
 
   private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {

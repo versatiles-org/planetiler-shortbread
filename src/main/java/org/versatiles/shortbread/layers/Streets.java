@@ -23,6 +23,8 @@ import org.versatiles.shortbread.util.ZOrder;
  * follow the schema version: raw {@code bicycle}/{@code horse} from z14 in 1.0, normalized
  * {@code motorcar}/{@code bicycle}/{@code foot}/{@code horse} from z13 in 1.1 (see {@link Access}).
  * <p>
+ * The boolean attributes default to {@code false} in the schema, so they are only written when true.
+ * <p>
  * EXPERIMENT {@code early_attributes} (shortbread-docs #184): {@code link} and {@code service} identify a feature, so
  * they are emitted from the feature's own minimum zoom instead of z11, and in 1.0 {@code bicycle}/{@code horse} from
  * z13, where paths enter the layer. The other mid-tier attributes stay at z11, because features only merge at low zoom
@@ -160,13 +162,13 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       .setMaxZoom(14)
       .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, rail, false))
-      .setAttr("kind", kind)
-      .setAttr("rail", rail);
+      .setAttr("kind", kind);
+    setIfTrue(feature, "rail", rail, mz);
 
     // mid tier (z11+)
-    feature.setAttrWithMinzoom("link", link, identifyingMinzoom);
-    feature.setAttrWithMinzoom("tunnel", tunnel, MED_TIER_MINZOOM);
-    feature.setAttrWithMinzoom("bridge", bridge, MED_TIER_MINZOOM);
+    setIfTrue(feature, "link", link, identifyingMinzoom);
+    setIfTrue(feature, "tunnel", tunnel, MED_TIER_MINZOOM);
+    setIfTrue(feature, "bridge", bridge, MED_TIER_MINZOOM);
     if (surface != null && !surface.isEmpty()) {
       // the schema defines surface as the raw value of the OSM tag, like street_polygons below
       feature.setAttrWithMinzoom("surface", surface, MED_TIER_MINZOOM);
@@ -179,8 +181,8 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     }
 
     // full tier (z14)
-    feature.setAttrWithMinzoom("oneway", oneway, FULL_TIER_MINZOOM);
-    feature.setAttrWithMinzoom("oneway_reverse", onewayReverse, FULL_TIER_MINZOOM);
+    setIfTrue(feature, "oneway", oneway, FULL_TIER_MINZOOM);
+    setIfTrue(feature, "oneway_reverse", onewayReverse, FULL_TIER_MINZOOM);
 
     if (options.v11()) {
       // 1.1: motorcar/bicycle/foot/horse, normalized to yes/limited/no, from z13, highways only
@@ -215,15 +217,15 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       return;
     }
 
+    // rail is always false here, the schema default, so it is not written
     var feature = features.polygon(POLYGONS)
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, false, false))
-      .setAttr("kind", kind)
-      .setAttr("rail", false)
-      .setAttr("tunnel", ZOrder.isTunnel(f))
-      .setAttr("bridge", ZOrder.isBridge(f));
+      .setAttr("kind", kind);
+    setIfTrue(feature, "tunnel", ZOrder.isTunnel(f), mz);
+    setIfTrue(feature, "bridge", ZOrder.isBridge(f), mz);
     String surface = f.getString("surface");
     if (surface != null && !surface.isEmpty()) {
       feature.setAttr("surface", surface);
@@ -245,6 +247,13 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
   private static void setIfPresent(FeatureCollector.Feature feature, String key, String value, int minzoom) {
     if (value != null && !value.isEmpty()) {
       feature.setAttrWithMinzoom(key, value, minzoom);
+    }
+  }
+
+  /** Writes a boolean attribute only when it is true, since the schema's default for it is false. */
+  private static void setIfTrue(FeatureCollector.Feature feature, String key, boolean value, int minzoom) {
+    if (value) {
+      feature.setAttrWithMinzoom(key, true, minzoom);
     }
   }
 }

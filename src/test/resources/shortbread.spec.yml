@@ -73,7 +73,6 @@ examples:
     tags:
       kind: canal
       tunnel: true
-      bridge: false
   - layer: water_lines_labels
     geometry: line
     # spec: river/canal labels from z12 (size-based above)
@@ -81,7 +80,6 @@ examples:
     tags:
       kind: canal
       tunnel: true
-      bridge: false
       name: The Canal
       name_en: The Canal (en)
       name_de: The Canal (de)
@@ -102,15 +100,11 @@ examples:
     min_zoom: 14
     tags:
       kind: stream
-      tunnel: false
-      bridge: false
   - layer: water_lines_labels
     geometry: line
     min_zoom: 14
     tags:
       kind: stream
-      tunnel: false
-      bridge: false
       name: The Stream
       name_en: The Stream (en)
       name_de: The Stream (de)
@@ -304,12 +298,8 @@ examples:
     min_zoom: 8
     min_size: 0
     tags:
-      bridge: false
       kind: primary
-      link: false
-      rail: false
       surface: asphalt
-      tunnel: false
   - layer: street_labels
     geometry: line
     min_zoom: 12
@@ -347,14 +337,10 @@ examples:
     allow_extra_tags: false
     min_size: 0
     tags:
-      bridge: false
       kind: primary
       link: true
-      rail: false
       surface: asphalt
-      tunnel: false
       oneway: true
-      oneway_reverse: false
   - layer: street_labels
     geometry: line
     min_zoom: 13
@@ -381,14 +367,9 @@ examples:
     allow_extra_tags: false
     min_size: 0
     tags:
-      bridge: false
       kind: rail
-      link: false
       rail: true
-      tunnel: false
       service: service_value
-      oneway: false
-      oneway_reverse: false
 
 - name: narrow_gauge without service
   input:
@@ -403,13 +384,8 @@ examples:
     min_zoom: 8
     allow_extra_tags: false
     tags:
-      bridge: false
       kind: narrow_gauge
-      link: false
       rail: true
-      tunnel: false
-      oneway: false
-      oneway_reverse: false
 
 - name: 'track with grade'
   input:
@@ -425,12 +401,8 @@ examples:
     at_zoom: 11
     allow_extra_tags: false
     tags:
-      bridge: false
       kind: track
-      link: false
-      rail: false
       tracktype: grade2
-      tunnel: false
 
 - name: 'named path'
   input:
@@ -469,7 +441,6 @@ examples:
     allow_extra_tags: false
     tags:
       kind: motorway
-      rail: false
 
 - name: 'path bridge'
   input:
@@ -486,11 +457,6 @@ examples:
     tags:
       kind: path
       bridge: true
-      link: false
-      oneway: false
-      oneway_reverse: false
-      rail: false
-      tunnel: false
 
 - name: 'pedestrian tunnel'
   input:
@@ -507,11 +473,6 @@ examples:
     tags:
       kind: pedestrian
       tunnel: true
-      bridge: false
-      link: false
-      oneway: false
-      oneway_reverse: false
-      rail: false
 
 - name: 'horse'
   input:
@@ -528,12 +489,6 @@ examples:
     tags:
       kind: track
       horse: definitely
-      tunnel: false
-      bridge: false
-      link: false
-      oneway: false
-      oneway_reverse: false
-      rail: false
 
 - name: 'bicycle'
   input:
@@ -550,12 +505,6 @@ examples:
     tags:
       kind: track
       bicycle: definitely
-      tunnel: false
-      bridge: false
-      link: false
-      oneway: false
-      oneway_reverse: false
-      rail: false
 
 - name: 'aeroway=taxiway'
   input:
@@ -572,12 +521,6 @@ examples:
       min_zoom: 13
       tags:
         kind: taxiway
-        bridge: false
-        tunnel: false
-        link: false
-        rail: false
-        oneway: false
-        oneway_reverse: false
 
 - name: 'aeroway=runway'
   input:
@@ -596,12 +539,6 @@ examples:
     tags:
       kind: runway
       surface: concrete:lanes
-      bridge: false
-      tunnel: false
-      link: false
-      rail: false
-      oneway: false
-      oneway_reverse: false
 
 - name: 'pedestrian polygon'
   input:
@@ -620,11 +557,8 @@ examples:
     min_zoom: 14
     allow_extra_tags: false
     tags:
-      bridge: false
       kind: pedestrian
-      rail: false
       surface: paving_stones
-      tunnel: false
   - layer: streets_polygons_labels
     geometry: point
     min_zoom: 14
@@ -663,8 +597,6 @@ examples:
     tags:
       kind: service
       bridge: true
-      rail: false
-      tunnel: false
 
 - name: 'motorway junction'
   input:
@@ -868,10 +800,6 @@ examples:
     allow_extra_tags: false
     tags:
       amenity: recycling
-      recycling:glass_bottles: false
-      recycling:paper: false
-      recycling:clothes: false
-      recycling:scrap_metal: false
 
 - name: 'poi bank without atm'
   input:
@@ -900,7 +828,6 @@ examples:
     geometry: point
     allow_extra_tags: false
     tags:
-      atm: false
       amenity: bank
 
 - name: 'poi on polygon'

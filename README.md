@@ -189,7 +189,11 @@ These apply to every build, with or without experiments.
   [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback.)
 - Name values are emitted as tagged. A multi-value tag such as `name=Mole Lake;Dewe’igan-madwewe-agaaming-zaaga’igan`
   stays one string; a style that wants a single name can split it at `;`.
-- Attributes with an empty value are omitted rather than emitted as an empty string.
+- Attributes whose value equals the schema's default are omitted: empty values rather than empty strings, and the
+  boolean attributes that default to `false` — `tunnel` and `bridge` on `water_lines`, `water_lines_labels` and
+  `street_polygons`, `link`, `rail`, `tunnel`, `bridge`, `oneway` and `oneway_reverse` on `streets`, and `atm` and
+  `recycling:*` on `pois` — are only written when `true`. Attributes without a default in the schema, such as
+  `maritime` and `disputed` on `boundaries`, are always written.
 - In `streets`, `street_labels`, `water_lines`, `water_lines_labels`, `dam_lines` and `boundaries`, connected lines with
   identical attributes are merged per tile, and pieces shorter than half a pixel are dropped.
 

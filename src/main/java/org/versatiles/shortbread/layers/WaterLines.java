@@ -70,14 +70,13 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
     int sortKey = ZOrder.layer(f);
 
     if (mz <= 14) {
-      features.line(LAYER)
+      var line = features.line(LAYER)
         .setMinZoom(mz)
         .setMaxZoom(14)
         .setMinPixelSize(0)
         .setAttr("kind", kind)
-        .setAttr("tunnel", tunnel)
-        .setAttr("bridge", bridge)
         .setSortKey(sortKey);
+      setTunnelAndBridge(line, tunnel, bridge);
     }
 
     if (f.hasTag("name") && mzLabel <= 14) {
@@ -86,10 +85,19 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
         .setMaxZoom(14)
         .setMinPixelSize(0)
         .setAttr("kind", kind)
-        .setAttr("tunnel", tunnel)
-        .setAttr("bridge", bridge)
         .setSortKey(sortKey);
+      setTunnelAndBridge(label, tunnel, bridge);
       Names.setNames(label, f, options.languages(), countries);
+    }
+  }
+
+  /** Writes tunnel and bridge only when true, since the schema's default for both is false. */
+  private static void setTunnelAndBridge(FeatureCollector.Feature feature, boolean tunnel, boolean bridge) {
+    if (tunnel) {
+      feature.setAttr("tunnel", true);
+    }
+    if (bridge) {
+      feature.setAttr("bridge", true);
     }
   }
 }

@@ -89,7 +89,40 @@ class ShortbreadProfileTest {
       Map.of("waterway", "river"));
     var line = onlyOne(features, "water_lines");
     assertEquals("river", attrs(line).get("kind"));
-    assertEquals(false, attrs(line).get("tunnel"));
+    assertNull(attrs(line).get("tunnel")); // the schema default false is not written
+  }
+
+  @Test
+  void booleanAttributesAreOnlyWrittenWhenTrue() {
+    // the schema's default for these attributes is false, so false is left out and true is written
+    var street = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("highway", "residential")), "streets");
+    for (String key : List.of("link", "rail", "tunnel", "bridge", "oneway", "oneway_reverse")) {
+      assertFalse(attrs(street).containsKey(key), () -> "streets has " + key);
+    }
+    var bridge = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "motorway_link", "bridge", "yes", "oneway", "yes")), "streets");
+    assertEquals(true, attrs(bridge).get("bridge"));
+    assertEquals(true, attrs(bridge).get("link"));
+    assertEquals(true, attrs(bridge).get("oneway"));
+    assertFalse(attrs(bridge).containsKey("tunnel"));
+    assertEquals(true, attrs(onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("railway", "rail")),
+      "streets")).get("rail"));
+
+    var square = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("highway", "pedestrian", "area", "yes")), "street_polygons");
+    for (String key : List.of("rail", "tunnel", "bridge")) {
+      assertFalse(attrs(square).containsKey(key), () -> "street_polygons has " + key);
+    }
+
+    var canal = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("waterway", "canal", "tunnel", "yes")),
+      "water_lines");
+    assertEquals(true, attrs(canal).get("tunnel"));
+    assertFalse(attrs(canal).containsKey("bridge"));
+
+    var recycling = onlyOne(process(TestUtils.newPoint(0, 0),
+      Map.of("amenity", "recycling", "recycling:paper", "yes")), "pois");
+    assertEquals(true, attrs(recycling).get("recycling:paper"));
+    assertFalse(attrs(recycling).containsKey("recycling:clothes"));
   }
 
   @Test
@@ -299,7 +332,7 @@ class ShortbreadProfileTest {
       Map.of("amenity", "bank", "name", "Bank", "addr:housenumber", "5"));
     var poi = onlyOne(features, "pois");
     assertEquals("bank", attrs(poi).get("amenity"));
-    assertEquals(false, attrs(poi).get("atm"));
+    assertNull(attrs(poi).get("atm")); // the schema default false is not written
     // a POI is not also written to addresses
     assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("addresses")));
   }
@@ -352,7 +385,7 @@ class ShortbreadProfileTest {
     // mid tier (z11): surface/tunnel/bridge appear
     var z11 = street.getAttrsAtZoom(11);
     assertEquals("asphalt", z11.get("surface"));
-    assertEquals(false, z11.get("tunnel"));
+    assertNull(z11.get("tunnel")); // the schema default false is not written
     assertNull(z11.get("oneway"));
     // full tier (z14): oneway appears
     assertEquals(true, street.getAttrsAtZoom(14).get("oneway"));

@@ -14,8 +14,9 @@ import java.util.List;
  * Each field comes from its own tag only: a feature tagged with {@code name} alone gets no {@code name_<code>}
  * attributes, rather than copies of {@code name}.
  * <p>
- * OSM allows several values in one tag separated by {@code ;} (e.g. {@code name=Mole Lake;Dewe'igan-...}); we keep only
- * the first so a label is a single clean name rather than a concatenated list.
+ * Values are emitted as tagged. OSM allows several values in one tag separated by {@code ;} (e.g.
+ * {@code name=Mole Lake;Dewe'igan-...}); such a value stays one string, and a style that wants a single name can split
+ * it.
  * <p>
  * EXPERIMENT: when a {@link CountryLanguages} index is supplied, a feature's unqualified {@code name} is copied into
  * {@code name_<lang>} <em>only</em> when the feature lies in a country whose default language is {@code <lang>} (e.g.
@@ -32,10 +33,10 @@ public final class Names {
 
   public static void setNames(FeatureCollector.Feature feature, SourceFeature source, List<String> languages,
     CountryLanguages countries) {
-    String name = firstName(source.getString("name"));
+    String name = source.getString("name");
     setIfPresent(feature, "name", name);
     for (String code : languages) {
-      setIfPresent(feature, "name_" + code, firstName(source.getString("name:" + code)));
+      setIfPresent(feature, "name_" + code, source.getString("name:" + code));
     }
     if (countries != null && name != null && !name.isEmpty()) {
       String language = countries.languageAt(source);
@@ -51,14 +52,5 @@ public final class Names {
     if (value != null && !value.isEmpty()) {
       feature.setAttr(key, value);
     }
-  }
-
-  /** Returns the first {@code ;}-separated value of an OSM multi-value name (trimmed), or {@code null} if unset. */
-  private static String firstName(String value) {
-    if (value == null) {
-      return null;
-    }
-    int i = value.indexOf(';');
-    return (i >= 0 ? value.substring(0, i) : value).trim();
   }
 }

@@ -613,13 +613,13 @@ class ShortbreadProfileTest {
   }
 
   @Test
-  void multiValueNameTakesFirstValue() {
-    // OSM uses ';' to join multiple names in one tag; we keep only the first for a clean label
+  void multiValueNameIsEmittedAsTagged() {
+    // OSM uses ';' to join multiple names in one tag; the spec's name is the tag's value, so the list stays whole
     var features = process(TestUtils.newPoint(0, 0),
       Map.of("amenity", "bank", "name", "Mole Lake;Dewe'igan-madwewe", "name:de", "Köln;Cologne"));
     var poi = onlyOne(features, "pois");
-    assertEquals("Mole Lake", attrs(poi).get("name"));
-    assertEquals("Köln", attrs(poi).get("name_de"));
+    assertEquals("Mole Lake;Dewe'igan-madwewe", attrs(poi).get("name"));
+    assertEquals("Köln;Cologne", attrs(poi).get("name_de"));
   }
 
   // a generous lon/lat box around Germany, fed to the profile's CountryLanguages handler to populate its index

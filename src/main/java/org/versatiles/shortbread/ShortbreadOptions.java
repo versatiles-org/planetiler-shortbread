@@ -14,12 +14,25 @@ import java.util.Set;
  */
 public record ShortbreadOptions(boolean v11, List<String> languages, Set<Experiment> experiments) {
 
+  /** The name languages Shortbread 1.0 defines: {@code name_en} and {@code name_de}. */
+  private static final Set<String> V10_LANGUAGES = Set.of("en", "de");
+
+  /** Reads the options, throwing {@link IllegalArgumentException} on a value the selected schema version rejects. */
   public static ShortbreadOptions from(Arguments args) {
     String version = args.getString("shortbread_version", "Shortbread schema version: 1.0 or 1.1", "1.0");
-    boolean v11 = version.startsWith("1.1");
-    // 1.0 fixes the set to en/de; 1.1 allows any IETF codes, defaulting to en/de for continuity
+    boolean v11 = switch (version) {
+      case "1.0" -> false;
+      case "1.1" -> true;
+      default -> throw new IllegalArgumentException(
+        "Unknown shortbread_version '" + version + "'. Valid values: 1.0, 1.1");
+    };
+    // 1.1 allows any IETF codes, defaulting to en/de for continuity; 1.0 fixes the set to en/de
     List<String> languages =
       args.getList("name_languages", "IETF language codes to emit as name_<code> attributes", List.of("en", "de"));
+    if (!v11 && !Set.copyOf(languages).equals(V10_LANGUAGES)) {
+      throw new IllegalArgumentException("Shortbread 1.0 defines only name_en and name_de, so name_languages must be " +
+        "en,de, got '" + String.join(",", languages) + "'. Use --shortbread_version=1.1 for other languages.");
+    }
     // beyond-spec features are opt-in; default is strict spec (no experiments)
     Set<Experiment> experiments =
       Experiment.parse(args.getList("shortbread_experiments", Experiment.help(), List.of()));

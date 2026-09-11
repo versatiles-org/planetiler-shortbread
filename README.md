@@ -51,7 +51,8 @@ Differences applied for 1.1:
 - `pois`: `dog_park` and `playground` move from `amenity` to `leisure`, so they are read from — and emitted under —
   whichever key the selected version uses.
 - Names: instead of the fixed `name_en` / `name_de`, any IETF-coded `name_<code>` is emitted from `name:<code>` for the
-  configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). This flag also works for 1.0.
+  configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). 1.0 defines only `name_en`
+  and `name_de`, so with 1.0 the flag accepts only `en,de`.
 
 The previous YAML schema is still runnable for comparison, from a Planetiler distribution jar:
 

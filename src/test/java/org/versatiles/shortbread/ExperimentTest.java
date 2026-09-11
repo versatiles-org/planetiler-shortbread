@@ -54,10 +54,11 @@ class ExperimentTest {
 
   @Test
   void everyTokenIsDocumented() throws IOException {
-    String docs = Files.readString(Path.of("docs", "extensions.md"));
+    // compare whole lines: a Windows checkout has CRLF line endings
+    List<String> lines = Files.readString(Path.of("docs", "extensions.md")).lines().toList();
     for (Experiment experiment : Experiment.values()) {
-      assertTrue(docs.contains("\n## `" + experiment.token() + "`\n"),
-        () -> "docs/extensions.md has no section \"## `" + experiment.token() + "`\"");
+      String heading = "## `" + experiment.token() + "`";
+      assertTrue(lines.contains(heading), () -> "docs/extensions.md has no section \"" + heading + "\"");
     }
   }
 }

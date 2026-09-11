@@ -98,9 +98,31 @@ class ShortbreadProfileTest {
     var b = onlyOne(features, "buildings");
     assertEquals(1, attrs(b).get("dummy"));
     assertEquals(14, b.getMinZoom());
-    // EXPERIMENT: untagged building gets the 5m default height, no min_height
-    assertEquals(5, attrs(b).get("height"));
+    // EXPERIMENT: an untagged building gets no height; a style applies its own default
+    assertNull(attrs(b).get("height"));
     assertNull(attrs(b).get("min_height"));
+  }
+
+  @Test
+  void minHeightNeedsAHeightAboveIt() {
+    // without a height, or at or above it, min_height would invert the extrusion, so it is left out
+    var onlyMin = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building", "yes", "min_height", "3")), "buildings");
+    assertNull(attrs(onlyMin).get("height"));
+    assertNull(attrs(onlyMin).get("min_height"));
+
+    var inverted = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building", "yes", "height", "5", "min_height", "10")), "buildings");
+    assertEquals(5, attrs(inverted).get("height"));
+    assertNull(attrs(inverted).get("min_height"));
+  }
+
+  @Test
+  void buildingPartWithOnlyMinLevelIsSkipped() {
+    // a part needs a height or levels tag; a base alone does not make it extrudable
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("building:part", "yes", "building:min_level", "3"));
+    assertTrue(features.stream().noneMatch(f -> f.getLayer().equals("buildings")));
   }
 
   @Test

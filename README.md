@@ -203,3 +203,8 @@ These apply to every build, with or without experiments.
 - `ShortbreadIntegrationTest` runs the whole pipeline over the bundled Monaco extract.
 - `util/CountryLanguagesTest`, `util/MergePolygonsTest` and `util/ShortbreadUtilTest` cover the helpers.
 
+Tile sizes are guarded separately by the `Tile size budget` workflow (`.github/workflows/tile-size.yml`). Weekly and on
+demand, it generates Estonia and Noord-Holland without and with all experiments, and fails when a compressed tile is
+larger than 500 KiB, naming the tile and its largest layer. The check itself is `.github/scripts/check_tile_size.py`,
+which also runs locally on any `--output_layerstats` file.
+

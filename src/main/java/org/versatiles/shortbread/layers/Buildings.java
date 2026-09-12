@@ -58,7 +58,9 @@ public class Buildings
 
   @Override
   public List<OsmRelationInfo> preprocessOsmRelation(OsmElement.Relation relation) {
-    if (relation.hasTag("type", "building")) {
+    // hide_3d is the only consumer, so without the experiment this would keep a record per building relation in
+    // memory for a whole planet build and never read it
+    if (options.has(Experiment.BUILDINGS_3D) && relation.hasTag("type", "building")) {
       return List.of(new BuildingRelation(relation.id()));
     }
     return null;
@@ -88,9 +90,12 @@ public class Buildings
           output.setAttr("hide_3d", true);
         }
       }
-    } else if (buildings3d && isBuildingValue(feature.getString("building:part")) && height(feature) != null) {
+    } else if (buildings3d && isBuildingValue(feature.getString("building:part"))) {
       // only parts with a height are 3D-relevant; the marker lets a 2D style skip them
-      addHeights(feature, emit(features).setAttr("part", true));
+      Double partHeight = height(feature);
+      if (partHeight != null) {
+        addHeights(feature, emit(features).setAttr("part", true), partHeight);
+      }
     }
   }
 
@@ -130,6 +135,11 @@ public class Buildings
     if (height == null) {
       return; // untagged: a style applies its own default height
     }
+    addHeights(f, output, height);
+  }
+
+  /** Same, for a caller that has already parsed the height and found it present. */
+  private static void addHeights(SourceFeature f, FeatureCollector.Feature output, Double height) {
     Double minHeight = Parse.meters(coalesce(str(f, "min_height"), str(f, "building:min_height")));
     Double minLevels =
       coalesce(Parse.parseDoubleOrNull(str(f, "building:min_level")), Parse.parseDoubleOrNull(str(f, "min_level")));

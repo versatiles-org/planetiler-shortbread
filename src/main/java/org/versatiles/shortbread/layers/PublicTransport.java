@@ -91,6 +91,6 @@ public class PublicTransport implements ForwardingProfile.FeatureProcessor {
     if (iata != null && !iata.isEmpty()) {
       feature.setAttr("iata", iata);
     }
-    Names.setNames(feature, f, options.languages(), countries);
+    Names.setNames(feature, f, options.nameKeys(), countries);
   }
 }

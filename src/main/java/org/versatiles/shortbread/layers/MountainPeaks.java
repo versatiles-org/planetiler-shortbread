@@ -59,7 +59,7 @@ public class MountainPeaks implements ForwardingProfile.FeatureProcessor {
     if (ele != null) {
       feature.setAttr("ele", ele);
     }
-    Names.setNames(feature, f, options.languages(), countries);
+    Names.setNames(feature, f, options.nameKeys(), countries);
   }
 
   /** The elevation in whole meters, or {@code null} unless the tag is a plain number. */

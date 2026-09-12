@@ -6,6 +6,7 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.util.Parse;
 import com.onthegomap.planetiler.util.SortKey;
+import com.onthegomap.planetiler.util.ZoomFunction;
 import org.versatiles.shortbread.Experiment;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
@@ -123,10 +124,11 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("population", pop)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get())
       // thin dense low/mid-zoom place labels: keep the most populous per 64px grid cell (~32/tile), à la OpenMapTiles.
-      // z13+ is left unthinned so all places appear when zoomed in; buffer must be >= grid size for edge consistency.
-      .setBufferPixels(64)
+      // z13+ is left unthinned so all places appear when zoomed in; buffer must be >= grid size for edge consistency,
+      // but only where the grid runs — above z12 the wide buffer would just duplicate points into neighbouring tiles
+      .setBufferPixelOverrides(ZoomFunction.maxZoom(12, 64))
       .setPointLabelGridSizeAndLimit(12, 64, 2);
-    Names.setNames(feature, f, options.languages(), countries);
+    Names.setNames(feature, f, options.nameKeys(), countries);
   }
 
   private void processIslandArea(SourceFeature f, FeatureCollector features) {
@@ -142,6 +144,6 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("kind", "island")
       .setAttr("population", 0L)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(areaM2, 1), 1, 1e14).get());
-    Names.setNames(label, f, options.languages(), countries);
+    Names.setNames(label, f, options.nameKeys(), countries);
   }
 }

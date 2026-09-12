@@ -4,6 +4,7 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.List;
 import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
@@ -30,6 +31,18 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
   private static final Set<String> RAILWAY_LABELS =
     Set.of("rail", "narrow_gauge", "light_rail", "tram", "subway", "funicular", "monorail");
 
+  /**
+   * Every {@code highway} value this layer emits: the kinds {@link #labelMinZoom} gives a zoom to, plus
+   * {@code motorway_junction}, which becomes a {@code street_labels_points} feature. Used to keep the source filter as
+   * narrow as the handler.
+   */
+  private static final List<String> LABELLED_HIGHWAYS = List.of(
+    "motorway", "trunk", "primary", "secondary", "tertiary",
+    "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link",
+    "unclassified", "residential", "busway", "bus_guideway", "living_street", "pedestrian", "track", "service",
+    "footway", "steps", "path", "cycleway",
+    "motorway_junction");
+
   private final ShortbreadOptions options;
   private final CountryLanguages countries;
 
@@ -40,12 +53,14 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public Expression filter() {
+    // match the values this layer labels, not the bare keys: every highway node in the planet used to reach the
+    // handler just to be rejected
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
       Expression.or(
-        Expression.matchField("highway"),
-        Expression.matchField("railway"),
-        Expression.matchField("aeroway")));
+        Expression.matchAny("highway", LABELLED_HIGHWAYS),
+        Expression.matchAny("railway", List.copyOf(RAILWAY_LABELS)),
+        Expression.matchAny("aeroway", "runway", "taxiway")));
   }
 
   @Override
@@ -58,7 +73,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
           .setZoomRange(12, 14)
           .setAttr("kind", highway);
         setIfPresent(feature, "ref", f.getString("ref"));
-        Names.setNames(feature, f, options.languages(), countries);
+        Names.setNames(feature, f, options.nameKeys(), countries);
       }
       return;
     }
@@ -128,7 +143,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       feature.setAttr("ref_rows", rows);
       feature.setAttr("ref_cols", cols);
     }
-    Names.setNames(feature, f, options.languages(), countries);
+    Names.setNames(feature, f, options.nameKeys(), countries);
   }
 
   private static int labelMinZoom(String highway) {

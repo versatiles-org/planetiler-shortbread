@@ -3,6 +3,7 @@ package org.versatiles.shortbread.util;
 import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import java.util.List;
+import org.versatiles.shortbread.ShortbreadOptions.NameKeys;
 
 /**
  * Sets the Shortbread name attributes from their OSM tags: {@code name} ← {@code name}, and one {@code name_<code>} ←
@@ -27,23 +28,28 @@ public final class Names {
 
   private Names() {}
 
-  public static void setNames(FeatureCollector.Feature feature, SourceFeature source, List<String> languages) {
-    setNames(feature, source, languages, null);
-  }
-
-  public static void setNames(FeatureCollector.Feature feature, SourceFeature source, List<String> languages,
+  public static void setNames(FeatureCollector.Feature feature, SourceFeature source, List<NameKeys> languages,
     CountryLanguages countries) {
     String name = source.getString("name");
     setIfPresent(feature, "name", name);
-    for (String code : languages) {
-      setIfPresent(feature, "name_" + code, source.getString("name:" + code));
+    // the `name_<code>` / `name:<code>` strings are built once in ShortbreadOptions, not per feature
+    for (NameKeys keys : languages) {
+      setIfPresent(feature, keys.attribute(), source.getString(keys.tag()));
     }
     if (countries != null && name != null && !name.isEmpty()) {
       String language = countries.languageAt(source);
-      // only fill the translated field if it is requested, still empty, and not already set from name:<lang>
-      if (language != null && languages.contains(language) &&
-        (source.getString("name:" + language) == null || source.getString("name:" + language).isEmpty())) {
-        feature.setAttr("name_" + language, name);
+      if (language == null) {
+        return;
+      }
+      // only fill the translated field if it is requested, and still empty — not already set from name:<lang>
+      for (NameKeys keys : languages) {
+        if (keys.language().equals(language)) {
+          String tagged = source.getString(keys.tag());
+          if (tagged == null || tagged.isEmpty()) {
+            feature.setAttr(keys.attribute(), name);
+          }
+          return;
+        }
       }
     }
   }

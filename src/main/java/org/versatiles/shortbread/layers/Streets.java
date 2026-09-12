@@ -231,7 +231,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       var label = features.pointOnSurface(POLYGON_LABELS)
         .setZoomRange(14, 14)
         .setAttr("kind", kind);
-      Names.setNames(label, f, options.languages(), countries);
+      Names.setNames(label, f, options.nameKeys(), countries);
     }
   }
 

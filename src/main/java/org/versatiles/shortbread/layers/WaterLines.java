@@ -90,7 +90,7 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
         .setAttr("kind", kind)
         .setSortKey(sortKey);
       setTunnelAndBridge(label, tunnel, bridge);
-      Names.setNames(label, f, options.languages(), countries);
+      Names.setNames(label, f, options.nameKeys(), countries);
     }
   }
 

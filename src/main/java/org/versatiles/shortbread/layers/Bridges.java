@@ -48,7 +48,7 @@ public class Bridges implements ForwardingProfile.FeatureProcessor {
         .setAttr("kind", "bridge");
       // EXPERIMENT (beyond Shortbread 1.0/1.1, which has no bridge name — shortbread-docs #141)
       if (options.has(Experiment.BRIDGE_NAMES)) {
-        Names.setNames(feature, f, options.languages(), countries);
+        Names.setNames(feature, f, options.nameKeys(), countries);
       }
     }
   }

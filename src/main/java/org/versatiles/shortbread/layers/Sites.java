@@ -4,6 +4,7 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.List;
 import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.util.Geo;
@@ -21,13 +22,15 @@ public class Sites implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public Expression filter() {
+    // match the values the handler accepts, not the bare keys, so the whole planet's amenities and landuse polygons
+    // are not routed through this handler only to be rejected
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
       Expression.or(
-        Expression.matchField("amenity"),
-        Expression.matchField("leisure"),
-        Expression.matchField("military"),
-        Expression.matchField("landuse")));
+        Expression.matchAny("amenity", List.copyOf(AMENITY)),
+        Expression.matchAny("leisure", "sports_centre"),
+        Expression.matchAny("military", "danger_area"),
+        Expression.matchAny("landuse", "construction")));
   }
 
   @Override

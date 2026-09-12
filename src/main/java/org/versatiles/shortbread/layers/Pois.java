@@ -4,6 +4,9 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
 import org.versatiles.shortbread.util.CountryLanguages;
@@ -32,18 +35,26 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public Expression filter() {
+    // Match the whitelisted values, not the bare keys: `matchField("highway")` alone pulled every highway node in the
+    // planet through this handler to be rejected. The values that 1.1 moved between keys, and the 1.1-only additions,
+    // are listed under both keys, because the filter is built once while the handler picks the key per version.
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
       Expression.or(
-        Expression.matchField("amenity"),
-        Expression.matchField("shop"),
-        Expression.matchField("tourism"),
-        Expression.matchField("man_made"),
-        Expression.matchField("historic"),
-        Expression.matchField("leisure"),
-        Expression.matchField("emergency"),
-        Expression.matchField("highway"),
-        Expression.matchField("office")));
+        Expression.matchAny("amenity", union(Poi.AMENITY, Poi.MOVED_TO_LEISURE, Set.of("fuel"))),
+        Expression.matchAny("shop", List.copyOf(Poi.SHOP)),
+        Expression.matchAny("tourism", List.copyOf(Poi.TOURISM)),
+        Expression.matchAny("man_made", List.copyOf(Poi.MAN_MADE)),
+        Expression.matchAny("historic", List.copyOf(Poi.HISTORIC)),
+        Expression.matchAny("leisure", union(Poi.LEISURE, Poi.MOVED_TO_LEISURE, Set.of("park"))),
+        Expression.matchAny("emergency", List.copyOf(Poi.EMERGENCY)),
+        Expression.matchAny("highway", List.copyOf(Poi.HIGHWAY)),
+        Expression.matchAny("office", List.copyOf(Poi.OFFICE))));
+  }
+
+  @SafeVarargs
+  private static List<String> union(Set<String>... sets) {
+    return Arrays.stream(sets).flatMap(Set::stream).distinct().toList();
   }
 
   @Override
@@ -130,7 +141,7 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
       setIfPresent(feature, "denomination", f.getString("denomination"));
     }
 
-    Names.setNames(feature, f, options.languages(), countries);
+    Names.setNames(feature, f, options.nameKeys(), countries);
     setIfPresent(feature, "housename", f.getString("addr:housename"));
     setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
   }

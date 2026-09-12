@@ -4,6 +4,8 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.util.Geo;
@@ -31,14 +33,22 @@ public class Land implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public Expression filter() {
+    // match the values the kind table accepts, not the bare keys: unrestricted `landuse`/`natural`/`leisure` routed
+    // most of the planet's tagged areas — and every natural=tree node — through this handler to be rejected
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
       Expression.or(
-        Expression.matchField("landuse"),
-        Expression.matchField("natural"),
-        Expression.matchField("wetland"),
-        Expression.matchField("leisure"),
+        Expression.matchAny("landuse", union(LANDUSE_Z10, LANDUSE_Z11,
+          Set.of("forest", "garages", "cemetery"))),
+        Expression.matchAny("natural", union(NATURAL_Z11, Set.of("wood", "sand", "beach"))),
+        Expression.matchAny("wetland", List.copyOf(WETLAND_Z11)),
+        Expression.matchAny("leisure", List.copyOf(LEISURE_Z11)),
         Expression.matchAny("amenity", "grave_yard")));
+  }
+
+  @SafeVarargs
+  private static List<String> union(Set<String>... sets) {
+    return Arrays.stream(sets).flatMap(Set::stream).distinct().toList();
   }
 
   @Override

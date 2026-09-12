@@ -12,10 +12,21 @@ import java.util.Set;
  * @param languages   IETF language codes for the {@code name_<code>} attributes, sourced from {@code name:<code>} tags
  * @param experiments the enabled beyond-spec experiments (empty = strict spec)
  */
-public record ShortbreadOptions(boolean v11, List<String> languages, Set<Experiment> experiments) {
+public record ShortbreadOptions(boolean v11, List<String> languages, Set<Experiment> experiments,
+  List<NameKeys> nameKeys) {
+
+  /** The output attribute and the OSM tag for one requested language, built once instead of per feature. */
+  public record NameKeys(String language, String attribute, String tag) {}
 
   /** The name languages Shortbread 1.0 defines: {@code name_en} and {@code name_de}. */
   private static final Set<String> V10_LANGUAGES = Set.of("en", "de");
+
+  /** Derives the per-language key strings from {@code languages}, so callers never build the 4th component. */
+  public ShortbreadOptions(boolean v11, List<String> languages, Set<Experiment> experiments) {
+    this(v11, languages, experiments, languages.stream()
+      .map(code -> new NameKeys(code, "name_" + code, "name:" + code))
+      .toList());
+  }
 
   /** Reads the options, throwing {@link IllegalArgumentException} on a value the selected schema version rejects. */
   public static ShortbreadOptions from(Arguments args) {

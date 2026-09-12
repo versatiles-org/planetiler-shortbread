@@ -32,12 +32,13 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public Expression filter() {
+    // match the values the handler accepts: `matchField("natural")` pulled in every natural=tree node
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
       Expression.or(
-        Expression.matchField("waterway"),
-        Expression.matchField("natural"),
-        Expression.matchField("landuse")));
+        Expression.matchAny("waterway", "riverbank", "dock", "canal"),
+        Expression.matchAny("natural", "water", "glacier"),
+        Expression.matchAny("landuse", "reservoir", "basin")));
   }
 
   @Override
@@ -107,9 +108,14 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
         // thin dense low/mid-zoom water labels: keep the largest (sort key = area) per 64px grid cell (~16/tile) so a
         // continent-sized z4 tile carries the few biggest seas/lakes, not thousands of points. z12+ is left unthinned.
         // buffer must be >= grid size for consistent thinning across tile edges.
+        //
+        // The buffer stays wide at every zoom, unlike place_labels: this label sits at the polygon's interior point,
+        // which for a water body straddling the edge of an extract can fall outside the tiles being written. Narrowing
+        // the buffer above the grid zooms measurably lost such a label (a lake on the western edge of a Berlin
+        // extract), because no emitted tile reached it any more. A planet build has no such edge, but extracts do.
         .setBufferPixels(64)
         .setPointLabelGridSizeAndLimit(11, 64, 1);
-      Names.setNames(label, f, options.languages(), countries);
+      Names.setNames(label, f, options.nameKeys(), countries);
     }
   }
 }

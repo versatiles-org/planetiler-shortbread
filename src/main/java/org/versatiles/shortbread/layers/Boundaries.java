@@ -170,6 +170,6 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setAttr("way_area", mercatorM2 / 1e4) // hectares (Mercator projection), per the spec
       // spec: labels are sorted by way_area in descending order
       .setSortKeyDescending(SortKey.orderByLog(mercatorM2, 1, 1e15).get());
-    Names.setNames(label, f, options.languages(), countries);
+    Names.setNames(label, f, options.nameKeys(), countries);
   }
 }

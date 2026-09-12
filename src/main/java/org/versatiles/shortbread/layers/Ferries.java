@@ -43,6 +43,6 @@ public class Ferries implements ForwardingProfile.FeatureProcessor {
       .setMaxZoom(14)
       .setMinPixelSize(0)
       .setAttr("kind", "ferry");
-    Names.setNames(feature, f, options.languages(), countries);
+    Names.setNames(feature, f, options.nameKeys(), countries);
   }
 }

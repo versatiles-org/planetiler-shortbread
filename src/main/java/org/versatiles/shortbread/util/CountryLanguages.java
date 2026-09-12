@@ -4,13 +4,18 @@ import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.geo.GeometryException;
-import com.onthegomap.planetiler.geo.PolygonIndex;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+import org.locationtech.jts.index.strtree.STRtree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +32,11 @@ import org.slf4j.LoggerFactory;
  * into every {@code name_<lang>}, which would mislabel a French town's name as German). Multilingual countries (CH, BE,
  * LU, CA, ...) are intentionally omitted to avoid guessing.
  * <p>
- * The index uses (Web-Mercator) {@link SourceFeature#worldGeometry() world geometry}, matching the query point. Natural
- * Earth 10m is coarse near borders; that is acceptable for a name-language heuristic.
+ * The index holds {@link PreparedGeometry prepared} polygon parts: every named feature in the build queries it, and a
+ * prepared geometry indexes a country's edges once instead of walking its full ring on each test — Natural Earth
+ * coastlines run to tens of thousands of points. The index uses (Web-Mercator) {@link SourceFeature#worldGeometry()
+ * world geometry}, matching the query point. Natural Earth 10m is coarse near borders; that is acceptable for a
+ * name-language heuristic.
  */
 public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
 
@@ -65,8 +73,12 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
   // shapefile reader preserves the DBF (upper-case) field names, but we also try lower-case for robustness.
   private static final List<String> ISO_FIELDS = List.of("ISO_A2_EH", "ISO_A2", "iso_a2_eh", "iso_a2");
 
-  private final PolygonIndex<String> index = PolygonIndex.create();
+  /** One prepared polygon part of a country, with the language to return when a point falls inside it. */
+  private record PreparedCountry(PreparedGeometry geometry, String language) {}
+
+  private final STRtree index = new STRtree();
   private final Set<String> requestedLanguages;
+  private volatile boolean built = false;
 
   /** @param requestedLanguages the {@code name_<code>} languages this run emits; others are never indexed */
   public CountryLanguages(List<String> requestedLanguages) {
@@ -90,9 +102,35 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
       return; // unknown/multilingual country, or a language this run does not emit
     }
     try {
-      index.put(f.worldGeometry(), language);
+      put(f.worldGeometry(), language);
     } catch (GeometryException e) {
       LOGGER.warn("Skipping country {} with invalid geometry: {}", iso, e.getMessage());
+    }
+  }
+
+  /** Indexes every polygon part of {@code geom}, prepared for repeated point-in-polygon tests. */
+  private void put(Geometry geom, String language) {
+    if (geom instanceof Polygon poly) {
+      var entry = new PreparedCountry(PreparedGeometryFactory.prepare(poly), language);
+      // STRtree inserts are not thread-safe and the source is read in parallel
+      synchronized (this) {
+        index.insert(poly.getEnvelopeInternal(), entry);
+      }
+    } else if (geom instanceof GeometryCollection geoms) {
+      for (int i = 0; i < geoms.getNumGeometries(); i++) {
+        put(geoms.getGeometryN(i), language);
+      }
+    }
+  }
+
+  private void build() {
+    if (!built) {
+      synchronized (this) {
+        if (!built) {
+          index.build();
+          built = true;
+        }
+      }
     }
   }
 
@@ -102,11 +140,19 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
    */
   public String languageAt(SourceFeature f) {
     try {
-      Geometry point = f.worldGeometry().getCentroid();
-      if (point.isEmpty()) {
+      // centroid() is cached on the feature and derived from its assembled polygon/line, so a feature that appears in
+      // several layers computes it once; a geometry that cannot be assembled throws and is treated as "no country"
+      Geometry point = f.centroid();
+      if (point.isEmpty() || !(point instanceof Point p)) {
         return null;
       }
-      return index.getOnlyContaining((org.locationtech.jts.geom.Point) point);
+      build();
+      for (Object item : index.query(p.getEnvelopeInternal())) {
+        if (item instanceof PreparedCountry country && country.geometry().contains(p)) {
+          return country.language();
+        }
+      }
+      return null;
     } catch (GeometryException e) {
       return null;
     }

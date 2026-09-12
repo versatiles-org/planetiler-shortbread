@@ -185,7 +185,15 @@ These apply to every build, with or without experiments.
 - `boundary_labels` are derived from administrative boundary polygons rather than a pre-built admin-points shapefile, so
   no extra data source is required. They are sorted by `way_area`, largest first.
 - `way_area` is a full-precision number in Web-Mercator units: m² on `water_polygons` and `water_polygons_labels`,
-  hectares on `boundary_labels`.
+  hectares on `boundary_labels`. The schema types it as a float, but Planetiler stores every floating-point attribute
+  as a double between the two passes, so a profile cannot emit a 4-byte float value — the tile would carry a rounded
+  number in an 8-byte field, losing precision without saving space.
+- `building=none` is excluded along with `building=no`. The schema names only `no`, but `none` is a synonym in common
+  use and never denotes a building.
+- `man_made=breakwater` and `man_made=groyne` follow the OSM area convention, like `pier`: a closed way is a polygon in
+  `pier_polygons`, anything else a line in `pier_lines`. The schema lists all three kinds under both layers without
+  saying which geometry wins, and OpenStreetMap Carto selects the same three values from both its polygon and line
+  tables, so there is no basis for forcing them to lines.
 - `surface` is the raw value of the OSM tag, as the schema defines it — not collapsed to `paved`/`unpaved`.
 - `tunnel` follows the schema exactly: `tunnel=yes`, `tunnel=building_passage` or `covered=yes`. A `tunnel=culvert`
   waterway is **not** a tunnel, which differs from OpenStreetMap Carto — culverts make up most waterway tunnels there.

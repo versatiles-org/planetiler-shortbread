@@ -193,8 +193,8 @@ these attributes arrive with the feature:
 | `service`                     | z11  | the feature's minimum zoom, e.g. z10 for service railways                                 |
 | `bicycle`, `horse` (1.0 only) | z14  | z13, where paths enter the layer                                                          |
 
-`tunnel`, `bridge`, `surface`, `tracktype` and `oneway` keep their spec zooms, because features only merge at low zoom
-when their attributes are identical; the 1.1 access attributes already start at z13.
+`tunnel`, `bridge`, `surface`, `tracktype` and `oneway` keep their spec zooms, because features only merge when their
+attributes are identical; the 1.1 access attributes already start at z13.
 
 **Cost**, measured on Estonia and Berlin extracts: about +2% `streets` layer bytes at z10 and no measurable change in
 whole tiles. Emitting all mid-tier attributes from the feature's minimum zoom would instead cost +23% to +36% of the z10

@@ -172,7 +172,9 @@ These apply to every build, with or without experiments.
   - `water_polygons_labels`: at most 1 per 64 px cell up to z11, largest first.
 - **Sub-pixel geometry.** `land` polygons of the same `kind` are merged per tile and merged pieces smaller than 1 px²
   dropped; `water_polygons` smaller than 1 px are dropped; `ocean` polygons are merged per tile and slivers that
-  collapse to lines at low zoom are dropped.
+  collapse to lines at low zoom are dropped. None of these size limits apply at the maximum zoom, which is the base for
+  overzooming: there a merged polygon only has to clear Planetiler's own `min_feature_size_at_max_zoom` (1/16 px, so
+  1/256 px² of area), and only geometry that collapses to a line or a zero-area ring is dropped.
 
 ### Interpretation choices
 
@@ -195,7 +197,13 @@ These apply to every build, with or without experiments.
   `recycling:*` on `pois` — are only written when `true`. Attributes without a default in the schema, such as
   `maritime` and `disputed` on `boundaries`, are always written.
 - In `streets`, `street_labels`, `water_lines`, `water_lines_labels`, `dam_lines` and `boundaries`, connected lines with
-  identical attributes are merged per tile, and pieces shorter than half a pixel are dropped.
+  identical attributes are merged per tile. Below the maximum zoom, pieces shorter than half a pixel are dropped and the
+  geometry is simplified with a 0.1 px tolerance; at the maximum zoom, which is the base for overzooming, every piece is
+  kept and the merged line is only simplified at the tile's own resolution (Planetiler's
+  `simplify_tolerance_at_max_zoom`, 1/16 px — one unit of the 4096-unit tile grid).
+- Merging groups features by their output attributes alone. Two lines that differ only in a tag the schema does not
+  emit — the OSM `layer`, say — therefore become one feature at one position in the draw order, and a merged line can
+  run opposite to one of the ways it came from.
 
 ## Tests
 

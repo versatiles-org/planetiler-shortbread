@@ -89,19 +89,27 @@ public class Shortbread extends ForwardingProfile {
       registerHandler(new MountainPeaks(options, countries));
     }
 
-    // line layers whose short segments are merged below the maximum zoom
-    registerHandler(new MergeLines(WaterLines.LAYER));
-    registerHandler(new MergeLines(WaterLines.LABELS));
-    registerHandler(new MergeLines(Dams.LINES));
-    registerHandler(new MergeLines(Streets.STREETS));
-    registerHandler(new MergeLines(StreetLabels.LABELS));
-    registerHandler(new MergeLines(Boundaries.LINES));
+    // The maximum rendering zoom is the base for overzooming, so its tiles keep the detail a client can zoom into:
+    // nothing there is dropped for being short, and both thresholds fall back to the ones Planetiler itself uses at the
+    // maximum zoom — simplify_tolerance_at_max_zoom for lines, and min_feature_size_at_max_zoom (a length) squared into
+    // an area for polygons, instead of a whole square tile pixel.
+    int maxzoom = config.maxzoomForRendering();
+    double toleranceAtMaxZoom = config.simplifyToleranceAtMaxZoom();
+    double minAreaAtMaxZoom = config.minFeatureSizeAtMaxZoom() * config.minFeatureSizeAtMaxZoom();
+
+    // line layers whose connected segments are joined per tile
+    registerHandler(new MergeLines(WaterLines.LAYER, toleranceAtMaxZoom, maxzoom));
+    registerHandler(new MergeLines(WaterLines.LABELS, toleranceAtMaxZoom, maxzoom));
+    registerHandler(new MergeLines(Dams.LINES, toleranceAtMaxZoom, maxzoom));
+    registerHandler(new MergeLines(Streets.STREETS, toleranceAtMaxZoom, maxzoom));
+    registerHandler(new MergeLines(StreetLabels.LABELS, toleranceAtMaxZoom, maxzoom));
+    registerHandler(new MergeLines(Boundaries.LINES, toleranceAtMaxZoom, maxzoom));
 
     // coalesce adjacent same-kind area polygons to shrink dense overview tiles
-    registerHandler(new MergePolygons(Land.LAYER, 1));
+    registerHandler(new MergePolygons(Land.LAYER, 1, minAreaAtMaxZoom, maxzoom));
     // union the split OSM ocean polygons per tile and drop sub-pixel slivers — at low zoom (z0-3) those slivers would
     // otherwise be simplified into degenerate (line) geometry, which fails the schema's "ocean must be polygon" rule
-    registerHandler(new MergePolygons(Ocean.LAYER_NAME, 1));
+    registerHandler(new MergePolygons(Ocean.LAYER_NAME, 1, minAreaAtMaxZoom, maxzoom));
   }
 
   @Override

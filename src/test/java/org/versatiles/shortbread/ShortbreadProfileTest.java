@@ -33,6 +33,22 @@ class ShortbreadProfileTest {
     return TestUtils.processSourceFeature(sf, profile);
   }
 
+  /**
+   * Processes a closed OSM way: unlike {@link SimpleFeature#create}, which fixes the geometry type, this reports both
+   * {@code canBeLine()} and {@code canBePolygon()} — what {@code OsmReader} does for a ring — so the area-vs-line
+   * decision is actually exercised.
+   */
+  private List<FeatureCollector.Feature> processClosedWay(Map<String, Object> tags) {
+    var ring = TestUtils.newLineString(0, 0, 0.5, 0, 0.5, 0.5, 0, 0);
+    SourceFeature sf =
+      SimpleFeature.createFakeOsmFeature(ring, tags, Shortbread.OSM_SOURCE, null, 1, List.of());
+    return TestUtils.processSourceFeature(sf, profile);
+  }
+
+  private boolean hasNoLayer(List<FeatureCollector.Feature> features, String layer) {
+    return features.stream().noneMatch(f -> f.getLayer().equals(layer));
+  }
+
   private FeatureCollector.Feature onlyOne(List<FeatureCollector.Feature> features, String layer) {
     var matches = features.stream().filter(f -> f.getLayer().equals(layer)).toList();
     assertEquals(1, matches.size(), () -> "expected exactly one " + layer + " feature in " +
@@ -90,6 +106,51 @@ class ShortbreadProfileTest {
     var line = onlyOne(features, "water_lines");
     assertEquals("river", attrs(line).get("kind"));
     assertNull(attrs(line).get("tunnel")); // the schema default false is not written
+  }
+
+  @Test
+  void closedWaterwayRingStaysALine() {
+    // a ring-shaped ditch (a moat, a field drain) is a line: only area=yes or a multipolygon makes a waterway an area
+    var ditch = processClosedWay(Map.of("waterway", "ditch"));
+    assertEquals("ditch", attrs(onlyOne(ditch, "water_lines")).get("kind"));
+    assertTrue(hasNoLayer(ditch, "water_polygons"), "a closed ditch must not become a water polygon");
+
+    var canal = processClosedWay(Map.of("waterway", "canal"));
+    assertEquals("canal", attrs(onlyOne(canal, "water_lines")).get("kind"));
+    assertTrue(hasNoLayer(canal, "water_polygons"), "a closed canal way is a line unless tagged as an area");
+  }
+
+  @Test
+  void canalTaggedAsAreaBecomesPolygon() {
+    var features = processClosedWay(Map.of("waterway", "canal", "area", "yes"));
+    assertEquals("canal", attrs(onlyOne(features, "water_polygons")).get("kind"));
+    assertTrue(hasNoLayer(features, "water_lines"), "an area-tagged canal must not also emit a line");
+  }
+
+  @Test
+  void culvertIsNotATunnel() {
+    // the schema defines tunnel as tunnel=yes|building_passage or covered=yes; OSM Carto also counts culverts
+    var stream = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("waterway", "stream", "tunnel", "culvert")), "water_lines");
+    assertNull(attrs(stream).get("tunnel"));
+  }
+
+  @Test
+  void waterPolygonAppearsWhenItCoversAPixel() {
+    // ~1.2 km² of water: it covers a square tile pixel at z7, and its label must not arrive before it
+    var features = process(TestUtils.newPolygon(0, 0, 0.01, 0, 0.01, 0.01, 0, 0.01, 0, 0),
+      Map.of("natural", "water", "name", "Small Lake"));
+    var poly = onlyOne(features, "water_polygons");
+    assertEquals(7, poly.getMinZoom());
+    assertEquals(poly.getMinZoom(), onlyOne(features, "water_polygons_labels").getMinZoom());
+  }
+
+  @Test
+  void tinyWaterPolygonSurvivesAtMaxZoom() {
+    // a ~1 m² pond never covers a pixel, but z14 is the complete base for overzooming, so it appears there
+    var features = process(TestUtils.newPolygon(0, 0, 0.00001, 0, 0.00001, 0.00001, 0, 0.00001, 0, 0),
+      Map.of("natural", "water"));
+    assertEquals(14, onlyOne(features, "water_polygons").getMinZoom());
   }
 
   @Test

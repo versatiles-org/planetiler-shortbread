@@ -52,30 +52,38 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
     boolean isRiver = (natural.equals("water") && water.equals("river")) || waterway.equals("riverbank");
 
     double worldArea = Geo.worldArea(f);
-    int mz = Integer.MAX_VALUE;
-    String kind = null;
-    if (landuse.equals("reservoir") || landuse.equals("basin") || (natural.equals("water") && !isRiver) ||
-      natural.equals("glacier")) {
-      mz = Math.max(4, Zooms.zminForArea(0.01, worldArea));
-      if (mz >= 10) {
-        mz = Math.max(10, Zooms.zminForArea(0.1, worldArea));
-      }
-      if (landuse.equals("reservoir") || landuse.equals("basin")) {
-        kind = landuse;
-      } else if (natural.equals("water") || natural.equals("glacier")) {
-        kind = natural;
-      }
-    } else if (isRiver) {
-      mz = Math.max(4, Zooms.zminForArea(0.1, worldArea));
-      kind = "river";
-    } else if (waterway.equals("dock") || waterway.equals("canal")) {
-      mz = 10;
-      kind = waterway;
-    }
-
-    if (kind == null || mz > 14) {
+    if (worldArea <= 0) {
+      // geometry that could not be assembled (e.g. a broken multipolygon): nothing to draw
       return;
     }
+    // The polygon below is rendered with setMinPixelSize(1), so it only appears once it covers a square tile pixel.
+    // Deriving the minimum zoom from that same threshold keeps water_polygons_labels in step with it, as the spec
+    // requires — that layer holds names "for all named water polygons available in the water_polygons layer". A
+    // coarser threshold labelled a lake about three zooms before any water was drawn.
+    int byArea = Zooms.zminForArea(1, worldArea);
+    int mz;
+    String kind;
+    if (landuse.equals("reservoir") || landuse.equals("basin")) {
+      kind = landuse;
+      mz = Math.max(4, byArea);
+    } else if (isRiver) {
+      kind = "river";
+      mz = Math.max(4, byArea);
+    } else if (natural.equals("water") || natural.equals("glacier")) {
+      kind = natural;
+      mz = Math.max(4, byArea);
+    } else if (waterway.equals("dock") || (waterway.equals("canal") && Geo.areaYesMultiBoundary(f))) {
+      // a closed `waterway=canal` way is a line unless it is explicitly tagged as an area; OpenStreetMap Carto's
+      // water-areas query likewise takes only dock and riverbank from planet_osm_polygon
+      kind = waterway;
+      mz = Math.max(10, byArea);
+    } else {
+      return;
+    }
+
+    // a water body that only reaches a full pixel beyond z14 still belongs in the maximum-zoom tile, which is the
+    // complete base for overzooming
+    mz = Math.min(mz, 14);
     double wayArea = Geo.mercatorAreaSquareMeters(f); // spec: way_area is in m² (Mercator projection)
     int sortKey = SortKey.orderByLog(Math.max(wayArea, 1), 1, 1e14).get();
 

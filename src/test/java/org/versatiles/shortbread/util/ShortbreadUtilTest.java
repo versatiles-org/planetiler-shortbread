@@ -26,8 +26,11 @@ class ShortbreadUtilTest {
 
   @Test
   void zOrderBooleans() {
-    assertTrue(ZOrder.isTunnel(point(Map.of("tunnel", "culvert"))));
+    assertTrue(ZOrder.isTunnel(point(Map.of("tunnel", "yes"))));
+    assertTrue(ZOrder.isTunnel(point(Map.of("tunnel", "building_passage"))));
     assertTrue(ZOrder.isTunnel(point(Map.of("covered", "yes"))));
+    // the schema lists only tunnel=yes|building_passage and covered=yes, so a culvert is not a tunnel
+    assertFalse(ZOrder.isTunnel(point(Map.of("tunnel", "culvert"))));
     assertFalse(ZOrder.isTunnel(point(Map.of("tunnel", "no"))));
     assertTrue(ZOrder.isBridge(point(Map.of("bridge", "viaduct"))));
     assertFalse(ZOrder.isBridge(point(Map.of("bridge", "no"))));

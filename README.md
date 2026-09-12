@@ -171,7 +171,8 @@ These apply to every build, with or without experiments.
   - `place_labels`: at most 2 per 64 px cell up to z12, most populous first.
   - `water_polygons_labels`: at most 1 per 64 px cell up to z11, largest first.
 - **Sub-pixel geometry.** `land` polygons of the same `kind` are merged per tile and merged pieces smaller than 1 px²
-  dropped; `water_polygons` smaller than 1 px are dropped; `ocean` polygons are merged per tile and slivers that
+  dropped; `water_polygons` enter the map at the zoom where they cover a square tile pixel, and any that would only
+  reach that size beyond z14 appear at z14; `ocean` polygons are merged per tile and slivers that
   collapse to lines at low zoom are dropped. None of these size limits apply at the maximum zoom, which is the base for
   overzooming: there a merged polygon only has to clear Planetiler's own `min_feature_size_at_max_zoom` (1/16 px, so
   1/256 px² of area), and only geometry that collapses to a line or a zero-area ring is dropped.
@@ -186,6 +187,13 @@ These apply to every build, with or without experiments.
 - `way_area` is a full-precision number in Web-Mercator units: m² on `water_polygons` and `water_polygons_labels`,
   hectares on `boundary_labels`.
 - `surface` is the raw value of the OSM tag, as the schema defines it — not collapsed to `paved`/`unpaved`.
+- `tunnel` follows the schema exactly: `tunnel=yes`, `tunnel=building_passage` or `covered=yes`. A `tunnel=culvert`
+  waterway is **not** a tunnel, which differs from OpenStreetMap Carto — culverts make up most waterway tunnels there.
+- A closed waterway is a line unless it is tagged as an area (`area=yes`, or a multipolygon/boundary relation): a
+  ring-shaped ditch or moat appears in `water_lines`, and `water_polygons` takes a `waterway=canal` ring only when it is
+  tagged as an area, as Carto's water-areas query does.
+- `water_polygons` and their labels share one minimum zoom, the zoom at which the polygon first covers a square tile
+  pixel, so a lake is never labelled before any water is drawn.
 - `name` and the `name_<code>` attributes each come from their own tag, with no fallback: a feature tagged only with
   `name` gets no translated fields. (The opt-in `locale_names`
   [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback.)

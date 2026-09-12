@@ -38,7 +38,10 @@ public class WaterLines implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public void processFeature(SourceFeature f, FeatureCollector features) {
-    if (Geo.isArea(f) || !f.canBeLine()) {
+    // A closed way is still a waterway line: a ring-shaped ditch, moat or canal is only an area when it says so
+    // ({@code area=yes} or a multipolygon/boundary relation), the same rule Streets applies and the one
+    // OpenStreetMap Carto follows — its water-lines query reads every waterway from planet_osm_line.
+    if (!f.canBeLine() || Geo.areaYesMultiBoundary(f)) {
       return;
     }
     String kind = f.getString("waterway", "");

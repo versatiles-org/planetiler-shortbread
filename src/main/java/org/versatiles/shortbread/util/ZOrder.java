@@ -14,11 +14,14 @@ public final class ZOrder {
 
   private static final int Z_STEP = 14;
 
-  private static final Set<String> TUNNEL_VALUES = Set.of("yes", "culvert", "building_passage");
+  // The schema defines `tunnel` as tunnel=yes|building_passage or covered=yes, for every layer that carries it.
+  // OpenStreetMap Carto also counts tunnel=culvert as a tunnel, but the spec is explicit here, so culverts — which
+  // dominate waterway tunnels — are not tunnels in this profile.
+  private static final Set<String> TUNNEL_VALUES = Set.of("yes", "building_passage");
   private static final Set<String> BRIDGE_VALUES =
     Set.of("yes", "viaduct", "boardwalk", "cantilever", "covered", "low_water_crossing", "movable", "trestle");
 
-  /** {@code tunnel=yes|culvert|building_passage} or {@code covered=yes}. */
+  /** {@code tunnel=yes|building_passage} or {@code covered=yes}, as the schema defines it. */
   public static boolean isTunnel(SourceFeature f) {
     return TUNNEL_VALUES.contains(str(f, "tunnel")) || "yes".equals(str(f, "covered"));
   }

@@ -136,6 +136,11 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     if (!f.canBePolygon() || !f.hasTag("boundary", "administrative")) {
       return;
     }
+    // a label point carries a name: without one it is an unlabelled dot, which is what an unnamed closed member way
+    // of a boundary relation would otherwise add
+    if (!f.hasTag("name")) {
+      return;
+    }
     Integer adminLevel = parseAdminLevel(f.getTag("admin_level"));
     if (adminLevel == null || (adminLevel != 2 && adminLevel != 4)) {
       return;

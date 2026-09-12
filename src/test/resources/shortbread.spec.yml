@@ -513,7 +513,6 @@ examples:
     tags:
       aeroway: taxiway
       ref: N
-  # street_labels covers highways, not aeroways, so there is no street_labels feature here
   output:
     - layer: streets
       geometry: line
@@ -521,6 +520,17 @@ examples:
       min_zoom: 13
       tags:
         kind: taxiway
+    # spec: street_labels kind comes from highway, aeroway or taxiway; taxiways are labelled from z13
+    - layer: street_labels
+      geometry: line
+      allow_extra_tags: false
+      min_zoom: 13
+      tags:
+        kind: taxiway
+        ref: N
+        ref_rows: 1
+        ref_cols: 1
+        tunnel: false
 
 - name: 'aeroway=runway'
   input:
@@ -530,7 +540,6 @@ examples:
       aeroway: runway
       ref: 07/25
       surface: concrete:lanes
-  # street_labels covers highways, not aeroways, so there is no street_labels feature here
   output:
   - layer: streets
     geometry: line
@@ -539,6 +548,17 @@ examples:
     tags:
       kind: runway
       surface: concrete:lanes
+  # spec: street_labels kind comes from highway, aeroway or taxiway; runways are labelled from z11
+  - layer: street_labels
+    geometry: line
+    min_zoom: 11
+    allow_extra_tags: false
+    tags:
+      kind: runway
+      ref: 07/25
+      ref_rows: 1
+      ref_cols: 5
+      tunnel: false
 
 - name: 'pedestrian polygon'
   input:

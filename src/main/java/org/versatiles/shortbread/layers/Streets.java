@@ -75,82 +75,67 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     }
   }
 
+  /** A {@code kind} value together with the minimum zoom the schema gives it. */
+  private record Kind(String value, int minzoom) {}
+
   private void processStreet(SourceFeature f, FeatureCollector features) {
-    String highway = f.getString("highway", "");
-    String railway = f.getString("railway", "");
-    String aeroway = f.getString("aeroway", "");
     String service = f.getString("service", "");
 
-    String kind = null;
-    int mz = Integer.MAX_VALUE;
-    boolean rail = false;
-    if (!highway.isEmpty()) {
-      switch (highway) {
-        case "motorway", "motorway_link" -> {
-          kind = "motorway";
-          mz = 5;
-        }
-        case "trunk", "trunk_link" -> {
-          kind = "trunk";
-          mz = 6;
-        }
-        case "primary", "primary_link" -> {
-          kind = "primary";
-          mz = 8;
-        }
-        case "secondary", "secondary_link" -> {
-          kind = "secondary";
-          mz = 9;
-        }
-        case "tertiary", "tertiary_link" -> {
-          kind = "tertiary";
-          mz = 10;
-        }
-        case "unclassified", "residential", "bus_guideway", "busway" -> {
-          kind = highway;
-          mz = 12;
-        }
-        case "living_street", "pedestrian", "track" -> {
-          kind = highway;
-          mz = 13;
-        }
-        case "service" -> {
-          kind = highway;
-          mz = 13;
-        }
-        case "footway", "steps", "path", "cycleway" -> {
-          kind = highway;
-          mz = 13;
-        }
-        default -> {
-          /* not a street */ }
-      }
-    } else if ((railway.equals("rail") || railway.equals("narrow_gauge")) && service.isEmpty()) {
-      kind = railway;
-      rail = true;
-      mz = 8;
-    } else if ((railway.equals("rail") || railway.equals("narrow_gauge")) ||
-      railway.equals("light_rail") || railway.equals("tram") || railway.equals("subway") ||
-      railway.equals("funicular") || railway.equals("monorail")) {
-      kind = railway;
-      rail = true;
-      mz = 10;
-    } else if (aeroway.equals("runway")) {
-      kind = aeroway;
-      mz = 11;
-    } else if (aeroway.equals("taxiway")) {
-      kind = aeroway;
-      mz = 13;
-    }
+    // A way can carry several of these tags at once — a tram embedded in a service road is both a street and a
+    // railway — but the schema gives each feature a single `kind`. OpenStreetMap Carto draws such a way twice (its
+    // roads and railway selects both pick it up), so emit one feature per identity rather than letting one win.
+    emitStreet(f, features, highwayKind(f.getString("highway", "")), true, false);
+    emitStreet(f, features, railwayKind(f.getString("railway", ""), service), false, true);
+    emitStreet(f, features, aerowayKind(f.getString("aeroway", "")), false, false);
+  }
 
-    if (kind == null || mz > 14) {
+  private static Kind highwayKind(String highway) {
+    return switch (highway) {
+      case "motorway", "motorway_link" -> new Kind("motorway", 5);
+      case "trunk", "trunk_link" -> new Kind("trunk", 6);
+      case "primary", "primary_link" -> new Kind("primary", 8);
+      case "secondary", "secondary_link" -> new Kind("secondary", 9);
+      case "tertiary", "tertiary_link" -> new Kind("tertiary", 10);
+      case "unclassified", "residential", "bus_guideway", "busway" -> new Kind(highway, 12);
+      case "living_street", "pedestrian", "track", "service", "footway", "steps", "path", "cycleway" ->
+        new Kind(highway, 13);
+      default -> null;
+    };
+  }
+
+  private static Kind railwayKind(String railway, String service) {
+    return switch (railway) {
+      // spec: rail and narrow_gauge from z8, or z10 when the way carries a service tag (siding, spur, yard)
+      case "rail", "narrow_gauge" -> new Kind(railway, service.isEmpty() ? 8 : 10);
+      case "light_rail", "tram", "subway", "funicular", "monorail" -> new Kind(railway, 10);
+      default -> null;
+    };
+  }
+
+  private static Kind aerowayKind(String aeroway) {
+    return switch (aeroway) {
+      case "runway" -> new Kind("runway", 11);
+      case "taxiway" -> new Kind("taxiway", 13);
+      default -> null;
+    };
+  }
+
+  /**
+   * Emits one {@code streets} feature for a single identity of the way.
+   *
+   * @param isHighway whether this feature is the way's road identity, which alone carries {@code link} and the access
+   *                  attributes — those describe the road, not a railway sharing its geometry
+   * @param rail      whether this feature is the way's railway identity
+   */
+  private void emitStreet(SourceFeature f, FeatureCollector features, Kind kind, boolean isHighway, boolean rail) {
+    if (kind == null || kind.minzoom() > 14) {
       return;
     }
-    boolean link = LINK_HIGHWAYS.contains(highway);
+    int mz = kind.minzoom();
+    String service = f.getString("service", "");
     String surface = f.getString("surface");
     String tracktype = f.getString("tracktype");
-    boolean tunnel = ZOrder.isTunnel(f);
-    boolean bridge = ZOrder.isBridge(f);
+    boolean link = isHighway && LINK_HIGHWAYS.contains(f.getString("highway", ""));
     boolean oneway = !rail && ZOrder.isOneway(f);
     boolean onewayReverse = !rail && ZOrder.isReverseOneway(f);
     boolean early = options.has(Experiment.EARLY_ATTRIBUTES);
@@ -162,13 +147,13 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       .setMaxZoom(14)
       .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, rail, false))
-      .setAttr("kind", kind);
+      .setAttr("kind", kind.value());
     setIfTrue(feature, "rail", rail, mz);
 
     // mid tier (z11+)
     setIfTrue(feature, "link", link, identifyingMinzoom);
-    setIfTrue(feature, "tunnel", tunnel, MED_TIER_MINZOOM);
-    setIfTrue(feature, "bridge", bridge, MED_TIER_MINZOOM);
+    setIfTrue(feature, "tunnel", ZOrder.isTunnel(f), MED_TIER_MINZOOM);
+    setIfTrue(feature, "bridge", ZOrder.isBridge(f), MED_TIER_MINZOOM);
     if (surface != null && !surface.isEmpty()) {
       // the schema defines surface as the raw value of the OSM tag, like street_polygons below
       feature.setAttrWithMinzoom("surface", surface, MED_TIER_MINZOOM);
@@ -184,12 +169,13 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     setIfTrue(feature, "oneway", oneway, FULL_TIER_MINZOOM);
     setIfTrue(feature, "oneway_reverse", onewayReverse, FULL_TIER_MINZOOM);
 
+    if (!isHighway) {
+      return; // the access attributes describe the road, so they belong to the highway feature only
+    }
     if (options.v11()) {
-      // 1.1: motorcar/bicycle/foot/horse, normalized to yes/limited/no, from z13, highways only
-      if (!highway.isEmpty()) {
-        for (String attribute : Access.ATTRIBUTES) {
-          setIfPresent(feature, attribute, Access.of(f, attribute), Access.MINZOOM);
-        }
+      // 1.1: motorcar/bicycle/foot/horse, normalized to yes/limited/no, from z13
+      for (String attribute : Access.ATTRIBUTES) {
+        setIfPresent(feature, attribute, Access.of(f, attribute), Access.MINZOOM);
       }
     } else {
       // 1.0: the raw bicycle/horse tag values, from z14 (z13 with early_attributes)

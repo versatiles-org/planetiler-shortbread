@@ -65,9 +65,12 @@ public final class ZOrder {
   }
 
   private static int classRank(String highway, String railway, boolean isRail, SourceFeature f) {
-    if (isRail && "rail".equals(railway) && !f.hasTag("service")) {
+    // narrow_gauge ranks with rail: Carto sorts every railway above all roads and treats narrow_gauge like the rest,
+    // demoting only the spur/siding/yard variants
+    boolean mainline = "rail".equals(railway) || "narrow_gauge".equals(railway);
+    if (isRail && mainline && !f.hasTag("service")) {
       return 13;
-    } else if (isRail && "rail".equals(railway)) {
+    } else if (isRail && mainline) {
       return 12;
     } else if (isRail && (railway.equals("subway") || railway.equals("light_rail") || railway.equals("tram") ||
       railway.equals("funicular") || railway.equals("monorail"))) {

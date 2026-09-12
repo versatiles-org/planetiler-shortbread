@@ -533,6 +533,77 @@ class ShortbreadProfileTest {
     assertEquals(10, label.getMinZoom());
   }
 
+  private List<FeatureCollector.Feature> streetsOf(List<FeatureCollector.Feature> features) {
+    return features.stream().filter(f -> f.getLayer().equals("streets")).toList();
+  }
+
+  @Test
+  void wayThatIsBothRoadAndRailwayEmitsBoth() {
+    // a tram in a service road (50 such ways in a Berlin extract): the schema allows one kind per feature, so each
+    // identity gets its own, as OpenStreetMap Carto draws them
+    var streets = streetsOf(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "service", "railway", "tram")));
+    assertEquals(List.of("service", "tram"), streets.stream().map(s -> attrs(s).get("kind")).toList());
+
+    var road = streets.get(0);
+    assertEquals(13, road.getMinZoom());
+    assertFalse(attrs(road).containsKey("rail"));
+
+    var tram = streets.get(1);
+    assertEquals(10, tram.getMinZoom());
+    assertEquals(true, attrs(tram).get("rail"));
+  }
+
+  @Test
+  void unknownHighwayValueStillEmitsItsRailway() {
+    var streets = streetsOf(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "construction", "railway", "rail")));
+    assertEquals(List.of("rail"), streets.stream().map(s -> attrs(s).get("kind")).toList());
+  }
+
+  @Test
+  void dualTaggedWayGetsOnlyOneLabel() {
+    // one way, one name: a second label feature would draw the same name twice
+    var label = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "service", "railway", "tram", "name", "Bahnhofstraße")), "street_labels");
+    assertEquals("service", attrs(label).get("kind"));
+    assertEquals("Bahnhofstraße", attrs(label).get("name"));
+  }
+
+  @Test
+  void aerowaysGetLabels() {
+    // spec: runway 11+, taxiway 13+, with kind from the aeroway tag
+    var runway = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("aeroway", "runway", "ref", "07/25")), "street_labels");
+    assertEquals("runway", attrs(runway).get("kind"));
+    assertEquals("07/25", attrs(runway).get("ref"));
+    assertEquals(11, runway.getMinZoom());
+
+    var taxiway = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("aeroway", "taxiway", "name", "November")), "street_labels");
+    assertEquals("taxiway", attrs(taxiway).get("kind"));
+    assertEquals(13, taxiway.getMinZoom());
+  }
+
+  @Test
+  void narrowGaugeSortsWithTheRailways() {
+    var narrowGauge = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("railway", "narrow_gauge")), "streets");
+    var footway = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("highway", "footway")), "streets");
+    var rail = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("railway", "rail")), "streets");
+    // a higher sort key is drawn on top: narrow gauge belongs with the railways, not below footways
+    assertTrue(narrowGauge.getSortKey() > footway.getSortKey());
+    assertEquals(rail.getSortKey(), narrowGauge.getSortKey());
+  }
+
+  @Test
+  void unnamedAdminPolygonGetsNoLabel() {
+    var features = process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("boundary", "administrative", "admin_level", "2"));
+    assertFalse(hasLayer(features, "boundary_labels"),
+      () -> "an unnamed administrative polygon must not add a label point");
+  }
+
   @Test
   void motorwayJunctionPoint() {
     var features = process(TestUtils.newPoint(0, 0),

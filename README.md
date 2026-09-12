@@ -194,6 +194,11 @@ These apply to every build, with or without experiments.
   tagged as an area, as Carto's water-areas query does.
 - `water_polygons` and their labels share one minimum zoom, the zoom at which the polygon first covers a square tile
   pixel, so a lake is never labelled before any water is drawn.
+- A way tagged both `highway` and `railway` — a tram in a service road, say — produces **one `streets` feature per
+  identity**, since `kind` holds a single value. OpenStreetMap Carto draws such a way as both. `street_labels` still
+  gets one feature: the way has one name, and a second label would draw it twice.
+- `railway=narrow_gauge` sorts with the other railways, not below footways.
+- `boundary_labels` are only emitted for named polygons.
 - `name` and the `name_<code>` attributes each come from their own tag, with no fallback: a feature tagged only with
   `name` gets no translated fields. (The opt-in `locale_names`
   [experiment](#experimental-features-beyond-the-spec) adds a *geofenced* fallback.)

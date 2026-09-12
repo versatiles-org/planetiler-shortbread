@@ -44,7 +44,8 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       Expression.matchSource(Shortbread.OSM_SOURCE),
       Expression.or(
         Expression.matchField("highway"),
-        Expression.matchField("railway")));
+        Expression.matchField("railway"),
+        Expression.matchField("aeroway")));
   }
 
   @Override
@@ -67,10 +68,13 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
     }
 
     String railway = f.getString("railway", "");
+    String aeroway = f.getString("aeroway", "");
     String kind;
     int mz;
     boolean rail;
-    if (!highway.isEmpty()) {
+    // Unlike the streets layer, a way that is both a road and a railway gets only one label: it has one name, and two
+    // label features would draw it twice. A highway value the schema does not label falls through to the other tags.
+    if (labelMinZoom(highway) <= 14) {
       kind = highway;
       mz = labelMinZoom(highway);
       rail = false;
@@ -78,10 +82,15 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
       kind = railway;
       mz = 10; // spec: railways are labelled from zoom 10
       rail = true;
+    } else if (aeroway.equals("runway")) {
+      kind = aeroway;
+      mz = 11; // spec: runway labels from zoom 11
+      rail = false;
+    } else if (aeroway.equals("taxiway")) {
+      kind = aeroway;
+      mz = 13; // spec: taxiway labels from zoom 13
+      rail = false;
     } else {
-      return;
-    }
-    if (mz > 14) {
       return;
     }
 

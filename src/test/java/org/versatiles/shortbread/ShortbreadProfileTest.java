@@ -474,6 +474,13 @@ class ShortbreadProfileTest {
     assertEquals(10, siding.getMinZoom());
     assertEquals("siding", siding.getAttrsAtZoom(10).get("service"));
 
+    // the proposal floors `service` at z10: a motorway carrying one must not expose it from z5, where it enters
+    var motorway = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
+      Map.of("highway", "motorway", "service", "driveway")), "streets");
+    assertEquals(5, motorway.getMinZoom());
+    assertNull(motorway.getAttrsAtZoom(9).get("service"));
+    assertEquals("driveway", motorway.getAttrsAtZoom(10).get("service"));
+
     // 1.0: bicycle/horse from z13, where paths enter the layer
     var path = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1),
       Map.of("highway", "path", "bicycle", "designated", "horse", "no")), "streets");

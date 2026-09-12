@@ -24,7 +24,7 @@ The published VersaTiles tiles are generated with all of them: the `versatiles-p
 | [`island_labels`](#island_labels)       | `place_labels`                | label points for islands mapped as polygons                                    | sees additional points, some before z10            |
 | [`address_details`](#address_details)   | `addresses`                   | `unit`, `block`                                                                | can ignore them                                    |
 | [`bridge_names`](#bridge_names)         | `bridges`                     | `name`, `name_<code>`                                                          | can ignore them                                    |
-| [`early_attributes`](#early_attributes) | `streets`                     | `link` and `service` from each feature's minimum zoom; 1.0 access from z13     | sees spec attributes at lower zooms than specified |
+| [`early_attributes`](#early_attributes) | `streets`                     | `link` from z5 and `service` from z10; 1.0 access from z13                     | sees spec attributes at lower zooms than specified |
 | [`mountain_peaks`](#mountain_peaks)     | `mountain_peaks`, a new layer | peaks, volcanoes and saddles with `kind`, names and `ele`                      | can ignore the layer                               |
 
 ## Detecting experiments
@@ -187,11 +187,14 @@ The spec makes some `streets` attributes available later than the features that 
 roads from z5 to z10, and service railways (sidings, yards, spurs) look like main lines at z10. With `early_attributes`
 these attributes arrive with the feature:
 
-|           Attribute           | Spec |                                  With `early_attributes`                                  |
-|-------------------------------|------|-------------------------------------------------------------------------------------------|
-| `link`                        | z11  | the feature's minimum zoom: motorway z5, trunk z6, primary z8, secondary z9, tertiary z10 |
-| `service`                     | z11  | the feature's minimum zoom, e.g. z10 for service railways                                 |
-| `bicycle`, `horse` (1.0 only) | z14  | z13, where paths enter the layer                                                          |
+|           Attribute           | Spec |                                   With `early_attributes`                                   |
+|-------------------------------|------|---------------------------------------------------------------------------------------------|
+| `link`                        | z11  | z5, the proposal's floor: the feature's own minimum zoom, since no link road starts earlier |
+| `service`                     | z11  | z10, the proposal's floor, so a motorway with a service tag does not expose it from z5      |
+| `bicycle`, `horse` (1.0 only) | z14  | z13, where paths enter the layer                                                            |
+
+The zooms are those of the upstream proposal, not simply each feature's minimum zoom: `service` is floored at z10 even
+when the feature itself starts earlier.
 
 `tunnel`, `bridge`, `surface`, `tracktype` and `oneway` keep their spec zooms, because features only merge when their
 attributes are identical; the 1.1 access attributes already start at z13.

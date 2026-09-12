@@ -40,6 +40,8 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
   private static final int FULL_TIER_MINZOOM = 14;
   // with early_attributes: 1.0 bicycle/horse from the zoom where paths enter the layer
   private static final int EARLY_ACCESS_MINZOOM = 13;
+  // with early_attributes: the earliest zoom the proposal allows for `service`, where service railways enter the layer
+  private static final int EARLY_SERVICE_MINZOOM = 10;
 
   private static final Set<String> LINK_HIGHWAYS =
     Set.of("motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link");
@@ -141,6 +143,9 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     boolean early = options.has(Experiment.EARLY_ATTRIBUTES);
     // link and service identify the feature: with early_attributes they arrive with it rather than at z11
     int identifyingMinzoom = early ? Math.min(mz, MED_TIER_MINZOOM) : MED_TIER_MINZOOM;
+    // `service` is floored at z10, the zoom the proposal specifies: a motorway or trunk carrying a service tag would
+    // otherwise expose it from z5, earlier than any consumer of the proposed schema expects
+    int serviceMinzoom = early ? Math.clamp(mz, EARLY_SERVICE_MINZOOM, MED_TIER_MINZOOM) : MED_TIER_MINZOOM;
 
     var feature = features.line(STREETS)
       .setMinZoom(mz)
@@ -162,7 +167,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       feature.setAttrWithMinzoom("tracktype", tracktype, MED_TIER_MINZOOM);
     }
     if (!service.isEmpty()) {
-      feature.setAttrWithMinzoom("service", service, identifyingMinzoom);
+      feature.setAttrWithMinzoom("service", service, serviceMinzoom);
     }
 
     // full tier (z14)

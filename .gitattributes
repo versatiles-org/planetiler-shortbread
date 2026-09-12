@@ -1,0 +1,14 @@
+# Normalize line endings: the repository stores LF, working copies get the platform's native endings on checkout.
+# Without this, a Windows checkout turns every file into CRLF, which made a test that compares documentation lines
+# fail only on windows-latest.
+* text=auto eol=lf
+
+# Keep the Maven wrapper script for Windows as CRLF, since cmd.exe needs it
+mvnw.cmd text eol=crlf
+
+# Binary files that must never be line-ending normalized
+*.jar binary
+*.pbf binary
+*.zip binary
+*.gz binary
+*.png binary

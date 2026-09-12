@@ -30,6 +30,11 @@ on:
 permissions:
   contents: read
 
+# a second run of the same ref would only repeat a long download and build
+concurrency:
+  group: tile-size-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   measure:
     name: ${{ matrix.area }}
@@ -52,16 +57,19 @@ jobs:
       - name: Build the executable jar
         run: ./mvnw -B -ntp -DskipTests -Dspotless.check.skip package
 
-      # the water polygons are the same for both extracts and change slowly, so a download is reused for a week;
-      # --download below only fetches sources that are missing
-      - name: Compute the week for the ocean cache key
-        id: week
-        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+      # The water polygons are the same for both extracts and change slowly, so the download is reused. The key is
+      # monthly, and restore-keys falls back to the newest older copy: with a weekly key and a weekly schedule the
+      # key changed on every run, so the cache never hit. --download below only fetches sources that are missing.
+      - name: Compute the month for the ocean cache key
+        id: cache_key
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
       - name: Restore the ocean shapefile
         uses: actions/cache@v6
         with:
           path: data/sources/water-polygons-split-3857.zip
-          key: water-polygons-${{ steps.week.outputs.week }}
+          key: water-polygons-${{ steps.cache_key.outputs.month }}
+          restore-keys: |
+            water-polygons-
 
       - name: Generate tiles without experiments
         run: >-

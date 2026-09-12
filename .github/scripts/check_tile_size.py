@@ -49,7 +49,13 @@ def main():
     failures = []  # (size, message)
     for path in args.stats:
         run = path.name.removesuffix(".layerstats.tsv.gz")
+        if not path.exists():
+            print(f"::error title=Missing layer stats::{path} does not exist; the run that writes it probably failed")
+            return 2
         tiles = read_stats(path)
+        if not tiles:
+            print(f"::error title=Empty layer stats::{path} lists no tiles, so nothing was checked against the budget")
+            return 2
 
         largest = {}  # zoom -> key of the largest tile
         for key, (size, _) in tiles.items():

@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# superseded pushes to the same branch or pull request stop running
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # When spotless:check fails the error message is a bit cryptic, so keep it in its own job
   # to make it obvious that formatting - not the build - is the problem.

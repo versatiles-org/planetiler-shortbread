@@ -18,6 +18,8 @@ import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.locationtech.jts.geom.Geometry;
 import org.versatiles.shortbread.util.CountryLanguages;
 
@@ -359,6 +361,18 @@ class ShortbreadProfileTest {
       Map.of("addr:housenumber", "5", "addr:unit", "B"), Shortbread.OSM_SOURCE, null, 1), strict), "addresses");
     assertEquals("5", attrs(addr).get("housenumber"));
     assertNull(attrs(addr).get("unit"));
+
+    // an island mapped as a polygon produces no label (ISLAND_LABELS off); only island nodes are labelled
+    assertTrue(TestUtils.processSourceFeature(SimpleFeature.create(
+      TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("place", "island", "name", "Big Isle"),
+      Shortbread.OSM_SOURCE, null, 1), strict).stream().noneMatch(f -> f.getLayer().equals("place_labels")),
+      "an island polygon must not be labelled without the island_labels experiment");
+
+    // a name-only feature gets no name_de even inside Germany (LOCALE_NAMES off, so no country index exists)
+    var town = onlyOne(TestUtils.processSourceFeature(SimpleFeature.create(TestUtils.newPoint(10, 51),
+      Map.of("place", "town", "name", "Köln"), Shortbread.OSM_SOURCE, null, 1), strict), "place_labels");
+    assertEquals("Köln", attrs(town).get("name"));
+    assertNull(attrs(town).get("name_de"), "locale_names is off, so name must not be copied into name_de");
   }
 
   @Test
@@ -699,6 +713,76 @@ class ShortbreadProfileTest {
     var ferry = onlyOne(features, "ferries");
     assertEquals("ferry", attrs(ferry).get("kind"));
     assertEquals(10, ferry.getMinZoom());
+  }
+
+  @ParameterizedTest(name = "{0}={1} -> public_transport kind={2} at z{3}")
+  @CsvSource({
+    "railway, station, station, 13",
+    "railway, halt, halt, 13",
+    "railway, tram_stop, tram_stop, 14",
+    "highway, bus_stop, bus_stop, 14",
+    "amenity, bus_station, bus_station, 13",
+    "amenity, ferry_terminal, ferry_terminal, 12",
+    "aerialway, station, aerialway_station, 13",
+    "aeroway, aerodrome, aerodrome, 11",
+    "aeroway, helipad, helipad, 13",
+  })
+  void publicTransportKindsAndZooms(String key, String value, String kind, int minzoom) {
+    var pt = onlyOne(process(TestUtils.newPoint(0, 0), Map.of(key, value, "name", "Stop")), "public_transport");
+    assertEquals(kind, attrs(pt).get("kind"));
+    assertEquals(minzoom, pt.getMinZoom());
+  }
+
+  @ParameterizedTest(name = "man_made={0} -> pier_lines and pier_polygons at z12")
+  @CsvSource({"pier", "breakwater", "groyne"})
+  void pierKindsAsLineAndPolygon(String kind) {
+    var line = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("man_made", kind)), "pier_lines");
+    assertEquals(kind, attrs(line).get("kind"));
+    assertEquals(12, line.getMinZoom());
+
+    var polygon = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of("man_made", kind)),
+      "pier_polygons");
+    assertEquals(kind, attrs(polygon).get("kind"));
+    assertEquals(12, polygon.getMinZoom());
+  }
+
+  @ParameterizedTest(name = "{0}={1} -> sites kind={1} at z14")
+  @CsvSource({
+    "amenity, university", "amenity, hospital", "amenity, prison", "amenity, parking",
+    "amenity, bicycle_parking", "amenity, school", "amenity, college",
+    "leisure, sports_centre", "landuse, construction", "military, danger_area",
+  })
+  void siteKinds(String key, String value) {
+    var site = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of(key, value)), "sites");
+    // landuse=construction and military=danger_area map to their value as the kind, like the amenities
+    assertEquals(value, attrs(site).get("kind"));
+    assertEquals(14, site.getMinZoom());
+  }
+
+  @ParameterizedTest(name = "{0}={1} -> land kind={2} at z{3}")
+  @CsvSource({
+    "landuse, forest, forest, 7", "natural, wood, forest, 7",
+    "landuse, residential, residential, 10", "landuse, farmland, farmland, 10",
+    "landuse, quarry, quarry, 11", "landuse, meadow, meadow, 11",
+    "natural, sand, sand, 10", "natural, beach, beach, 10",
+    "natural, heath, heath, 11", "natural, scree, scree, 11",
+    "leisure, park, park, 11", "leisure, golf_course, golf_course, 11",
+    "landuse, garages, garages, 10", "landuse, cemetery, cemetery, 13",
+    "amenity, grave_yard, grave_yard, 13",
+  })
+  void landKindsAndZooms(String key, String value, String kind, int minzoom) {
+    var land = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0), Map.of(key, value)), "land");
+    assertEquals(kind, attrs(land).get("kind"));
+    assertEquals(minzoom, land.getMinZoom());
+  }
+
+  @ParameterizedTest(name = "railway={0} -> streets kind={0} at z10, rail=true")
+  @CsvSource({"light_rail", "tram", "subway", "funicular", "monorail"})
+  void minorRailKindsEnterAtZoom10(String railway) {
+    var street = onlyOne(process(TestUtils.newLineString(0, 0, 1, 1), Map.of("railway", railway)), "streets");
+    assertEquals(railway, attrs(street).get("kind"));
+    assertEquals(10, street.getMinZoom());
+    assertEquals(true, attrs(street).get("rail"));
   }
 
   @Test

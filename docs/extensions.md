@@ -42,6 +42,11 @@ because they add fields or layers:
 `locale_names`, `island_labels` and `early_attributes` add no fields and cannot be detected from the metadata. The
 Shortbread validator in versatiles-rs reports extension attributes as `unknown_attribute` warnings.
 
+**The table only works when the data exercises the experiment.** `vector_layers` is built from the layers and fields
+that actually appear in the tiles, not from what the profile registered, so a region with no `natural=peak` gets no
+`mountain_peaks` layer even with the experiment enabled, and a region whose buildings carry no height tag gets no
+`height` field. A missing row means "not found in this extract", not "not enabled".
+
 ## `3d_buildings`
 
 Heights and [Simple 3D Buildings](https://wiki.openstreetmap.org/wiki/Simple3DBuildingsV1) parts for extruded buildings.

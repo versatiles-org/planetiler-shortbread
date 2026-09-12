@@ -416,10 +416,12 @@ examples:
   output:
   - layer: streets
     geometry: line
+    min_zoom: 13
     tags:
       kind: path
   - layer: street_labels
     geometry: line
+    min_zoom: 14
     tags:
       kind: path
       name: Name
@@ -710,7 +712,7 @@ examples:
       name_en: 'Name (en)'
       name_de: 'Name (de)'
 
-- name: ferry without motor at z11
+- name: passenger-only ferry appears at z12, not with the car ferries at z10
   input:
     source: osm
     geometry: line
@@ -719,7 +721,12 @@ examples:
       motor_vehicle: no
       name: Name
   output:
-    at_zoom: 11
+    layer: ferries
+    geometry: line
+    min_zoom: 12
+    tags:
+      kind: ferry
+      name: Name
 
 - name: ferry with motor at z11
   input:
@@ -749,6 +756,7 @@ examples:
   output:
     - layer: pois
       geometry: point
+      min_zoom: 14
       allow_extra_tags: false
       tags:
         office: diplomatic
@@ -765,6 +773,7 @@ examples:
       man_made: beauty
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -780,6 +789,7 @@ examples:
       denomination: some_denomination
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -799,6 +809,7 @@ examples:
       recycling:scrap_metal: yes
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -816,6 +827,7 @@ examples:
       amenity: recycling
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -830,6 +842,7 @@ examples:
       amenity: bank
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -845,6 +858,7 @@ examples:
       amenity: bank
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -858,6 +872,7 @@ examples:
       historic: battlefield
   output:
     layer: pois
+    min_zoom: 14
     geometry: point
     allow_extra_tags: false
     tags:
@@ -872,6 +887,7 @@ examples:
       name: 'Name'
   output:
     layer: public_transport
+    min_zoom: 13
     geometry: point
     allow_extra_tags: false
     tags:
@@ -888,6 +904,7 @@ examples:
       iata: eye eight a
   output:
     layer: public_transport
+    min_zoom: 11
     geometry: point
     allow_extra_tags: false
     tags:
@@ -1116,6 +1133,7 @@ examples:
       name: 'Name'
   output:
     layer: place_labels
+    min_zoom: 6
     geometry: point
     tags:
       kind: city

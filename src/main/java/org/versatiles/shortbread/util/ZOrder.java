@@ -5,8 +5,10 @@ import com.onthegomap.planetiler.util.Parse;
 import java.util.Set;
 
 /**
- * Boolean tag helpers and the draw-order computation. The computed z-order is used as a Planetiler sort key (higher
- * value = drawn on top / kept when features are dropped).
+ * Boolean tag helpers and the draw-order computation. The computed z-order is used as a Planetiler sort key: features
+ * are written to a tile in ascending sort-key order, so a higher value is drawn later, i.e. on top. Note that a label
+ * grid keeps the <em>lowest</em> sort keys in each cell, which is why the label layers use
+ * {@code setSortKeyDescending}.
  */
 public final class ZOrder {
 

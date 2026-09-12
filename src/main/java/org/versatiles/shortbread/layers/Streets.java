@@ -9,6 +9,7 @@ import org.versatiles.shortbread.Experiment;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
 import org.versatiles.shortbread.util.Access;
+import org.versatiles.shortbread.util.Attrs;
 import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
@@ -130,7 +131,7 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
    * @param rail      whether this feature is the way's railway identity
    */
   private void emitStreet(SourceFeature f, FeatureCollector features, Kind kind, boolean isHighway, boolean rail) {
-    if (kind == null || kind.minzoom() > 14) {
+    if (kind == null) {
       return;
     }
     int mz = kind.minzoom();
@@ -153,12 +154,12 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, rail, false))
       .setAttr("kind", kind.value());
-    setIfTrue(feature, "rail", rail, mz);
+    Attrs.setIfTrue(feature, "rail", rail, mz);
 
     // mid tier (z11+)
-    setIfTrue(feature, "link", link, identifyingMinzoom);
-    setIfTrue(feature, "tunnel", ZOrder.isTunnel(f), MED_TIER_MINZOOM);
-    setIfTrue(feature, "bridge", ZOrder.isBridge(f), MED_TIER_MINZOOM);
+    Attrs.setIfTrue(feature, "link", link, identifyingMinzoom);
+    Attrs.setIfTrue(feature, "tunnel", ZOrder.isTunnel(f), MED_TIER_MINZOOM);
+    Attrs.setIfTrue(feature, "bridge", ZOrder.isBridge(f), MED_TIER_MINZOOM);
     if (surface != null && !surface.isEmpty()) {
       // the schema defines surface as the raw value of the OSM tag, like street_polygons below
       feature.setAttrWithMinzoom("surface", surface, MED_TIER_MINZOOM);
@@ -171,8 +172,8 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     }
 
     // full tier (z14)
-    setIfTrue(feature, "oneway", oneway, FULL_TIER_MINZOOM);
-    setIfTrue(feature, "oneway_reverse", onewayReverse, FULL_TIER_MINZOOM);
+    Attrs.setIfTrue(feature, "oneway", oneway, FULL_TIER_MINZOOM);
+    Attrs.setIfTrue(feature, "oneway_reverse", onewayReverse, FULL_TIER_MINZOOM);
 
     if (!isHighway) {
       return; // the access attributes describe the road, so they belong to the highway feature only
@@ -180,13 +181,13 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     if (options.v11()) {
       // 1.1: motorcar/bicycle/foot/horse, normalized to yes/limited/no, from z13
       for (String attribute : Access.ATTRIBUTES) {
-        setIfPresent(feature, attribute, Access.of(f, attribute), Access.MINZOOM);
+        Attrs.setIfPresent(feature, attribute, Access.of(f, attribute), Access.MINZOOM);
       }
     } else {
       // 1.0: the raw bicycle/horse tag values, from z14 (z13 with early_attributes)
       int accessMinzoom = early ? EARLY_ACCESS_MINZOOM : FULL_TIER_MINZOOM;
-      setIfPresent(feature, "bicycle", f.getString("bicycle"), accessMinzoom);
-      setIfPresent(feature, "horse", f.getString("horse"), accessMinzoom);
+      Attrs.setIfPresent(feature, "bicycle", f.getString("bicycle"), accessMinzoom);
+      Attrs.setIfPresent(feature, "horse", f.getString("horse"), accessMinzoom);
     }
   }
 
@@ -215,8 +216,8 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
       .setMinPixelSize(0)
       .setSortKey(ZOrder.zOrder(f, false, false))
       .setAttr("kind", kind);
-    setIfTrue(feature, "tunnel", ZOrder.isTunnel(f), mz);
-    setIfTrue(feature, "bridge", ZOrder.isBridge(f), mz);
+    Attrs.setIfTrue(feature, "tunnel", ZOrder.isTunnel(f), mz);
+    Attrs.setIfTrue(feature, "bridge", ZOrder.isBridge(f), mz);
     String surface = f.getString("surface");
     if (surface != null && !surface.isEmpty()) {
       feature.setAttr("surface", surface);
@@ -235,16 +236,5 @@ public class Streets implements ForwardingProfile.FeatureProcessor {
     }
   }
 
-  private static void setIfPresent(FeatureCollector.Feature feature, String key, String value, int minzoom) {
-    if (value != null && !value.isEmpty()) {
-      feature.setAttrWithMinzoom(key, value, minzoom);
-    }
-  }
 
-  /** Writes a boolean attribute only when it is true, since the schema's default for it is false. */
-  private static void setIfTrue(FeatureCollector.Feature feature, String key, boolean value, int minzoom) {
-    if (value) {
-      feature.setAttrWithMinzoom(key, true, minzoom);
-    }
-  }
 }

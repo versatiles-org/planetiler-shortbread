@@ -7,12 +7,12 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import org.versatiles.shortbread.Experiment;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
+import org.versatiles.shortbread.util.Attrs;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Poi;
 
 /**
  * The {@code addresses} layer (zoom 14): house numbers/names from {@code addr:housenumber} / {@code addr:housename}.
- * Ports {@code process_addresses}.
  * <p>
  * A feature that already qualifies for the {@code pois} layer is not also emitted here (see {@link Poi#matches}).
  */
@@ -56,18 +56,13 @@ public class Addresses implements ForwardingProfile.FeatureProcessor {
       // keeps the cap consistent across tile edges.
       .setBufferPixels(8)
       .setPointLabelGridSizeAndLimit(14, 8, 8);
-    setIfPresent(feature, "housename", f.getString("addr:housename"));
-    setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
+    Attrs.setIfPresent(feature, "housename", f.getString("addr:housename"));
+    Attrs.setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
     // EXPERIMENT (beyond Shortbread, which defines only housename/housenumber): emit unit/block when present
     if (options.has(Experiment.ADDRESS_DETAILS)) {
-      setIfPresent(feature, "unit", f.getString("addr:unit"));
-      setIfPresent(feature, "block", f.getString("addr:block"));
+      Attrs.setIfPresent(feature, "unit", f.getString("addr:unit"));
+      Attrs.setIfPresent(feature, "block", f.getString("addr:block"));
     }
   }
 
-  private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {
-    if (value != null && !value.isEmpty()) {
-      feature.setAttr(key, value);
-    }
-  }
 }

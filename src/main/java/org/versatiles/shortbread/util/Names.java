@@ -31,10 +31,10 @@ public final class Names {
   public static void setNames(FeatureCollector.Feature feature, SourceFeature source, List<NameKeys> languages,
     CountryLanguages countries) {
     String name = source.getString("name");
-    setIfPresent(feature, "name", name);
+    Attrs.setIfPresent(feature, "name", name);
     // the `name_<code>` / `name:<code>` strings are built once in ShortbreadOptions, not per feature
     for (NameKeys keys : languages) {
-      setIfPresent(feature, keys.attribute(), source.getString(keys.tag()));
+      Attrs.setIfPresent(feature, keys.attribute(), source.getString(keys.tag()));
     }
     if (countries != null && name != null && !name.isEmpty()) {
       String language = countries.languageAt(source);
@@ -54,9 +54,4 @@ public final class Names {
     }
   }
 
-  private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {
-    if (value != null && !value.isEmpty()) {
-      feature.setAttr(key, value);
-    }
-  }
 }

@@ -15,10 +15,10 @@ import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
 
 /**
- * The {@code place_labels} layer (zoom 3+): cities, towns, villages and other named places. Ports
- * {@code process_place_layer}. Each place type has a fixed minimum zoom and a default population used when the OSM
- * {@code population} tag is missing; {@code capital=yes} / {@code capital=4} promote the kind to {@code capital} /
- * {@code state_capital} at zoom 4. Population drives the label priority (sort key).
+ * The {@code place_labels} layer (zoom 4+): cities, towns, villages and other named places. Each place type has a fixed
+ * minimum zoom and a default population used when the OSM {@code population} tag is missing; {@code capital=yes} /
+ * {@code capital=4} promote the kind to {@code capital} / {@code state_capital} at zoom 4. Population drives the label
+ * priority (sort key).
  */
 public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
 

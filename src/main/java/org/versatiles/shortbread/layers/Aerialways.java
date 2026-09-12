@@ -7,7 +7,7 @@ import com.onthegomap.planetiler.reader.SourceFeature;
 import org.versatiles.shortbread.Shortbread;
 
 /**
- * The {@code aerialways} layer (zoom 12): cable cars, gondolas, lifts and tows. Ports {@code process_aerialways}.
+ * The {@code aerialways} layer (zoom 12): cable cars, gondolas, lifts and tows.
  */
 public class Aerialways implements ForwardingProfile.FeatureProcessor {
 

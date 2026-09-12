@@ -53,11 +53,6 @@ public final class Geo {
     return f.area(Unit.Area.SQUARE_METER);
   }
 
-  /** Approximate feature area in hectares. */
-  public static double areaHectares(SourceFeature f) {
-    return f.area(Unit.Area.HECTARE);
-  }
-
   /** Web-Mercator world area: a square whose side is the WGS84 equatorial circumference (in m²). */
   private static final double MERCATOR_WORLD_AREA_M2 = 40075016.6855785 * 40075016.6855785;
 

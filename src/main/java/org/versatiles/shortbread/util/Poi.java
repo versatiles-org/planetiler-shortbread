@@ -64,11 +64,6 @@ public final class Poi {
     return value != null && set.contains(value) ? value : null;
   }
 
-  /** Returns true if the feature carries at least one whitelisted POI key/value pair. */
-  public static boolean matches(SourceFeature f) {
-    return matches(f, false);
-  }
-
   /**
    * Returns true if the feature is a POI. When {@code v11} is set, the Shortbread 1.1 additions ({@code amenity=fuel}
    * and {@code leisure=park}) are also accepted, and {@code playground}/{@code dog_park} are read from {@code leisure}

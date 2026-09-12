@@ -26,7 +26,6 @@ public class Ocean implements ForwardingProfile.FeatureProcessor {
   public void processFeature(SourceFeature feature, FeatureCollector features) {
     features.polygon(LAYER_NAME)
       .setZoomRange(0, 14)
-      .setBufferPixels(4)
       // keep the full ocean coverage at every zoom, do not drop small slivers between tiles
       .setMinPixelSize(0);
   }

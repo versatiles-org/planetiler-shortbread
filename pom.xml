@@ -91,6 +91,20 @@
     </dependency>
   </dependencies>
 
+  <description>
+    A Planetiler profile that generates vector tiles in the Shortbread schema (versions 1.0 and 1.1) from
+    OpenStreetMap data, with optional beyond-spec extensions.
+  </description>
+  <url>https://github.com/versatiles-org/planetiler-shortbread</url>
+
+  <licenses>
+    <license>
+      <name>The Unlicense</name>
+      <url>https://unlicense.org/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
   <scm>
     <connection>scm:git:https://github.com/versatiles-org/planetiler-shortbread.git</connection>
     <url>https://github.com/versatiles-org/planetiler-shortbread</url>

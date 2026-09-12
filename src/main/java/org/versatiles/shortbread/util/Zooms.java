@@ -17,7 +17,7 @@ public final class Zooms {
 
   /**
    * @param minSquarePixels minimum on-screen area in tile pixels² (a 256px tile)
-   * @param worldArea       feature area as a fraction of the planet ({@link WithGeometry#area()})
+   * @param worldArea       feature area as a fraction of the planet (see the class comment)
    */
   public static int zminForArea(double minSquarePixels, double worldArea) {
     if (worldArea <= 0) {
@@ -29,7 +29,7 @@ public final class Zooms {
 
   /**
    * @param minLengthPixels minimum on-screen length in tile pixels (a 256px tile)
-   * @param worldLength     feature length as a fraction of the planet circumference ({@link WithGeometry#length()})
+   * @param worldLength     feature length as a fraction of the planet circumference (see the class comment)
    */
   public static int zminForLength(double minLengthPixels, double worldLength) {
     if (worldLength <= 0) {

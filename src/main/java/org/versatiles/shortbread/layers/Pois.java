@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
+import org.versatiles.shortbread.util.Attrs;
 import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
@@ -102,60 +103,49 @@ public class Pois implements ForwardingProfile.FeatureProcessor {
     }
     feature.setZoomRange(14, 14);
 
-    setIfPresent(feature, "amenity", amenity);
-    setIfPresent(feature, "shop", shop);
-    setIfPresent(feature, "tourism", tourism);
-    setIfPresent(feature, "man_made", manMade);
-    setIfPresent(feature, "historic", historic);
-    setIfPresent(feature, "leisure", leisure);
-    setIfPresent(feature, "emergency", emergency);
-    setIfPresent(feature, "highway", highway);
-    setIfPresent(feature, "office", office);
+    Attrs.setIfPresent(feature, "amenity", amenity);
+    Attrs.setIfPresent(feature, "shop", shop);
+    Attrs.setIfPresent(feature, "tourism", tourism);
+    Attrs.setIfPresent(feature, "man_made", manMade);
+    Attrs.setIfPresent(feature, "historic", historic);
+    Attrs.setIfPresent(feature, "leisure", leisure);
+    Attrs.setIfPresent(feature, "emergency", emergency);
+    Attrs.setIfPresent(feature, "highway", highway);
+    Attrs.setIfPresent(feature, "office", office);
 
     if (amenity != null && Poi.CATERING.contains(amenity)) {
-      setIfPresent(feature, "cuisine", f.getString("cuisine"));
+      Attrs.setIfPresent(feature, "cuisine", f.getString("cuisine"));
     }
     if (leisure != null && Poi.SPORT.contains(leisure)) {
-      setIfPresent(feature, "sport", f.getString("sport"));
+      Attrs.setIfPresent(feature, "sport", f.getString("sport"));
     }
     if ("vending_machine".equals(amenity)) {
-      setIfPresent(feature, "vending", f.getString("vending"));
+      Attrs.setIfPresent(feature, "vending", f.getString("vending"));
     }
     if ("information".equals(tourism)) {
-      setIfPresent(feature, "information", f.getString("information"));
+      Attrs.setIfPresent(feature, "information", f.getString("information"));
     }
     if ("tower".equals(manMade)) {
-      setIfPresent(feature, "tower:type", f.getString("tower:type"));
+      Attrs.setIfPresent(feature, "tower:type", f.getString("tower:type"));
     }
     if ("recycling".equals(amenity)) {
-      setIfYes(feature, f, "recycling:glass_bottles");
-      setIfYes(feature, f, "recycling:paper");
-      setIfYes(feature, f, "recycling:clothes");
-      setIfYes(feature, f, "recycling:scrap_metal");
+      Attrs.setIfYes(feature, f, "recycling:glass_bottles");
+      Attrs.setIfYes(feature, f, "recycling:paper");
+      Attrs.setIfYes(feature, f, "recycling:clothes");
+      Attrs.setIfYes(feature, f, "recycling:scrap_metal");
     }
     if ("bank".equals(amenity)) {
-      setIfYes(feature, f, "atm");
+      Attrs.setIfYes(feature, f, "atm");
     }
     if ("place_of_worship".equals(amenity)) {
-      setIfPresent(feature, "religion", f.getString("religion"));
-      setIfPresent(feature, "denomination", f.getString("denomination"));
+      Attrs.setIfPresent(feature, "religion", f.getString("religion"));
+      Attrs.setIfPresent(feature, "denomination", f.getString("denomination"));
     }
 
     Names.setNames(feature, f, options.nameKeys(), countries);
-    setIfPresent(feature, "housename", f.getString("addr:housename"));
-    setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
+    Attrs.setIfPresent(feature, "housename", f.getString("addr:housename"));
+    Attrs.setIfPresent(feature, "housenumber", f.getString("addr:housenumber"));
   }
 
-  /** Writes {@code key=true} when the tag is {@code yes}; the schema's default for these flags is false. */
-  private static void setIfYes(FeatureCollector.Feature feature, SourceFeature f, String key) {
-    if ("yes".equals(f.getString(key, ""))) {
-      feature.setAttr(key, true);
-    }
-  }
 
-  private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {
-    if (value != null && !value.isEmpty()) {
-      feature.setAttr(key, value);
-    }
-  }
 }

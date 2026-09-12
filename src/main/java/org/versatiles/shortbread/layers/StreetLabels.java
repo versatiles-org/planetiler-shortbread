@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
+import org.versatiles.shortbread.util.Attrs;
 import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
@@ -72,7 +73,7 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
         var feature = features.point(POINTS)
           .setZoomRange(12, 14)
           .setAttr("kind", highway);
-        setIfPresent(feature, "ref", f.getString("ref"));
+        Attrs.setIfPresent(feature, "ref", f.getString("ref"));
         Names.setNames(feature, f, options.nameKeys(), countries);
       }
       return;
@@ -158,9 +159,4 @@ public class StreetLabels implements ForwardingProfile.FeatureProcessor {
     };
   }
 
-  private static void setIfPresent(FeatureCollector.Feature feature, String key, String value) {
-    if (value != null && !value.isEmpty()) {
-      feature.setAttr(key, value);
-    }
-  }
 }

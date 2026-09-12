@@ -737,7 +737,7 @@ examples:
       kind: ferry
       name: Name
 
-- name: 'pois can have names and adresses. This makes them not show up on the addresses layer'
+- name: 'pois can have names and addresses. This makes them not show up on the addresses layer'
   input:
     source: osm
     geometry: point
@@ -756,7 +756,7 @@ examples:
         housename: 'Housename'
         housenumber: 'Housenumber'
 
-- name: 'arts_centre poi with invalid tag (man_made=beauty) is not emmitted as such'
+- name: 'arts_centre poi with invalid tag (man_made=beauty) is not emitted as such'
   input:
     source: osm
     geometry: point
@@ -787,7 +787,7 @@ examples:
       religion: some_religion
       denomination: some_denomination
 
-- name: 'recycling poi with invalid tag does not cause this to be emmitted'
+- name: 'recycling poi carries every recycling:* flag it is tagged with'
   input:
     source: osm
     geometry: point
@@ -821,7 +821,7 @@ examples:
     tags:
       amenity: recycling
 
-- name: 'poi bank without atm'
+- name: 'poi bank with atm'
   input:
     source: osm
     geometry: point
@@ -836,7 +836,7 @@ examples:
       atm: true
       amenity: bank
 
-- name: 'poi bank with atm'
+- name: 'poi bank without atm'
   input:
     source: osm
     geometry: point
@@ -931,7 +931,7 @@ examples:
       place: hamlet
   output: [ ]
 
-- name: 'non administrative boundarys are not boundary labels'
+- name: 'non administrative boundaries are not boundary labels'
   input:
     source: osm
     geometry: POLYGON ((-0.5 -0.5, 0.5 -0.5, 0.5 0.5, -0.5 0.5, -0.5 -0.5))

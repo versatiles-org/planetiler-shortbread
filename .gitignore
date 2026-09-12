@@ -20,4 +20,8 @@ target/
 .settings
 bin/
 
+# vs code
+*.code-workspace
+.vscode/
+
 data/

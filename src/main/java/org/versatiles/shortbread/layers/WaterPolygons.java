@@ -13,9 +13,9 @@ import org.versatiles.shortbread.util.Names;
 import org.versatiles.shortbread.util.Zooms;
 
 /**
- * The {@code water_polygons} layer (and its {@code water_polygons_labels} centroids): lakes, reservoirs, rivers, docks,
- * canals and glaciers. The minimum zoom scales with the polygon's on-screen area so small water bodies only appear when
- * large enough.
+ * The {@code water_polygons} layer (and the interior label points of {@code water_polygons_labels}): lakes, reservoirs,
+ * rivers, docks, canals and glaciers. The minimum zoom scales with the polygon's on-screen area so small water bodies
+ * only appear when large enough.
  */
 public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
 

@@ -10,8 +10,8 @@ import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Names;
 
 /**
- * The {@code ferries} layer (zoom 8): ferry routes. Ports {@code process_ferries}. Car ferries appear from zoom 10,
- * passenger-only ferries ({@code motor_vehicle=no}) from zoom 12.
+ * The {@code ferries} layer: ferry routes. Car ferries appear from zoom 10, passenger-only ferries
+ * ({@code motor_vehicle=no}) from zoom 12.
  */
 public class Ferries implements ForwardingProfile.FeatureProcessor {
 

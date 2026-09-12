@@ -52,14 +52,22 @@ class ShortbreadUtilTest {
 
   @Test
   void poiMatching() {
-    assertTrue(Poi.matches(point(Map.of("amenity", "bank"))));
-    assertFalse(Poi.matches(point(Map.of("amenity", "not_a_real_amenity"))));
-    assertTrue(Poi.matches(point(Map.of("office", "diplomatic"))));
-    assertFalse(Poi.matches(point(Map.of("office", "company"))));
+    // false = Shortbread 1.0, the version the production caller passes when the schema is 1.0
+    assertTrue(Poi.matches(point(Map.of("amenity", "bank")), false));
+    assertFalse(Poi.matches(point(Map.of("amenity", "not_a_real_amenity")), false));
+    assertTrue(Poi.matches(point(Map.of("office", "diplomatic")), false));
+    assertFalse(Poi.matches(point(Map.of("office", "company")), false));
     // man_made alone is enough to make a feature a POI
-    assertTrue(Poi.matches(point(Map.of("man_made", "lighthouse"))));
-    assertFalse(Poi.matches(point(Map.of("building", "yes"))));
-    assertTrue(Poi.matches(point(Map.of("amenity", "food_court"))));
-    assertFalse(Poi.matches(point(Map.of("amenity", "foot_court"))));
+    assertTrue(Poi.matches(point(Map.of("man_made", "lighthouse")), false));
+    assertFalse(Poi.matches(point(Map.of("building", "yes")), false));
+    assertTrue(Poi.matches(point(Map.of("amenity", "food_court")), false));
+    assertFalse(Poi.matches(point(Map.of("amenity", "foot_court")), false));
+
+    // 1.1 moves playground/dog_park to leisure and adds amenity=fuel and leisure=park
+    assertTrue(Poi.matches(point(Map.of("amenity", "playground")), false));
+    assertFalse(Poi.matches(point(Map.of("leisure", "playground")), false));
+    assertTrue(Poi.matches(point(Map.of("leisure", "playground")), true));
+    assertTrue(Poi.matches(point(Map.of("amenity", "fuel")), true));
+    assertFalse(Poi.matches(point(Map.of("amenity", "fuel")), false));
   }
 }

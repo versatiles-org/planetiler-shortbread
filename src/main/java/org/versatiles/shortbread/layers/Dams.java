@@ -8,7 +8,7 @@ import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.util.Geo;
 
 /**
- * The {@code dam_lines} and {@code dam_polygons} layers from {@code waterway=dam}. Ports {@code process_dam}.
+ * The {@code dam_lines} and {@code dam_polygons} layers from {@code waterway=dam}.
  */
 public class Dams implements ForwardingProfile.FeatureProcessor {
 

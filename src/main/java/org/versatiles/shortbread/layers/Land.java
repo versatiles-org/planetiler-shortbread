@@ -11,8 +11,8 @@ import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.util.Geo;
 
 /**
- * The {@code land} layer: land use / land cover polygons (forest, residential, farmland, parks, wetlands, …). Ports the
- * kind and minimum zoom come from a fixed per-value table. Both {@code landuse=forest} and {@code natural=wood} map to
+ * The {@code land} layer: land use / land cover polygons (forest, residential, farmland, parks, wetlands, …). The kind
+ * and minimum zoom come from a fixed per-value table. Both {@code landuse=forest} and {@code natural=wood} map to
  * {@code kind=forest}.
  */
 public class Land implements ForwardingProfile.FeatureProcessor {

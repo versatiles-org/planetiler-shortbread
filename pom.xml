@@ -11,6 +11,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
+    <!-- The released Planetiler this standalone build compiles against. submodule.pom.xml deliberately does NOT use
+         this: inside a Planetiler checkout it inherits planetiler-parent at ${revision} and takes planetiler-core at
+         ${project.version}, so it builds against that working tree (0.10.3-SNAPSHOT at the time of writing). The two
+         are meant to differ — pinning this to a SNAPSHOT would break the standalone build, which resolves from Maven
+         Central. Raise it when a newer Planetiler is released. -->
     <planetiler.version>0.10.2</planetiler.version>
     <junit.version>6.0.3</junit.version>
 

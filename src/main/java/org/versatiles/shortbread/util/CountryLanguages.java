@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.Point;
@@ -18,6 +20,7 @@ import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.locationtech.jts.index.strtree.STRtree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.versatiles.shortbread.Shortbread;
 
 /**
  * A country &rarr; default-language spatial lookup, used to infer the language of an unqualified OSM {@code name} tag
@@ -38,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * world geometry}, matching the query point. Natural Earth 10m is coarse near borders; that is acceptable for a
  * name-language heuristic.
  */
-public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
+public class CountryLanguages implements ForwardingProfile.FeatureProcessor, ForwardingProfile.FinishHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CountryLanguages.class);
 
@@ -79,6 +82,7 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
   private final STRtree index = new STRtree();
   private final Set<String> requestedLanguages;
   private volatile boolean built = false;
+  private final AtomicInteger indexed = new AtomicInteger();
 
   /** @param requestedLanguages the {@code name_<code>} languages this run emits; others are never indexed */
   public CountryLanguages(List<String> requestedLanguages) {
@@ -108,6 +112,26 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
     }
   }
 
+  /**
+   * Fails the build if the OSM source finished without a single country in the index.
+   * <p>
+   * This instance only exists when {@code locale_names} is on, and {@link org.versatiles.shortbread.ShortbreadMain}
+   * declares the Natural Earth source before OSM so the index is complete first. A profile constructed from another
+   * entry point — the Planetiler submodule registers {@code shortbread} as a task — gets its options from the config
+   * but not necessarily that source, and would then emit tiles with every geofenced name silently missing. Checking at
+   * the end of the OSM source is late (the names are already gone from this run) but it turns silent wrong output into
+   * a build failure, which is the point.
+   */
+  @Override
+  public void finish(String sourceName, FeatureCollector.Factory featureCollectors,
+    Consumer<FeatureCollector.Feature> emit) {
+    if (Shortbread.OSM_SOURCE.equals(sourceName) && indexed.get() == 0) {
+      throw new IllegalStateException(
+        "The locale_names experiment is enabled but no country was indexed: the '" + SOURCE +
+          "' source was not read. Declare it before the OSM source, as ShortbreadMain does, or disable locale_names.");
+    }
+  }
+
   /** Indexes every polygon part of {@code geom}, prepared for repeated point-in-polygon tests. */
   private void put(Geometry geom, String language) {
     if (geom instanceof Polygon poly) {
@@ -116,6 +140,7 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor {
       synchronized (this) {
         index.insert(poly.getEnvelopeInternal(), entry);
       }
+      indexed.incrementAndGet();
     } else if (geom instanceof GeometryCollection geoms) {
       for (int i = 0; i < geoms.getNumGeometries(); i++) {
         put(geoms.getGeometryN(i), language);

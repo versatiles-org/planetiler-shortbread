@@ -1,7 +1,10 @@
 package org.versatiles.shortbread.util;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.onthegomap.planetiler.TestUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
@@ -49,6 +52,33 @@ class CountryLanguagesTest {
     countries.processFeature(country("ISO_A2", "CH", GERMANY_BOX), null); // multilingual, intentionally unmapped
 
     assertNull(countries.languageAt(point(10, 51)));
+  }
+
+  @Test
+  void failsWhenTheCountrySourceWasNeverRead() {
+    // locale_names is on (this instance only exists then) but nothing indexed it: the Natural Earth source was not
+    // wired, so every geofenced name would be silently missing from the output
+    var countries = new CountryLanguages(List.of("de"));
+    var e = assertThrows(IllegalStateException.class,
+      () -> countries.finish("osm", null, f -> {
+      }));
+    assertTrue(e.getMessage().contains(CountryLanguages.SOURCE), () -> "unhelpful message: " + e.getMessage());
+  }
+
+  @Test
+  void doesNotFailWhenCountriesWereIndexed() {
+    var countries = new CountryLanguages(List.of("de"));
+    countries.processFeature(country("ISO_A2", "DE", GERMANY_BOX), null);
+    assertDoesNotThrow(() -> countries.finish("osm", null, f -> {
+    }));
+  }
+
+  @Test
+  void ignoresOtherSourcesFinishing() {
+    // the ocean source finishing proves nothing about the country index
+    var countries = new CountryLanguages(List.of("de"));
+    assertDoesNotThrow(() -> countries.finish("ocean", null, f -> {
+    }));
   }
 
   @Test

@@ -47,9 +47,9 @@ jobs:
     env:
       BUDGET_KIB: ${{ inputs.budget_kib || '500' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: 'temurin'
@@ -86,7 +86,7 @@ jobs:
           data/none.mbtiles.layerstats.tsv.gz data/all.mbtiles.layerstats.tsv.gz
       - name: Upload the layer stats
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: layerstats-${{ matrix.area }}
           path: data/*.layerstats.tsv.gz

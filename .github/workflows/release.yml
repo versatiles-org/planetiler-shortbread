@@ -41,8 +41,8 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -112,7 +112,7 @@ jobs:
       # source commit that was released; its pom still says 1.0.0-SNAPSHOT, because the version is set during the build
       # and never committed back to the repository.
       - name: Create the tag
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ github.token }}
           script: |
@@ -132,7 +132,7 @@ jobs:
       # pre-pends the body below. On the very first release there is no previous tag, so GitHub summarizes everything —
       # that is fine, and is why `previous_tag` is left unset rather than pinned.
       - name: Create the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           fail_on_unmatched_files: true
           tag_name: v${{ inputs.version }}

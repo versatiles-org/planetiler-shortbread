@@ -11,6 +11,11 @@ on:
         description: 'Extra docker image tags, comma separated. Empty means "latest" for a stable version and no extra tag for a prerelease.'
         required: false
         default: ''
+      publish:
+        description: 'Publish the release immediately instead of leaving it as a draft to review first'
+        type: boolean
+        required: false
+        default: false
 
 # never publish two releases at once
 concurrency:
@@ -118,12 +123,40 @@ jobs:
               sha: context.sha
             })
 
+      # `prerelease` must follow the version: without it the action defaults to false and GitHub badges a `-pre1`
+      # release as "Latest", so anything reading /releases/latest gets a prerelease. The same hyphen rule decides the
+      # image tags above, so the container and the release agree. `make_latest` is deliberately not set: the API
+      # refuses to mark drafts and prereleases as latest anyway, and a stable release should be latest.
+      #
+      # `generate_release_notes` builds the changelog from the commits and pull requests since the previous tag, and
+      # pre-pends the body below. On the very first release there is no previous tag, so GitHub summarizes everything —
+      # that is fine, and is why `previous_tag` is left unset rather than pinned.
       - name: Create the release
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           tag_name: v${{ inputs.version }}
-          draft: true
+          name: v${{ inputs.version }}
+          draft: ${{ !inputs.publish }}
+          prerelease: ${{ contains(inputs.version, '-') }}
+          generate_release_notes: true
+          body: |
+            **Container image**
+
+            ```
+            docker pull ghcr.io/versatiles-org/planetiler-shortbread:${{ inputs.version }}
+            ```
+
+            **Jar** — `planetiler-shortbread.jar`, with `.sha256` and `.md5` checksums attached below.
+
+            ```
+            java -jar planetiler-shortbread.jar --area=monaco
+            ```
+
+            Built from ${{ github.sha }}. The tag marks the source that was released; its `pom.xml` still reads
+            `1.0.0-SNAPSHOT`, because the version is set during the build and never committed back.
+
+            ---
           files: |
             planetiler-shortbread.jar*
         env:

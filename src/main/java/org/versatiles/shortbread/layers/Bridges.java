@@ -12,8 +12,7 @@ import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
 
 /**
- * The {@code bridges} layer (zoom 12): bridge outlines from {@code man_made=bridge} areas. Ports
- * {@code process_bridges}.
+ * The {@code bridges} layer (zoom 12): bridge outlines from {@code man_made=bridge} areas.
  * <p>
  * EXPERIMENT (beyond Shortbread 1.0/1.1, which has no bridge name — see shortbread-docs #141): we also emit
  * {@code name} / {@code name_<code>} when present, so named bridges can be labelled. Additive; unnamed bridges are

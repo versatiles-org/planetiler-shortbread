@@ -153,8 +153,9 @@ java -jar planetiler-dist/target/*-with-deps.jar shortbread --area=monaco
 - `Experiment` — the registry of beyond-spec [experimental features](#experimental-features-beyond-the-spec) and the
   `--shortbread_experiments` parser.
 - `util/` — shared helpers: `Names` (name attributes + the optional geofenced fallback), `CountryLanguages` (the
-  country→language index backing `locale_names`), `Access` (the 1.1 access attributes), `ZOrder`, `Zooms` (size-based
-  minimum zoom), `Poi` (POI whitelists), `Geo`, `MergeLines`, and `MergePolygons`.
+  country→language index backing `locale_names`), `Access` (the 1.1 access attributes), `Attrs` (write an attribute
+  only when it differs from the schema default), `ZOrder`, `Zooms` (size-based minimum zoom), `Poi` (POI whitelists),
+  `Geo`, `MergeLines`, and `MergePolygons`.
 - `docs/extensions.md` — the contract of the experiments.
 
 ## Notable output details
@@ -234,8 +235,11 @@ These apply to every build, with or without experiments.
 - `ShortbreadV11Test` covers the 1.0/1.1 differences.
 - `ShortbreadOptionsTest` covers the validation of the version and language options.
 - `ExperimentTest` covers the experiment tokens and checks that each one is documented in `docs/extensions.md`.
-- `ShortbreadIntegrationTest` runs the whole pipeline over the bundled Monaco extract.
-- `util/CountryLanguagesTest`, `util/MergePolygonsTest` and `util/ShortbreadUtilTest` cover the helpers.
+- `ShortbreadIntegrationTest` runs the whole pipeline over the bundled Monaco extract and checks the result: concrete
+  features with their attributes at fixed zooms, the `version` metadata, the `vector_layers` list inside the `json`
+  metadata value, and a 1.1 run.
+- `util/CountryLanguagesTest`, `util/MergeLinesTest`, `util/MergePolygonsTest` and `util/ShortbreadUtilTest` cover the
+  helpers.
 
 Tile sizes are guarded separately by the `Tile size budget` workflow (`.github/workflows/tile-size.yml`). Weekly and on
 demand, it generates Estonia and Noord-Holland without and with all experiments, and fails when a compressed tile is

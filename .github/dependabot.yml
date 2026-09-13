@@ -1,0 +1,47 @@
+version: 2
+
+updates:
+  # GitHub Actions used by ci.yml, release.yml and tile-size.yml. Grouped into one pull request per week: seven
+  # actions would otherwise open seven, and they are almost always routine. Major bumps are split out, because those
+  # are the ones that change behaviour (actions/upload-artifact v3 -> v4 changed artifact semantics, for example).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor:
+        update-types:
+          - minor
+          - patch
+      actions-major:
+        update-types:
+          - major
+
+  # Maven dependencies and build plugins from pom.xml — planetiler-core, JUnit, surefire, spotless, jib and the rest.
+  #
+  # Only pom.xml is scanned: submodule.pom.xml is not named pom.xml, so Dependabot ignores it, which is what we want.
+  # That file inherits planetiler-parent at ${revision} and takes planetiler-core at ${project.version} so it builds
+  # against the surrounding Planetiler checkout; pinning a version there would break the submodule build.
+  #
+  # A planetiler-core bump is the interesting one: the standalone build pins a released version in the
+  # `planetiler.version` property, and raising it is a deliberate decision, so majors arrive as their own pull request.
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      maven-minor:
+        update-types:
+          - minor
+          - patch
+      maven-major:
+        update-types:
+          - major
+
+# Not configured, deliberately:
+#
+# - docker: the container's base image (eclipse-temurin:21-jre) is declared in the jib plugin config inside pom.xml,
+#   not in a Dockerfile, so neither the docker updater (which needs a Dockerfile) nor the maven updater tracks it.
+#   Base-image updates have to be noticed by hand — check it when a JDK release lands.

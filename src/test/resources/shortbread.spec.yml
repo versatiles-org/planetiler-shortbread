@@ -4,8 +4,8 @@ examples:
     source: ocean
     geometry: polygon
     tags:
-      x: 1
-      y: 2
+      x: "1"
+      y: "2"
   output:
     layer: ocean
     geometry: polygon
@@ -62,7 +62,7 @@ examples:
     geometry: line
     tags:
       waterway: canal
-      tunnel: yes
+      tunnel: "yes"
       name: The Canal
       name:en: The Canal (en)
       name:de: The Canal (de)
@@ -228,7 +228,7 @@ examples:
     source: osm
     geometry: polygon
     tags:
-      building: yes
+      building: "yes"
   output:
   - layer: buildings
     geometry: polygon
@@ -250,7 +250,7 @@ examples:
     source: osm
     geometry: polygon
     tags:
-      addr:housenumber: 123
+      addr:housenumber: "123"
   output:
   - layer: addresses
     geometry: point
@@ -277,18 +277,18 @@ examples:
     source: osm
     geometry: line
     tags:
-      change:lanes:backward: no
+      change:lanes:backward: "no"
       change:lanes:forward: not_left|not_right
-      embankment: yes
+      embankment: "yes"
       highway: primary
-      lanes: 3
-      lanes:backward: 1
-      lanes:forward: 2
-      maxspeed: 100
-      overtaking:backward: no
+      lanes: "3"
+      lanes:backward: "1"
+      lanes:forward: "2"
+      maxspeed: "100"
+      overtaking:backward: "no"
       priority_road: designated
       ref: B 27
-      sidewalk: no
+      sidewalk: "no"
       source:maxspeed: DE:rural
       surface: asphalt
       zone:traffic: DE:rural
@@ -316,18 +316,18 @@ examples:
     source: osm
     geometry: line
     tags:
-      cycleway:right: no
+      cycleway:right: "no"
       destination: Löwenstein;Obersulm;Ellhofen;Breitenauer See
       destination:colour: ;;;brown
-      foot: no
+      foot: "no"
       hazard: traffic_signals
       highway: primary_link
-      lanes: 1
-      lit: no
-      maxspeed: 50
-      oneway: yes
+      lanes: "1"
+      lit: "no"
+      maxspeed: "50"
+      oneway: "yes"
       ref: B 39;B 39A
-      sidewalk: no
+      sidewalk: "no"
       surface: asphalt
       turn: right
   output:
@@ -450,7 +450,7 @@ examples:
     geometry: line
     tags:
       highway: path
-      bridge: yes
+      bridge: "yes"
   output:
     layer: streets
     geometry: line
@@ -466,7 +466,7 @@ examples:
     geometry: line
     tags:
       highway: pedestrian
-      tunnel: yes
+      tunnel: "yes"
   output:
     layer: streets
     geometry: line
@@ -567,9 +567,9 @@ examples:
     source: osm
     geometry: polygon
     tags:
-      area: yes
+      area: "yes"
       highway: pedestrian
-      lit: yes
+      lit: "yes"
       surface: paving_stones
       name: 'Name'
       name:en: 'Name (en)'
@@ -608,9 +608,9 @@ examples:
     source: osm
     geometry: polygon
     tags:
-      area: yes
+      area: "yes"
       highway: service
-      bridge: yes
+      bridge: "yes"
   output:
     layer: street_polygons
     geometry: polygon
@@ -697,7 +697,7 @@ examples:
     geometry: line
     tags:
       route: ferry
-      motor_vehicle: no
+      motor_vehicle: "no"
       name: Name
       name:en: 'Name (en)'
       name:de: 'Name (de)'
@@ -718,7 +718,7 @@ examples:
     geometry: line
     tags:
       route: ferry
-      motor_vehicle: no
+      motor_vehicle: "no"
       name: Name
   output:
     layer: ferries
@@ -803,10 +803,10 @@ examples:
     geometry: point
     tags:
       amenity: recycling
-      recycling:glass_bottles: yes
-      recycling:paper: yes
-      recycling:clothes: yes
-      recycling:scrap_metal: yes
+      recycling:glass_bottles: "yes"
+      recycling:paper: "yes"
+      recycling:clothes: "yes"
+      recycling:scrap_metal: "yes"
   output:
     layer: pois
     min_zoom: 14
@@ -838,7 +838,7 @@ examples:
     source: osm
     geometry: point
     tags:
-      atm: yes
+      atm: "yes"
       amenity: bank
   output:
     layer: pois
@@ -854,7 +854,7 @@ examples:
     source: osm
     geometry: point
     tags:
-      atm: no
+      atm: "no"
       amenity: bank
   output:
     layer: pois
@@ -953,7 +953,7 @@ examples:
     source: osm
     geometry: POLYGON ((-0.5 -0.5, 0.5 -0.5, 0.5 0.5, -0.5 0.5, -0.5 -0.5))
     tags:
-      admin_level: 4
+      admin_level: "4"
       government: transportation
       short_name: DMV
       name: New York State Department of Motor Vehicles
@@ -964,7 +964,7 @@ examples:
     source: osm
     geometry: POLYGON ((-0.5 -0.5, 0.5 -0.5, 0.5 0.5, -0.5 0.5, -0.5 -0.5))
     tags:
-      admin_level: 2
+      admin_level: "2"
       boundary: administrative
       name: Name
       name:en: ''
@@ -990,7 +990,7 @@ examples:
     source: osm
     geometry: POLYGON ((-1.5 -1.5, 1.5 -1.5, 1.5 1.5, -1.5 1.5, -1.5 -1.5))
     tags:
-      admin_level: 2
+      admin_level: "2"
       boundary: administrative
       name: Name
   output:
@@ -1006,7 +1006,7 @@ examples:
     source: osm
     geometry: POLYGON ((-4 -4, 4 -4, 4 4, -4 4, -4 -4))
     tags:
-      admin_level: 2
+      admin_level: "2"
       boundary: administrative
       name: Name
   output:
@@ -1022,7 +1022,7 @@ examples:
     source: osm
     geometry: POLYGON ((-10 -10, 10 -10, 10 10, -10 10, -10 -10))
     tags:
-      admin_level: 2
+      admin_level: "2"
       boundary: administrative
       name: Name
   output:
@@ -1038,7 +1038,7 @@ examples:
     source: osm
     geometry: POLYGON ((-10 -10, 10 -10, 10 10, -10 10, -10 -10))
     tags:
-      admin_level: 4
+      admin_level: "4"
       boundary: administrative
       name: Name
   output:
@@ -1111,7 +1111,7 @@ examples:
     geometry: point
     tags:
       place: city
-      capital: yes
+      capital: "yes"
       name: 'Name'
   output:
     layer: place_labels

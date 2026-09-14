@@ -10,6 +10,7 @@ import org.versatiles.shortbread.ShortbreadOptions;
 import org.versatiles.shortbread.util.CountryLanguages;
 import org.versatiles.shortbread.util.Geo;
 import org.versatiles.shortbread.util.Names;
+import org.versatiles.shortbread.util.ZOrder;
 import org.versatiles.shortbread.util.Zooms;
 
 /**
@@ -43,7 +44,10 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
 
   @Override
   public void processFeature(SourceFeature f, FeatureCollector features) {
-    if (!Geo.isArea(f)) {
+    // water running underground (e.g. Canal Saint-Martin beneath Boulevard Richard-Lenoir in Paris) is not drawn: the
+    // layer has no tunnel attribute a style could filter on. The same definition as water_lines' tunnel attribute
+    // applies, so culverts stay.
+    if (ZOrder.isTunnel(f) || !Geo.isArea(f)) {
       return;
     }
     String waterway = f.getString("waterway", "");

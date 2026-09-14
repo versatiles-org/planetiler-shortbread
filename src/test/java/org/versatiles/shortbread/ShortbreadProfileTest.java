@@ -138,6 +138,20 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void tunnelledWaterAreaIsSkipped() {
+    // Canal Saint-Martin beneath Boulevard Richard-Lenoir, Paris (way/236735251): water_polygons has no tunnel
+    // attribute, so the underground stretch must not be drawn as open water — nor labelled
+    var features = processClosedWay(Map.of("natural", "water", "water", "canal", "tunnel", "yes",
+      "location", "underground", "layer", "-2", "name", "Voûte Richard Lenoir"));
+    assertTrue(hasNoLayer(features, "water_polygons"), "a tunnelled water area must not become a water polygon");
+    assertTrue(hasNoLayer(features, "water_polygons_labels"), "a tunnelled water area must not be labelled");
+
+    // culverts are not tunnels in this profile, as for water_lines
+    var culvert = processClosedWay(Map.of("natural", "water", "tunnel", "culvert"));
+    assertEquals("water", attrs(onlyOne(culvert, "water_polygons")).get("kind"));
+  }
+
+  @Test
   void waterPolygonAppearsWhenItCoversAPixel() {
     // ~1.2 km² of water: it covers a square tile pixel at z7, and its label must not arrive before it
     var features = process(TestUtils.newPolygon(0, 0, 0.01, 0, 0.01, 0.01, 0, 0.01, 0, 0),

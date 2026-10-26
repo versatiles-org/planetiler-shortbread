@@ -44,7 +44,7 @@ Output is written to `data/shortbread.mbtiles` by default.
 | `--area`                                                             | `monaco`                                                                | Geofabrik extract to download as OSM input; `planet` downloads the latest planet file (`aws:latest`)                                                                                                                                  |
 | `--output`                                                           | `data/shortbread.mbtiles`                                               | output archive                                                                                                                                                                                                                        |
 | `--shortbread_version`                                               | `1.0`                                                                   | schema version, `1.0` or `1.1`; any other value fails at startup                                                                                                                                                                      |
-| `--name_languages`                                                   | `en,de`                                                                 | IETF language codes emitted as `name_<code>`; with 1.0 only `en,de` is accepted                                                                                                                                                       |
+| `--name_languages`                                                   | `en,de`                                                                 | IETF language codes emitted as `name_<code>`, or `extended` for the [extended list](#names) (combinable: `extended,eo`); with 1.0 only `en,de` is accepted                                                                            |
 | `--shortbread_experiments`                                           | `none`                                                                  | `all`, `none`, or a comma-separated list of [experiment tokens](docs/extensions.md), case-insensitive; an unknown token fails at startup, the deprecated `building_heights` and `building_parts` enable `3d_buildings` with a warning |
 | `--osm_path` / `--osm_url`                                           | `data/sources/<area>.osm.pbf` / `geofabrik:<area>`                      | OSM input file and its download URL                                                                                                                                                                                                   |
 | `--ocean_path` / `--ocean_url`                                       | `data/sources/water-polygons-split-3857.zip` / osmdata.openstreetmap.de | ocean shapefile and its download URL                                                                                                                                                                                                  |
@@ -83,7 +83,28 @@ The archive metadata's `version` is `1.0` or `1.1` accordingly. Differences appl
   1.0 also accepts `3`.
 - Names: instead of the fixed `name_en` / `name_de`, any IETF-coded `name_<code>` is emitted from `name:<code>` for the
   configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). 1.0 defines only `name_en`
-  and `name_de`, so with 1.0 the flag accepts only `en,de`.
+  and `name_de`, so with 1.0 the flag accepts only `en,de`. See [Names](#names) for the `extended` list.
+
+### Names
+
+With 1.1, `--name_languages=extended` emits 81 languages:
+
+```
+af am ar az be bg bn br bs ca co cs cy da de el en eo es et eu fa fi fr fy ga gd gl he hi hr hu hy id is it ja ka kk kn
+ko ku la lb lt lv mk ml mr ms mt my ne nl no oc pa pl pnb pt rm ro ru sk sl sq sr sr-Latn sv sw ta te th tr uk ur uz vi
+zh zh-Hans zh-Hant
+```
+
+It is the OpenMapTiles language list without its non-IETF codes (`ja_kana`, `ja_rm`), `tok` and the romanisations
+(`ja-Latn`, `ja-Hira`, `ko-Latn`), plus the languages with more than about 25,000 `name:<code>` tags on taginfo that
+OpenMapTiles lacks (`gl`, `mr`, `ms`, `my`, `ne`, `sw`, `uz`). `extended` combines with other codes
+(`--name_languages=extended,tok`); repeated codes are emitted once. Every entry must be a language code as OSM uses it
+in `name:<code>` keys (lower-case primary language, optional subtags such as `zh-Hant`), so a typo fails at startup.
+
+Each `name_<code>` is written only where the feature has a `name:<code>` tag, so a longer list costs little. Measured
+against the 11 languages of the published VersaTiles tiles (2026-10-26, Shortbread 1.1, with and without experiments):
+archives grow by 0.2% (Berlin), 0.1% (Noord-Holland), 0.7–1.1% (Estonia) and 1.7% (Israel); the largest z14 tile
+grows by up to 10% (Jerusalem, 194 → 214 KiB), mostly in `pois` and `street_labels`.
 
 The previous YAML schema is still runnable for comparison, from a Planetiler distribution jar:
 

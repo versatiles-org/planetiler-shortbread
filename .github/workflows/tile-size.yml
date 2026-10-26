@@ -4,7 +4,8 @@ name: Tile size budget
 # tiles gets noticed, for example losing the address density limit. It runs weekly and on demand rather than on every
 # pull request, because it downloads about 1.3 GB of input and runs for several minutes.
 #
-# Extracts, each generated twice, without experiments and with all of them:
+# Extracts, each generated twice: with the defaults (Shortbread 1.0, en/de, no experiments), and as the published
+# VersaTiles tiles are built (Shortbread 1.1, all experiments, the extended name language list):
 # - estonia: low-zoom tiles with a long coastline, many lakes and large forests
 # - noord-holland: the densest city tiles, in central Amsterdam, the worst case for addresses and POIs
 #
@@ -12,6 +13,8 @@ name: Tile size budget
 # Baseline when the budget was introduced (2026-09-11, extracts from June 2026), without / with all experiments:
 # - estonia: largest tile 101 / 101 KiB at z7, 137 / 152 KiB at z14
 # - noord-holland: largest tile 323 / 331 KiB at z14 (central Amsterdam, mostly buildings)
+# The second run uses 1.1 and the extended list since 2026-10-26; measured locally then, largest z14 tile:
+# estonia 165 KiB, noord-holland 341 KiB.
 #
 # The script prints the largest tile per zoom and its largest layer to the job summary, and the layer stats of every
 # run are uploaded as an artifact, so a regression can be traced to a layer.
@@ -75,9 +78,10 @@ jobs:
         run: >-
           java -Xmx8g -jar target/*-with-deps.jar --area=${{ matrix.area }} --download --force
           --shortbread_experiments=none --output=data/none.mbtiles --output_layerstats=true
-      - name: Generate tiles with all experiments
+      - name: Generate tiles with all experiments and the extended language list
         run: >-
           java -Xmx8g -jar target/*-with-deps.jar --area=${{ matrix.area }} --download --force
+          --shortbread_version=1.1 --name_languages=extended
           --shortbread_experiments=all --output=data/all.mbtiles --output_layerstats=true
 
       - name: Check the tile sizes against the budget

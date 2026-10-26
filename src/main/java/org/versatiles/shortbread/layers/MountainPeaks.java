@@ -6,6 +6,7 @@ import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.regex.Pattern;
 import org.versatiles.shortbread.Shortbread;
 import org.versatiles.shortbread.ShortbreadOptions;
@@ -16,14 +17,17 @@ import org.versatiles.shortbread.util.Names;
  * EXPERIMENT {@code mountain_peaks}: the {@code mountain_peaks} point layer, which Shortbread 1.0/1.1 does not have
  * (see shortbread-docs #137). Only registered when the experiment is enabled.
  * <p>
- * Follows OpenStreetMap Carto: peaks, volcanoes and saddles mapped as nodes, at the map scale where Carto draws them.
- * Carto's zooms refer to 256 px raster tiles, one level later than the same scale in 512 px vector tiles, so its z11
- * for peaks and volcanoes is z10 here and its z15 for saddles is z14. {@code ele} is only emitted when the tag is a
- * plain number of meters, rounded to whole meters, and higher peaks come first.
+ * Follows OpenStreetMap Carto: peaks, volcanoes, saddles and mountain passes mapped as nodes, at the map scale where
+ * Carto draws them. Carto's zooms refer to 256 px raster tiles, one level later than the same scale in 512 px vector
+ * tiles, so its z11 for peaks and volcanoes is z10 here and its z15 for saddles and passes is z14. A node tagged with
+ * both {@code natural=*} and {@code mountain_pass=yes} keeps its {@code natural} kind, as in Carto. {@code ele} is only
+ * emitted when the tag is a plain number of meters, rounded to whole meters, and higher peaks come first.
  */
 public class MountainPeaks implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "mountain_peaks";
+
+  private static final List<String> NATURAL_KINDS = List.of("peak", "volcano", "saddle");
 
   // a plain number of meters, as OpenStreetMap Carto accepts it; values with units or ranges are not an elevation
   private static final Pattern ELEVATION = Pattern.compile("-?\\d{1,4}(\\.\\d+)?");
@@ -40,7 +44,9 @@ public class MountainPeaks implements ForwardingProfile.FeatureProcessor {
   public Expression filter() {
     return Expression.and(
       Expression.matchSource(Shortbread.OSM_SOURCE),
-      Expression.matchAny("natural", "peak", "volcano", "saddle"));
+      Expression.or(
+        Expression.matchAny("natural", NATURAL_KINDS),
+        Expression.matchAny("mountain_pass", "yes")));
   }
 
   @Override
@@ -48,10 +54,12 @@ public class MountainPeaks implements ForwardingProfile.FeatureProcessor {
     if (!f.isPoint()) {
       return;
     }
-    String kind = f.getString("natural");
+    String natural = f.getString("natural");
+    // natural first, as Carto gives natural=saddle priority over mountain_pass=yes on the same node
+    String kind = natural != null && NATURAL_KINDS.contains(natural) ? natural : "mountain_pass";
     Integer ele = elevation(f.getString("ele"));
     var feature = features.point(LAYER)
-      .setMinZoom("saddle".equals(kind) ? 14 : 10)
+      .setMinZoom("peak".equals(kind) || "volcano".equals(kind) ? 10 : 14)
       .setMaxZoom(14)
       .setAttr("kind", kind)
       // higher first; peaks without a usable elevation last

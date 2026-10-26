@@ -255,14 +255,16 @@ for the schema. If it is accepted, the behavior becomes the default for the vers
 ## `mountain_peaks`
 
 A point layer the schema does not have, for orientation in mountain areas. It follows OpenStreetMap Carto, which draws
-peaks and volcanoes from z11 and saddles from z15. Carto's zooms refer to 256 px raster tiles, and the same map scale
-is one zoom lower in 512 px vector tiles, so the layer starts at z10 and z14. Only nodes are used, as in Carto.
+peaks and volcanoes from z11, and saddles and mountain passes from z15. Carto's zooms refer to 256 px raster tiles, and
+the same map scale is one zoom lower in 512 px vector tiles, so the layer starts at z10 and z14. Only nodes are used, as
+in Carto. A node tagged with both `natural=*` and `mountain_pass=yes` keeps its `natural` kind, as in Carto.
 
-|   Kind    |       From        | Zoom |
-|-----------|-------------------|------|
-| `peak`    | `natural=peak`    | 10+  |
-| `volcano` | `natural=volcano` | 10+  |
-| `saddle`  | `natural=saddle`  | 14   |
+|      Kind       |        From         | Zoom |
+|-----------------|---------------------|------|
+| `peak`          | `natural=peak`      | 10+  |
+| `volcano`       | `natural=volcano`   | 10+  |
+| `saddle`        | `natural=saddle`    | 14   |
+| `mountain_pass` | `mountain_pass=yes` | 14   |
 
 |       Attribute       |      Type       |                        Present                        |
 |-----------------------|-----------------|-------------------------------------------------------|
@@ -277,12 +279,14 @@ is one zoom lower in 512 px vector tiles, so the layer starts at z10 and z14. On
   and 93% with a plain `ele`; at most 348 peaks in a z10 tile, 116 in a z11 tile and 11 in a z14 tile.
 - **Cost**, on the same extract: the archive grows by 0.5% (334,184 KiB to 335,944 KiB). z10 tiles grow the most, by
   6.7% in total, but the largest z10 tile only from 125.0 KiB to 126.8 KiB; from z12 on the largest tiles are unchanged.
+  These numbers predate `mountain_pass`: worldwide 38,236 nodes carry `mountain_pass=yes`, 23,317 of them also
+  `natural=saddle` (taginfo, 2026-10-26), so about 15,000 points are added, at z14 only.
 
 ```json
 {
   "type": "symbol",
   "source-layer": "mountain_peaks",
-  "filter": ["!=", ["get", "kind"], "saddle"],
+  "filter": ["in", ["get", "kind"], ["literal", ["peak", "volcano"]]],
   "layout": {
     "text-field": ["concat", ["get", "name"], "\n", ["get", "ele"]],
     "symbol-sort-key": ["-", 0, ["coalesce", ["get", "ele"], 0]]

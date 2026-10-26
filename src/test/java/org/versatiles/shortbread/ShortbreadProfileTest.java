@@ -691,6 +691,22 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void mountainPassKindAndZoom() {
+    // OpenStreetMap Carto draws mountain_pass=yes like a saddle, from its raster z15 (vector z14)
+    var pass = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("mountain_pass", "yes", "name", "Furkapass",
+      "ele", "2429")), "mountain_peaks");
+    assertEquals("mountain_pass", attrs(pass).get("kind"));
+    assertEquals(2429, attrs(pass).get("ele"));
+    assertEquals(14, pass.getMinZoom());
+    // natural=* keeps its kind on a node that is also a pass, as in Carto
+    var saddle = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("natural", "saddle", "mountain_pass", "yes")),
+      "mountain_peaks");
+    assertEquals("saddle", attrs(saddle).get("kind"));
+    assertTrue(process(TestUtils.newPoint(0, 0), Map.of("mountain_pass", "no")).stream()
+      .noneMatch(f -> f.getLayer().equals("mountain_peaks")));
+  }
+
+  @Test
   void peakElevationOnlyFromPlainNumbers() {
     // like OpenStreetMap Carto: a plain number of meters, rounded half away from zero; no units, lists or ranges
     for (String ele : List.of("4545 m", "14911'", "4545;4546", "12345", "")) {

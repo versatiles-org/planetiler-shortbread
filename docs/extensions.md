@@ -25,7 +25,7 @@ The published VersaTiles tiles are generated with all of them: the `versatiles-p
 | [`address_details`](#address_details)   | `addresses`                   | `unit`, `block`                                                                | can ignore them                                    |
 | [`bridge_names`](#bridge_names)         | `bridges`                     | `name`, `name_<code>`                                                          | can ignore them                                    |
 | [`early_attributes`](#early_attributes) | `streets`                     | `link` from z5 and `service` from z10; 1.0 access from z13                     | sees spec attributes at lower zooms than specified |
-| [`mountain_peaks`](#mountain_peaks)     | `mountain_peaks`, a new layer | peaks, volcanoes and saddles with `kind`, names and `ele`                      | can ignore the layer                               |
+| [`mountain_peaks`](#mountain_peaks)     | `mountain_peaks`, a new layer | peaks, volcanoes, saddles and mountain passes with `kind`, names and `ele`     | can ignore the layer                               |
 
 ## Detecting experiments
 
@@ -43,9 +43,9 @@ because they add fields or layers:
 Shortbread validator in versatiles-rs reports extension attributes as `unknown_attribute` warnings.
 
 **The table only works when the data exercises the experiment.** `vector_layers` is built from the layers and fields
-that actually appear in the tiles, not from what the profile registered, so a region with no `natural=peak` gets no
-`mountain_peaks` layer even with the experiment enabled, and a region whose buildings carry no height tag gets no
-`height` field. A missing row means "not found in this extract", not "not enabled".
+that actually appear in the tiles, not from what the profile registered, so a region with no peaks, volcanoes,
+saddles or passes gets no `mountain_peaks` layer even with the experiment enabled, and a region whose buildings carry
+no height tag gets no `height` field. A missing row means "not found in this extract", not "not enabled".
 
 ## `3d_buildings`
 

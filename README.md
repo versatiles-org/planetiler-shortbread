@@ -85,6 +85,13 @@ The archive metadata's `version` is `1.0` or `1.1` accordingly. Differences appl
   configured language list. Set it with `--name_languages=en,de,fr,...` (default `en,de`). 1.0 defines only `name_en`
   and `name_de`, so with 1.0 the flag accepts only `en,de`. See [Names](#names) for the `extended` list.
 
+The previous YAML schema is still runnable for comparison, from a Planetiler distribution jar:
+
+```bash
+java -jar planetiler-dist/target/*-with-deps.jar custom \
+  --schema=planetiler-custommap/src/main/resources/samples/shortbread.yml --area=monaco
+```
+
 ### Names
 
 With 1.1, `--name_languages=extended` emits 81 languages:
@@ -106,13 +113,6 @@ against the 11 languages of the published VersaTiles tiles (2026-10-26, Shortbre
 archives grow by 0.2% (Berlin), 0.1% (Noord-Holland), 0.7–1.1% (Estonia) and 1.7% (Israel); the largest z14 tile
 grows by up to 10% (Jerusalem, 194 → 214 KiB), mostly in `pois` and `street_labels`.
 
-The previous YAML schema is still runnable for comparison, from a Planetiler distribution jar:
-
-```bash
-java -jar planetiler-dist/target/*-with-deps.jar custom \
-  --schema=planetiler-custommap/src/main/resources/samples/shortbread.yml --area=monaco
-```
-
 ## Experimental features (beyond the spec)
 
 This profile can emit a few features that are **not part of the Shortbread schema**. They are *experiments* — useful for
@@ -133,23 +133,23 @@ java -jar target/*-with-deps.jar --area=monaco \
 java -jar target/*-with-deps.jar --area=monaco --shortbread_experiments=none
 ```
 
-|       Token        |            Layers            |                                             Adds                                              |
-|--------------------|------------------------------|-----------------------------------------------------------------------------------------------|
-| `3d_buildings`     | `buildings`                  | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true`                |
-| `locale_names`     | all name layers              | `name_<lang>` from `name` inside countries whose language is `<lang>`                         |
-| `island_labels`    | `place_labels`               | label points for islands mapped as polygons                                                   |
-| `address_details`  | `addresses`                  | `unit`, `block`                                                                               |
-| `bridge_names`     | `bridges`                    | `name`, `name_<code>`                                                                         |
-| `early_attributes` | `streets`                    | `link` and `service` from each feature's minimum zoom; with 1.0, `bicycle` / `horse` from z13 |
-| `mountain_peaks`   | `mountain_peaks` (new layer) | peaks and volcanoes from z10, saddles at z14, with `kind`, names and `ele`                    |
+|       Token        |            Layers            |                                              Adds                                              |
+|--------------------|------------------------------|------------------------------------------------------------------------------------------------|
+| `3d_buildings`     | `buildings`                  | `height`, `min_height`, `hide_3d`; `building:part` polygons marked `part=true`                 |
+| `locale_names`     | all name layers              | `name_<lang>` from `name` inside countries whose language is `<lang>`                          |
+| `island_labels`    | `place_labels`               | label points for islands mapped as polygons                                                    |
+| `address_details`  | `addresses`                  | `unit`, `block`                                                                                |
+| `bridge_names`     | `bridges`                    | `name`, `name_<code>`                                                                          |
+| `early_attributes` | `streets`                    | `link` from z5 and `service` from z10; with 1.0, `bicycle` / `horse` from z13                  |
+| `mountain_peaks`   | `mountain_peaks` (new layer) | peaks and volcanoes from z10, saddles and mountain passes at z14, with `kind`, names and `ele` |
 
 The full contract of each experiment — attributes, when they are present, how they are derived, style snippets,
 caveats, how to detect it in a tileset, and its upstream status — is in [docs/extensions.md](docs/extensions.md).
 
-Most experiments only add attributes that a strict-spec consumer can ignore. Three change what such a consumer sees:
-`3d_buildings` adds `building:part` polygons to `buildings`, `island_labels` adds `place_labels` points from z8, and
-`locale_names` fills the spec's `name_<lang>` attributes from `name`. `early_attributes` makes spec attributes available
-at lower zooms than the spec defines.
+Most experiments only add attributes, or a layer, that a strict-spec consumer can ignore. Three change what such a
+consumer sees: `3d_buildings` adds `building:part` polygons to `buildings`, `island_labels` adds `place_labels` points
+from z8, and `locale_names` fills the spec's `name_<lang>` attributes from `name`. `early_attributes` makes spec
+attributes available at lower zooms than the spec defines.
 
 The registry of tokens lives in `Experiment.java`. A new token must also get a section in `docs/extensions.md`; a test
 checks that.
@@ -222,6 +222,8 @@ These apply to every build, with or without experiments.
 - `surface` is the raw value of the OSM tag, as the schema defines it — not collapsed to `paved`/`unpaved`.
 - `tunnel` follows the schema exactly: `tunnel=yes`, `tunnel=building_passage` or `covered=yes`. A `tunnel=culvert`
   waterway is **not** a tunnel, which differs from OpenStreetMap Carto — culverts make up most waterway tunnels there.
+  `water_polygons` has no `tunnel` attribute, so water areas that are tunnels by this rule are left out, along with
+  their label points: an underground canal would otherwise be drawn as open water.
 - A closed waterway is a line unless it is tagged as an area (`area=yes`, or a multipolygon/boundary relation): a
   ring-shaped ditch or moat appears in `water_lines`, and `water_polygons` takes a `waterway=canal` ring only when it is
   tagged as an area, as Carto's water-areas query does.

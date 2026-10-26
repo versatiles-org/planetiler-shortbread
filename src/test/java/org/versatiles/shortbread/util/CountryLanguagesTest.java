@@ -2,8 +2,8 @@ package org.versatiles.shortbread.util;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.onthegomap.planetiler.TestUtils;
@@ -55,30 +55,33 @@ class CountryLanguagesTest {
   }
 
   @Test
-  void failsWhenTheCountrySourceWasNeverRead() {
-    // locale_names is on (this instance only exists then) but nothing indexed it: the Natural Earth source was not
-    // wired, so every geofenced name would be silently missing from the output
+  void notesWhenTheCountrySourceWasNeverRead() {
+    // locale_names is on (this instance only exists then) but the Natural Earth source was not wired, so every
+    // geofenced name would be silently missing; finish only logs, because Planetiler swallows exceptions from it
     var countries = new CountryLanguages(List.of("de"));
-    var e = assertThrows(IllegalStateException.class,
-      () -> countries.finish("osm", null, f -> {
-      }));
-    assertTrue(e.getMessage().contains(CountryLanguages.SOURCE), () -> "unhelpful message: " + e.getMessage());
-  }
-
-  @Test
-  void doesNotFailWhenCountriesWereIndexed() {
-    var countries = new CountryLanguages(List.of("de"));
-    countries.processFeature(country("ISO_A2", "DE", GERMANY_BOX), null);
+    assertFalse(countries.sourceWasRead());
     assertDoesNotThrow(() -> countries.finish("osm", null, f -> {
     }));
   }
 
   @Test
-  void ignoresOtherSourcesFinishing() {
-    // the ocean source finishing proves nothing about the country index
+  void countsTheSourceAsReadWithoutAnIndexedCountry() {
+    // an extract can lie entirely in unmapped countries (Israel) or in countries whose language this run does not emit
+    // (Estonia without et): the source was read, nothing is wrong
     var countries = new CountryLanguages(List.of("de"));
-    assertDoesNotThrow(() -> countries.finish("ocean", null, f -> {
-    }));
+    countries.processFeature(country("ISO_A2", "IL", GERMANY_BOX), null);
+    countries.processFeature(country("ISO_A2", "EE", GERMANY_BOX), null);
+
+    assertTrue(countries.sourceWasRead());
+    assertNull(countries.languageAt(point(10, 51)));
+  }
+
+  @Test
+  void countsTheSourceAsReadWhenCountriesWereIndexed() {
+    var countries = new CountryLanguages(List.of("de"));
+    countries.processFeature(country("ISO_A2", "DE", GERMANY_BOX), null);
+
+    assertTrue(countries.sourceWasRead());
   }
 
   @Test

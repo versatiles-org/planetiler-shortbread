@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
@@ -82,7 +81,7 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor, For
   private final STRtree index = new STRtree();
   private final Set<String> requestedLanguages;
   private volatile boolean built = false;
-  private final AtomicInteger indexed = new AtomicInteger();
+  private volatile boolean sourceRead = false;
 
   /** @param requestedLanguages the {@code name_<code>} languages this run emits; others are never indexed */
   public CountryLanguages(List<String> requestedLanguages) {
@@ -97,6 +96,7 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor, For
   /** Builds the country index; emits no tile features. */
   @Override
   public void processFeature(SourceFeature f, FeatureCollector features) {
+    sourceRead = true;
     String iso = isoCode(f);
     if (iso == null) {
       return;
@@ -113,23 +113,30 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor, For
   }
 
   /**
-   * Fails the build if the OSM source finished without a single country in the index.
+   * Logs an error if the OSM source finished before any feature of the Natural Earth source was read.
    * <p>
    * This instance only exists when {@code locale_names} is on, and {@link org.versatiles.shortbread.ShortbreadMain}
-   * declares the Natural Earth source before OSM so the index is complete first. A profile constructed from another
-   * entry point — the Planetiler submodule registers {@code shortbread} as a task — gets its options from the config
-   * but not necessarily that source, and would then emit tiles with every geofenced name silently missing. Checking at
-   * the end of the OSM source is late (the names are already gone from this run) but it turns silent wrong output into
-   * a build failure, which is the point.
+   * declares the Natural Earth source before OSM so the index is complete first. Every Planetiler task for this profile
+   * goes through {@code ShortbreadMain}, but a {@link Shortbread} built by other code gets its options from the config
+   * and not necessarily that source, and would then emit tiles with every geofenced name silently missing.
+   * <p>
+   * The check asks whether the source was read, not whether a country was indexed: an extract can lie entirely in
+   * countries that are unmapped or whose language this run does not emit (Israel, or Estonia without {@code et}), and
+   * the Natural Earth reader only returns countries inside the extract's bounds. It logs instead of throwing because
+   * Planetiler catches and logs every exception from {@code finish} without failing the run.
    */
   @Override
   public void finish(String sourceName, FeatureCollector.Factory featureCollectors,
     Consumer<FeatureCollector.Feature> emit) {
-    if (Shortbread.OSM_SOURCE.equals(sourceName) && indexed.get() == 0) {
-      throw new IllegalStateException(
-        "The locale_names experiment is enabled but no country was indexed: the '" + SOURCE +
-          "' source was not read. Declare it before the OSM source, as ShortbreadMain does, or disable locale_names.");
+    if (Shortbread.OSM_SOURCE.equals(sourceName) && !sourceRead) {
+      LOGGER.error("The locale_names experiment is enabled but the '{}' source was not read, so no name_<lang> is " +
+        "filled from name. Declare it before the OSM source, as ShortbreadMain does, or disable locale_names.", SOURCE);
     }
+  }
+
+  /** Whether any feature of the Natural Earth source reached this handler, indexed or not. */
+  boolean sourceWasRead() {
+    return sourceRead;
   }
 
   /** Indexes every polygon part of {@code geom}, prepared for repeated point-in-polygon tests. */
@@ -140,7 +147,6 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor, For
       synchronized (this) {
         index.insert(poly.getEnvelopeInternal(), entry);
       }
-      indexed.incrementAndGet();
     } else if (geom instanceof GeometryCollection geoms) {
       for (int i = 0; i < geoms.getNumGeometries(); i++) {
         put(geoms.getGeometryN(i), language);

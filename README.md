@@ -206,10 +206,13 @@ These apply to every build, with or without experiments.
   integer, so a value like `2;4` matches neither 2 nor 4.
 - `boundary_labels` are derived from administrative boundary polygons rather than a pre-built admin-points shapefile, so
   no extra data source is required. They are sorted by `way_area`, largest first.
-- `way_area` is a full-precision number in Web-Mercator units: m² on `water_polygons` and `water_polygons_labels`,
-  hectares on `boundary_labels`. The schema types it as a float, but Planetiler stores every floating-point attribute
-  as a double between the two passes, so a profile cannot emit a 4-byte float value — the tile would carry a rounded
-  number in an 8-byte field, losing precision without saving space.
+- `way_area` is an integer in Web-Mercator units, rounded to whole m² on `water_polygons` and
+  `water_polygons_labels` and to whole hectares on `boundary_labels`. The schema types it as a float, but Planetiler
+  stores every floating-point attribute as a double between the two passes, so a profile cannot emit a 4-byte float
+  value. An integer is written as a variable-length `sint_value`, usually 2–4 bytes instead of a double's 8, and
+  rounded values compress better: −0.2% (Berlin), −0.4% (Estonia) and −1.2% (Noord-Holland) archive size, −6% to −9%
+  for the two water layers (measured 2026-10-26). Areas below half a unit become `0`; that affects only the tiniest
+  water polygons, which appear only at z14.
 - `building=none` is excluded along with `building=no`. The schema names only `no`, but `none` is a synonym in common
   use and never denotes a building.
 - `man_made=breakwater` and `man_made=groyne` follow the OSM area convention, like `pier`: a closed way is a polygon in

@@ -167,7 +167,8 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
       .setMinZoom(mz)
       .setMaxZoom(14)
       .setAttr("admin_level", adminLevel)
-      .setAttr("way_area", mercatorM2 / 1e4) // hectares (Mercator projection), per the spec
+      // whole hectares (Mercator projection), per the spec, written as an integer like water_polygons' way_area
+      .setAttr("way_area", Math.round(mercatorM2 / 1e4))
       // spec: labels are sorted by way_area in descending order
       .setSortKeyDescending(SortKey.orderByLog(mercatorM2, 1, 1e15).get());
     Names.setNames(label, f, options.nameKeys(), countries);

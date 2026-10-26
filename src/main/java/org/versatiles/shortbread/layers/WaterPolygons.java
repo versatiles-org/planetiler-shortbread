@@ -91,6 +91,8 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
     mz = Math.min(mz, 14);
     double wayArea = Geo.mercatorAreaSquareMeters(f); // spec: way_area is in m² (Mercator projection)
     int sortKey = SortKey.orderByLog(Math.max(wayArea, 1), 1, 1e14).get();
+    // whole m², written as an integer: smaller than a double in the tile (see the README's output details)
+    long wayAreaM2 = Math.round(wayArea);
 
     features.polygon(LAYER)
       .setMinZoom(mz)
@@ -98,7 +100,7 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
       .setMinPixelSize(1)
       .setPixelTolerance(0.25)
       .setAttr("kind", kind)
-      .setAttr("way_area", wayArea)
+      .setAttr("way_area", wayAreaM2)
       .setSortKeyDescending(sortKey);
 
     if (f.hasTag("name")) {
@@ -107,7 +109,7 @@ public class WaterPolygons implements ForwardingProfile.FeatureProcessor {
         .setMinZoom(mz)
         .setMaxZoom(14)
         .setAttr("kind", kind)
-        .setAttr("way_area", wayArea)
+        .setAttr("way_area", wayAreaM2)
         .setSortKeyDescending(sortKey)
         // thin dense low/mid-zoom water labels: keep the largest (sort key = area) per 64px grid cell (~16/tile) so a
         // continent-sized z4 tile carries the few biggest seas/lakes, not thousands of points. z12+ is left unthinned.

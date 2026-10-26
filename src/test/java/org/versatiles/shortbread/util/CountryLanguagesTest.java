@@ -9,10 +9,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.onthegomap.planetiler.TestUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
+import org.versatiles.shortbread.ShortbreadOptions;
 
 class CountryLanguagesTest {
 
@@ -82,6 +89,38 @@ class CountryLanguagesTest {
     countries.processFeature(country("ISO_A2", "DE", GERMANY_BOX), null);
 
     assertTrue(countries.sourceWasRead());
+  }
+
+  @Test
+  void mapsArabicSpeakingCountries() {
+    var countries = new CountryLanguages(List.of("en", "ar"));
+    countries.processFeature(country("ISO_A2", "SA", GERMANY_BOX), null);
+
+    assertEquals("ar", countries.languageAt(point(10, 51)));
+  }
+
+  @Test
+  void everyCountryLanguageIsInTheExtendedList() {
+    // otherwise --name_languages=extended could never use that country's entry
+    for (var entry : CountryLanguages.ISO_TO_LANGUAGE.entrySet()) {
+      assertTrue(ShortbreadOptions.EXTENDED_LANGUAGES.contains(entry.getValue()),
+        () -> entry.getKey() + " maps to " + entry.getValue() + ", which is not in the extended list");
+    }
+  }
+
+  @Test
+  void countryTableIsDocumented() throws IOException {
+    // rows of the table in docs/extensions.md: | `<lang>` | <ISO>, <ISO>, ... |
+    Map<String, String> documented = new HashMap<>();
+    for (String line : Files.readString(Path.of("docs", "extensions.md")).lines().toList()) {
+      Matcher m = Pattern.compile("^\\| `([a-z]{2,3})` +\\| ([A-Z, ]+?) *\\|$").matcher(line);
+      if (m.matches()) {
+        for (String iso : m.group(2).split(", ")) {
+          documented.put(iso, m.group(1));
+        }
+      }
+    }
+    assertEquals(CountryLanguages.ISO_TO_LANGUAGE, documented);
   }
 
   @Test

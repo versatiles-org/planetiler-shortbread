@@ -5,11 +5,13 @@ import com.onthegomap.planetiler.ForwardingProfile;
 import com.onthegomap.planetiler.expression.Expression;
 import com.onthegomap.planetiler.geo.GeometryException;
 import com.onthegomap.planetiler.reader.SourceFeature;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.Point;
@@ -31,8 +33,8 @@ import org.versatiles.shortbread.Shortbread;
  * {@code name} when it lies in a country whose default language is {@code <lang>} (e.g. a German town tagged just
  * {@code name=Köln} gets {@code name_de=Köln}). This makes a frontend "show only language X" mode usable — the
  * unqualified local name is treated as language X inside X-speaking countries — without globally copying {@code name}
- * into every {@code name_<lang>}, which would mislabel a French town's name as German). Multilingual countries (CH, BE,
- * LU, CA, ...) are intentionally omitted to avoid guessing.
+ * into every {@code name_<lang>}, which would mislabel a French town's name as German). Countries with several
+ * languages (CH, BE, LU, CA, ...) are intentionally omitted to avoid guessing; see {@link #COUNTRIES_BY_LANGUAGE}.
  * <p>
  * The index holds {@link PreparedGeometry prepared} polygon parts: every named feature in the build queries it, and a
  * prepared geometry indexes a country's edges once instead of walking its full ring on each test — Natural Earth
@@ -47,29 +49,63 @@ public class CountryLanguages implements ForwardingProfile.FeatureProcessor, For
   /** Natural Earth source/layer name, wired in {@code ShortbreadMain}. */
   public static final String SOURCE = "ne_10m_admin_0_countries";
 
-  // ISO 3166-1 alpha-2 -> default (single official/dominant) language, for clearly monolingual countries only.
-  // Multi-official-language countries are deliberately absent (see class doc).
-  private static final Map<String, String> ISO_TO_LANGUAGE = Map.ofEntries(
-    Map.entry("DE", "de"), Map.entry("AT", "de"), Map.entry("LI", "de"),
-    Map.entry("FR", "fr"), Map.entry("MC", "fr"),
-    Map.entry("NL", "nl"),
-    Map.entry("GB", "en"), Map.entry("IE", "en"), Map.entry("US", "en"), Map.entry("AU", "en"),
-    Map.entry("NZ", "en"),
-    Map.entry("IT", "it"), Map.entry("SM", "it"),
-    Map.entry("ES", "es"), Map.entry("AR", "es"), Map.entry("MX", "es"), Map.entry("CO", "es"),
-    Map.entry("CL", "es"), Map.entry("PE", "es"), Map.entry("VE", "es"), Map.entry("EC", "es"),
-    Map.entry("BO", "es"), Map.entry("PY", "es"), Map.entry("UY", "es"), Map.entry("CR", "es"),
-    Map.entry("CU", "es"), Map.entry("DO", "es"), Map.entry("GT", "es"), Map.entry("HN", "es"),
-    Map.entry("NI", "es"), Map.entry("PA", "es"), Map.entry("SV", "es"),
-    Map.entry("PT", "pt"), Map.entry("BR", "pt"),
-    Map.entry("DK", "da"), Map.entry("SE", "sv"), Map.entry("NO", "no"), Map.entry("IS", "is"),
-    Map.entry("FI", "fi"),
-    Map.entry("PL", "pl"), Map.entry("CZ", "cs"), Map.entry("SK", "sk"), Map.entry("HU", "hu"),
-    Map.entry("RO", "ro"), Map.entry("BG", "bg"), Map.entry("GR", "el"), Map.entry("HR", "hr"),
-    Map.entry("SI", "sl"), Map.entry("RS", "sr"), Map.entry("EE", "et"), Map.entry("LV", "lv"),
-    Map.entry("LT", "lt"), Map.entry("RU", "ru"), Map.entry("UA", "uk"), Map.entry("TR", "tr"),
-    Map.entry("JP", "ja"), Map.entry("KR", "ko"), Map.entry("CN", "zh"), Map.entry("TW", "zh"),
-    Map.entry("TH", "th"), Map.entry("VN", "vi"));
+  // Language -> the countries (ISO 3166-1 alpha-2) whose unqualified `name` is taken to be in that language. A country
+  // is listed when Nominatim's settings/country_settings.yaml gives it exactly this one language and, for a non-Latin
+  // script, its place and street names are mostly written in that script: Bangladesh, Nepal and Myanmar are left out,
+  // because many of their names are in Latin script. Countries with several languages, such as CH, BE, LU, CA, MA or IQ,
+  // are left out to avoid guessing. Exceptions, where Nominatim also lists regional or minority languages, so names in
+  // those regions are taken to be in the main language: BO, ES, FI, IE, IT, NO, NZ, PY, and TW (Nominatim: zh-Hant).
+  private static final Map<String, String> COUNTRIES_BY_LANGUAGE = Map.ofEntries(
+    Map.entry("ar", "AE BH EG JO KW LY OM QA SA SY YE"),
+    Map.entry("az", "AZ"),
+    Map.entry("bg", "BG"),
+    Map.entry("ca", "AD"),
+    Map.entry("cs", "CZ"),
+    Map.entry("da", "DK"),
+    Map.entry("de", "AT DE LI"),
+    Map.entry("el", "GR"),
+    Map.entry("en", "AG AI AU BB BM BS BZ DM FJ FK FM GB GD GG GH GI GM GS GY IE IM IO JE JM KI KN KY LC LR MS NG NZ " +
+      "SB SH SL SS TC TO TT TV US VC VG ZM"),
+    Map.entry("es", "AR BO CL CO CR CU DO EC ES GT HN MX NI PA PE PY SV UY VE"),
+    Map.entry("et", "EE"),
+    Map.entry("fa", "IR"),
+    Map.entry("fi", "FI"),
+    Map.entry("fr", "BF BI BJ CD CG CI FR GA GN MC ML NE SN TG"),
+    Map.entry("he", "IL"),
+    Map.entry("hr", "HR"),
+    Map.entry("hu", "HU"),
+    Map.entry("hy", "AM"),
+    Map.entry("id", "ID"),
+    Map.entry("is", "IS"),
+    Map.entry("it", "IT SM VA"),
+    Map.entry("ja", "JP"),
+    Map.entry("ka", "GE"),
+    Map.entry("ko", "KP KR"),
+    Map.entry("lt", "LT"),
+    Map.entry("lv", "LV"),
+    Map.entry("mk", "MK"),
+    Map.entry("ms", "BN MY"),
+    Map.entry("nl", "NL SR"),
+    Map.entry("no", "NO"),
+    Map.entry("pl", "PL"),
+    Map.entry("pt", "AO BR CV GW MZ PT ST"),
+    Map.entry("ro", "RO"),
+    Map.entry("ru", "RU"),
+    Map.entry("sk", "SK"),
+    Map.entry("sl", "SI"),
+    Map.entry("sq", "AL"),
+    Map.entry("sr", "RS"),
+    Map.entry("sv", "SE"),
+    Map.entry("th", "TH"),
+    Map.entry("tr", "TR"),
+    Map.entry("uk", "UA"),
+    Map.entry("vi", "VN"),
+    Map.entry("zh", "CN TW"));
+
+  /** ISO 3166-1 alpha-2 &rarr; language, from {@link #COUNTRIES_BY_LANGUAGE}; a country listed twice fails here. */
+  static final Map<String, String> ISO_TO_LANGUAGE = COUNTRIES_BY_LANGUAGE.entrySet().stream()
+    .flatMap(e -> Arrays.stream(e.getValue().split(" ")).map(iso -> Map.entry(iso, e.getKey())))
+    .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
 
   // Natural Earth admin_0 ISO field, by preference. *_EH variants fill the "-99" gaps in the plain field; the
   // shapefile reader preserves the DBF (upper-case) field names, but we also try lower-case for robustness.

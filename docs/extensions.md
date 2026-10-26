@@ -116,19 +116,60 @@ when all of these hold:
 
 - `<lang>` is in `--name_languages`,
 - the centroid of the feature lies in a country polygon of the Natural Earth `ne_10m_admin_0_countries` dataset,
-- that country's language is `<lang>` in this table (monolingual countries only; countries with several official
-  languages, such as CH, BE, LU and CA, are left out):
+- that country's language is `<lang>` in this table. A country is listed when Nominatim's
+  [`country_settings.yaml`](https://github.com/osm-search/Nominatim/blob/master/settings/country_settings.yaml) gives it
+  exactly this one language and, for a non-Latin script, its place and street names are mostly written in that script
+  (Bangladesh, Nepal and Myanmar are left out: many of their names are in Latin script). Countries with several
+  languages, such as CH, BE, LU, CA, MA or IQ, are left out. Exceptions, where Nominatim also lists regional or minority
+  languages, so names in those regions are taken to be in the main language: BO, ES, FI, IE, IT, NO, NZ, PY, and TW
+  (Nominatim: `zh-Hant`).
 
-| Language |                                                                                                                Countries                                                                                                                 |
-|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `de`     | DE, AT, LI                                                                                                                                                                                                                               |
-| `en`     | GB, IE, US, AU, NZ                                                                                                                                                                                                                       |
-| `es`     | ES, AR, MX, CO, CL, PE, VE, EC, BO, PY, UY, CR, CU, DO, GT, HN, NI, PA, SV                                                                                                                                                               |
-| `fr`     | FR, MC                                                                                                                                                                                                                                   |
-| `it`     | IT, SM                                                                                                                                                                                                                                   |
-| `pt`     | PT, BR                                                                                                                                                                                                                                   |
-| `zh`     | CN, TW                                                                                                                                                                                                                                   |
-| others   | NL `nl`, DK `da`, SE `sv`, NO `no`, IS `is`, FI `fi`, PL `pl`, CZ `cs`, SK `sk`, HU `hu`, RO `ro`, BG `bg`, GR `el`, HR `hr`, SI `sl`, RS `sr`, EE `et`, LV `lv`, LT `lt`, RU `ru`, UA `uk`, TR `tr`, JP `ja`, KR `ko`, TH `th`, VN `vi` |
+| Language |                                                                                   Countries                                                                                    |
+|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ar`     | AE, BH, EG, JO, KW, LY, OM, QA, SA, SY, YE                                                                                                                                     |
+| `az`     | AZ                                                                                                                                                                             |
+| `bg`     | BG                                                                                                                                                                             |
+| `ca`     | AD                                                                                                                                                                             |
+| `cs`     | CZ                                                                                                                                                                             |
+| `da`     | DK                                                                                                                                                                             |
+| `de`     | AT, DE, LI                                                                                                                                                                     |
+| `el`     | GR                                                                                                                                                                             |
+| `en`     | AG, AI, AU, BB, BM, BS, BZ, DM, FJ, FK, FM, GB, GD, GG, GH, GI, GM, GS, GY, IE, IM, IO, JE, JM, KI, KN, KY, LC, LR, MS, NG, NZ, SB, SH, SL, SS, TC, TO, TT, TV, US, VC, VG, ZM |
+| `es`     | AR, BO, CL, CO, CR, CU, DO, EC, ES, GT, HN, MX, NI, PA, PE, PY, SV, UY, VE                                                                                                     |
+| `et`     | EE                                                                                                                                                                             |
+| `fa`     | IR                                                                                                                                                                             |
+| `fi`     | FI                                                                                                                                                                             |
+| `fr`     | BF, BI, BJ, CD, CG, CI, FR, GA, GN, MC, ML, NE, SN, TG                                                                                                                         |
+| `he`     | IL                                                                                                                                                                             |
+| `hr`     | HR                                                                                                                                                                             |
+| `hu`     | HU                                                                                                                                                                             |
+| `hy`     | AM                                                                                                                                                                             |
+| `id`     | ID                                                                                                                                                                             |
+| `is`     | IS                                                                                                                                                                             |
+| `it`     | IT, SM, VA                                                                                                                                                                     |
+| `ja`     | JP                                                                                                                                                                             |
+| `ka`     | GE                                                                                                                                                                             |
+| `ko`     | KP, KR                                                                                                                                                                         |
+| `lt`     | LT                                                                                                                                                                             |
+| `lv`     | LV                                                                                                                                                                             |
+| `mk`     | MK                                                                                                                                                                             |
+| `ms`     | BN, MY                                                                                                                                                                         |
+| `nl`     | NL, SR                                                                                                                                                                         |
+| `no`     | NO                                                                                                                                                                             |
+| `pl`     | PL                                                                                                                                                                             |
+| `pt`     | AO, BR, CV, GW, MZ, PT, ST                                                                                                                                                     |
+| `ro`     | RO                                                                                                                                                                             |
+| `ru`     | RU                                                                                                                                                                             |
+| `sk`     | SK                                                                                                                                                                             |
+| `sl`     | SI                                                                                                                                                                             |
+| `sq`     | AL                                                                                                                                                                             |
+| `sr`     | RS                                                                                                                                                                             |
+| `sv`     | SE                                                                                                                                                                             |
+| `th`     | TH                                                                                                                                                                             |
+| `tr`     | TR                                                                                                                                                                             |
+| `uk`     | UA                                                                                                                                                                             |
+| `vi`     | VN                                                                                                                                                                             |
+| `zh`     | CN, TW                                                                                                                                                                         |
 
 It applies to every layer with names: `boundary_labels`, `place_labels`, `water_polygons_labels`,
 `water_lines_labels`, `street_labels`, `street_labels_points`, `streets_polygons_labels`, `pois`, `ferries`,

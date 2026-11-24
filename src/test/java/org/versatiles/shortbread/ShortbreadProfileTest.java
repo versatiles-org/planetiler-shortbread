@@ -1011,6 +1011,40 @@ class ShortbreadProfileTest {
   }
 
   @Test
+  void boundaryLabelBufferCoversLabelsCrossingTileEdges() {
+    // a country name reaches far beyond its label point: with Planetiler's default 4px buffer the point is missing from
+    // a neighbouring tile that the label crosses, and per-tile renderers cut the label at the tile edge
+    var label = onlyOne(process(TestUtils.newPolygon(0, 0, 10, 0, 10, 10, 0, 10, 0, 0),
+      Map.of("boundary", "administrative", "admin_level", "2", "name", "Country")), "boundary_labels");
+    for (int z = label.getMinZoom(); z <= 14; z++) {
+      assertEquals(40, label.getBufferPixelsAtZoom(z), "buffer at z" + z);
+    }
+  }
+
+  @Test
+  void placeLabelBufferKeepsGridBufferAndCoversLabelsAbove() {
+    var place = onlyOne(process(TestUtils.newPoint(0, 0), Map.of("place", "city", "name", "Metropolis")),
+      "place_labels");
+    for (int z = place.getMinZoom(); z <= 14; z++) {
+      // where the label grid thins places (up to z12) the buffer must be at least the grid size, so that adjacent
+      // tiles keep the same places; above it, it must still hold a label crossing the tile edge
+      double expected = z <= 12 ? 64 : 40;
+      assertEquals(expected, place.getBufferPixelsAtZoom(z), "buffer at z" + z);
+      assertTrue(place.getBufferPixelsAtZoom(z) >= place.getPointLabelGridPixelSizeAtZoom(z),
+        "buffer below label grid size at z" + z);
+    }
+  }
+
+  @Test
+  void islandLabelBufferCoversLabelsCrossingTileEdges() {
+    var label = onlyOne(process(TestUtils.newPolygon(0, 0, 1, 0, 1, 1, 0, 1, 0, 0),
+      Map.of("place", "island", "name", "Big Isle")), "place_labels");
+    for (int z = label.getMinZoom(); z <= 14; z++) {
+      assertEquals(40, label.getBufferPixelsAtZoom(z), "buffer at z" + z);
+    }
+  }
+
+  @Test
   void nameTranslationsWithoutFallback() {
     var features = process(TestUtils.newPoint(0, 0),
       Map.of("amenity", "bank", "name", "Bank", "name:de", "Bankhaus"));

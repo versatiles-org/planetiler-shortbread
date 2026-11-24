@@ -123,6 +123,10 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("kind", kind)
       .setAttr("population", pop)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get())
+      // renderers that draw one tile at a time (server-side raster rendering) cut a label at the tile edge when its
+      // point is missing from a tile the label crosses, so the buffer covers half of a label wrapped at MapLibre's
+      // default text-max-width (10em) at up to 16px font size
+      .setBufferPixels(40)
       // thin dense low/mid-zoom place labels: keep the most populous per 64px grid cell (~32/tile), à la OpenMapTiles.
       // z13+ is left unthinned so all places appear when zoomed in; buffer must be >= grid size for edge consistency,
       // but only where the grid runs — above z12 the wide buffer would just duplicate points into neighbouring tiles
@@ -141,6 +145,8 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
     var label = features.pointOnSurface(LAYER)
       .setMinZoom(mz)
       .setMaxZoom(14)
+      // like the place points above: a label crossing the tile edge needs its point in both tiles
+      .setBufferPixels(40)
       .setAttr("kind", "island")
       .setAttr("population", 0L)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(areaM2, 1), 1, 1e14).get());

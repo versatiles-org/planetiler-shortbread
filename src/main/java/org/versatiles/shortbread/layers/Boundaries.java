@@ -166,10 +166,8 @@ public class Boundaries implements ForwardingProfile.FeatureProcessor, Forwardin
     var label = features.pointOnSurface(LABELS)
       .setMinZoom(mz)
       .setMaxZoom(14)
-      // renderers that draw one tile at a time (server-side raster rendering) cut a label at the tile edge when its
-      // point is missing from a tile the label crosses; country and state names are long, so the buffer covers half
-      // of a label wrapped at MapLibre's default text-max-width (10em) at up to 16px font size
-      .setBufferPixels(40)
+      // country and state names are long and often cross tile edges
+      .setBufferPixels(PlaceLabels.LABEL_BUFFER_PIXELS)
       .setAttr("admin_level", adminLevel)
       // whole hectares (Mercator projection), per the spec, written as an integer like water_polygons' way_area
       .setAttr("way_area", Math.round(mercatorM2 / 1e4))

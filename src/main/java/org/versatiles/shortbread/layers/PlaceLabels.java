@@ -24,6 +24,15 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
 
   public static final String LAYER = "place_labels";
 
+  /**
+   * Buffer of label points, in tile pixels (a 256px tile), so that a label crossing a tile edge has its point in every
+   * tile it reaches. Renderers that draw one tile at a time, such as server-side raster rendering with MapLibre Native,
+   * cut the label at the edge of a tile that lacks the point. The buffer covers half of the widest label: MapLibre
+   * wraps text at {@code text-max-width}, 10em by default, so half a label is 5em on a 512px style tile, or 2.5em in
+   * tile pixels. 40px covers font sizes up to 16px, the largest place and boundary label size in the VersaTiles styles.
+   */
+  public static final double LABEL_BUFFER_PIXELS = 40;
+
   private final ShortbreadOptions options;
   private final CountryLanguages countries;
 
@@ -123,13 +132,10 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
       .setAttr("kind", kind)
       .setAttr("population", pop)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(pop, 1), 1, 1e9).get())
-      // renderers that draw one tile at a time (server-side raster rendering) cut a label at the tile edge when its
-      // point is missing from a tile the label crosses, so the buffer covers half of a label wrapped at MapLibre's
-      // default text-max-width (10em) at up to 16px font size
-      .setBufferPixels(40)
       // thin dense low/mid-zoom place labels: keep the most populous per 64px grid cell (~32/tile), à la OpenMapTiles.
-      // z13+ is left unthinned so all places appear when zoomed in; buffer must be >= grid size for edge consistency,
-      // but only where the grid runs — above z12 the wide buffer would just duplicate points into neighbouring tiles
+      // z13+ is left unthinned so all places appear when zoomed in. Where the grid runs, the buffer must be at least
+      // the grid size, so that adjacent tiles keep the same places; above it, LABEL_BUFFER_PIXELS is enough
+      .setBufferPixels(LABEL_BUFFER_PIXELS)
       .setBufferPixelOverrides(ZoomFunction.maxZoom(12, 64))
       .setPointLabelGridSizeAndLimit(12, 64, 2);
     Names.setNames(feature, f, options.nameKeys(), countries);
@@ -145,8 +151,7 @@ public class PlaceLabels implements ForwardingProfile.FeatureProcessor {
     var label = features.pointOnSurface(LAYER)
       .setMinZoom(mz)
       .setMaxZoom(14)
-      // like the place points above: a label crossing the tile edge needs its point in both tiles
-      .setBufferPixels(40)
+      .setBufferPixels(LABEL_BUFFER_PIXELS)
       .setAttr("kind", "island")
       .setAttr("population", 0L)
       .setSortKeyDescending(SortKey.orderByLog(Math.max(areaM2, 1), 1, 1e14).get());

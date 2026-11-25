@@ -103,15 +103,12 @@ jobs:
       - name: Build and test the whole reactor
         working-directory: planetiler
         run: ./mvnw -Dspotless.check.skip --batch-mode -no-transfer-progress verify --file pom.xml
-      # Asking for an unknown task makes Main print every registered task and exit,
+      # `<task> --help` prints the task's help and exits 0, while Main rejects an unknown task with an error,
       # so this checks the wiring without starting a pipeline or downloading sources.
       - name: Check the distribution jar registers the shortbread tasks
         working-directory: planetiler
         run: |
-          output=$(java -jar planetiler-dist/target/*with-deps.jar no-such-task 2>&1 || true)
-          echo "$output"
-          registered=$(echo "$output" | sed -n 's/.*possibilities: \[\(.*\)\].*/\1/p' | tr ',' '\n' | tr -d ' ')
-          test -n "$registered" || { echo "could not read the task list"; exit 1; }
           for task in shortbread shortbread-1.1 generate-shortbread generate-shortbread-1.1; do
-            echo "$registered" | grep -qx "$task" || { echo "task '$task' is not registered"; exit 1; }
+            output=$(java -jar planetiler-dist/target/*with-deps.jar "$task" --help 2>&1) ||
+              { echo "$output"; echo "task '$task' is not registered"; exit 1; }
           done

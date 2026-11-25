@@ -93,10 +93,11 @@ jobs:
       - name: Check out the planetiler-openmaptiles submodule
         working-directory: planetiler
         run: git submodule update --init planetiler-openmaptiles
-      - name: Set up JDK 21
+      # the planetiler fork tracks upstream, which requires Java 25 since onthegomap/planetiler#1631
+      - name: Set up JDK 25
         uses: actions/setup-java@v6
         with:
-          java-version: 21
+          java-version: 25
           distribution: 'temurin'
           cache: 'maven'
       - name: Build and test the whole reactor

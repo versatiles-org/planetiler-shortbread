@@ -62,6 +62,22 @@
     </repository>
   </repositories>
 
+  <!-- The assembly plugin takes planetiler-core as a plugin dependency (for its with-deps descriptor), and Maven
+       resolves plugin dependencies only from pluginRepositories, so a SNAPSHOT planetiler.version needs this too: -->
+  <pluginRepositories>
+    <pluginRepository>
+      <name>Central Portal Snapshots</name>
+      <id>central-portal-snapshots</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
+
   <dependencies>
     <dependency>
       <groupId>com.onthegomap.planetiler</groupId>

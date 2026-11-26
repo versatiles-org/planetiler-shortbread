@@ -11,8 +11,8 @@ hand-written profile instead.
 
 ## Building and running
 
-This repo builds standalone against a released `planetiler-core` from Maven Central. Building and running need Java 25
-or newer, as Planetiler does:
+This repo builds standalone against `planetiler-core` from Maven Central (a snapshot until Planetiler 0.10.3 is
+released). Building and running need Java 25 or newer, as Planetiler does:
 
 ```bash
 ./mvnw clean package
@@ -31,8 +31,8 @@ java -jar target/*-with-deps.jar --area=planet
 These input sources are used and downloaded automatically if missing:
 
 - `osm` — an OpenStreetMap `.osm.pbf` extract (Geofabrik by default)
-- `ocean` — the OSM water polygons shapefile
-  ([water-polygons-split-3857](https://osmdata.openstreetmap.de/data/water-polygons.html)) used for the `ocean` layer
+- `ocean` — the [OSM water polygons](https://osmdata.openstreetmap.de/data/water-polygons.html) used for the `ocean`
+  layer, as GeoParquet from `planetiler.onthegomap.com`; only the parts the map bounds need are downloaded
 - `ne_10m_admin_0_countries` — the [Natural Earth](https://www.naturalearthdata.com/) country polygons, a few MB, only
   when the `locale_names` [experiment](#experimental-features-beyond-the-spec) is enabled
 
@@ -40,16 +40,16 @@ Output is written to `data/shortbread.mbtiles` by default.
 
 ## Command-line reference
 
-|                               Argument                               |                                 Default                                 |                                                                                                              Description                                                                                                              |
-|----------------------------------------------------------------------|-------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--area`                                                             | `monaco`                                                                | Geofabrik extract to download as OSM input; `planet` downloads the latest planet file (`aws:latest`)                                                                                                                                  |
-| `--output`                                                           | `data/shortbread.mbtiles`                                               | output archive                                                                                                                                                                                                                        |
-| `--shortbread_version`                                               | `1.0`                                                                   | schema version, `1.0` or `1.1`; any other value fails at startup                                                                                                                                                                      |
-| `--name_languages`                                                   | `en,de`                                                                 | IETF language codes emitted as `name_<code>`, or `extended` for the [extended list](#names) (combinable: `extended,eo`); with 1.0 only `en,de` is accepted                                                                            |
-| `--shortbread_experiments`                                           | `none`                                                                  | `all`, `none`, or a comma-separated list of [experiment tokens](docs/extensions.md), case-insensitive; an unknown token fails at startup, the deprecated `building_heights` and `building_parts` enable `3d_buildings` with a warning |
-| `--osm_path` / `--osm_url`                                           | `data/sources/<area>.osm.pbf` / `geofabrik:<area>`                      | OSM input file and its download URL                                                                                                                                                                                                   |
-| `--ocean_path` / `--ocean_url`                                       | `data/sources/water-polygons-split-3857.zip` / osmdata.openstreetmap.de | ocean shapefile and its download URL                                                                                                                                                                                                  |
-| `--ne_10m_admin_0_countries_path` / `--ne_10m_admin_0_countries_url` | `data/sources/ne_10m_admin_0_countries.zip` / Natural Earth             | country polygons for `locale_names`                                                                                                                                                                                                   |
+|                               Argument                               |                              Default                              |                                                                                                              Description                                                                                                              |
+|----------------------------------------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--area`                                                             | `monaco`                                                          | Geofabrik extract to download as OSM input; `planet` downloads the latest planet file (`aws:latest`)                                                                                                                                  |
+| `--output`                                                           | `data/shortbread.mbtiles`                                         | output archive                                                                                                                                                                                                                        |
+| `--shortbread_version`                                               | `1.0`                                                             | schema version, `1.0` or `1.1`; any other value fails at startup                                                                                                                                                                      |
+| `--name_languages`                                                   | `en,de`                                                           | IETF language codes emitted as `name_<code>`, or `extended` for the [extended list](#names) (combinable: `extended,eo`); with 1.0 only `en,de` is accepted                                                                            |
+| `--shortbread_experiments`                                           | `none`                                                            | `all`, `none`, or a comma-separated list of [experiment tokens](docs/extensions.md), case-insensitive; an unknown token fails at startup, the deprecated `building_heights` and `building_parts` enable `3d_buildings` with a warning |
+| `--osm_path` / `--osm_url`                                           | `data/sources/<area>.osm.pbf` / `geofabrik:<area>`                | OSM input file and its download URL                                                                                                                                                                                                   |
+| `--ocean_path` / `--ocean_url`                                       | `data/sources/water_polygons.parquet` / planetiler.onthegomap.com | ocean GeoParquet file and its download URL; `--download` fetches only the parts the map bounds need, `--download=full` the whole file                                                                                                 |
+| `--ne_10m_admin_0_countries_path` / `--ne_10m_admin_0_countries_url` | `data/sources/ne_10m_admin_0_countries.zip` / Natural Earth       | country polygons for `locale_names`                                                                                                                                                                                                   |
 
 All other [Planetiler arguments](https://github.com/onthegomap/planetiler) work as usual, for example `--download`,
 `--force`, `--tmpdir` or `--output_layerstats`.

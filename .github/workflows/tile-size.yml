@@ -2,7 +2,7 @@ name: Tile size budget
 
 # Generates two real extracts and fails when any compressed tile is larger than the budget, so a change that bloats
 # tiles gets noticed, for example losing the address density limit. It runs weekly and on demand rather than on every
-# pull request, because it downloads about 1.3 GB of input and runs for several minutes.
+# pull request, because it downloads two OSM extracts and runs for several minutes.
 #
 # Extracts, each generated twice: with the defaults (Shortbread 1.0, en/de, no experiments), and as the published
 # VersaTiles tiles are built (Shortbread 1.1, all experiments, the extended name language list):
@@ -60,19 +60,8 @@ jobs:
       - name: Build the executable jar
         run: ./mvnw -B -ntp -DskipTests -Dspotless.check.skip package
 
-      # The water polygons are the same for both extracts and change slowly, so the download is reused. The key is
-      # monthly, and restore-keys falls back to the newest older copy: with a weekly key and a weekly schedule the
-      # key changed on every run, so the cache never hit. --download below only fetches sources that are missing.
-      - name: Compute the month for the ocean cache key
-        id: cache_key
-        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
-      - name: Restore the ocean shapefile
-        uses: actions/cache@v6
-        with:
-          path: data/sources/water-polygons-split-3857.zip
-          key: water-polygons-${{ steps.cache_key.outputs.month }}
-          restore-keys: |
-            water-polygons-
+      # The ocean source is GeoParquet read with range requests, so --download fetches only the parts each extract
+      # needs, a few MB, and keeps them in a sparse file. That is too little to be worth a cache.
 
       - name: Generate tiles without experiments
         run: >-

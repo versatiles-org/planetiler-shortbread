@@ -9,9 +9,9 @@ import org.versatiles.shortbread.Shortbread;
 /**
  * The {@code ocean} layer: ocean/sea polygons covering the whole globe at every zoom level.
  * <p>
- * Unlike most layers this is not derived from OSM tags but from the pre-assembled OSM water polygons shapefile
- * (water-polygons-split-3857) published at osmdata.openstreetmap.de, wired in as the {@code ocean} source. The schema
- * defines no attributes on this layer.
+ * Unlike most layers this is not derived from OSM tags but from the pre-assembled OSM water polygons published at
+ * osmdata.openstreetmap.de, read as GeoParquet and wired in as the {@code ocean} source (see {@code ShortbreadMain}).
+ * The schema defines no attributes on this layer.
  */
 public class Ocean implements ForwardingProfile.FeatureProcessor {
 

@@ -11,12 +11,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>25</maven.compiler.source>
     <maven.compiler.target>25</maven.compiler.target>
-    <!-- The released Planetiler this standalone build compiles against. submodule.pom.xml deliberately does NOT use
-         this: inside a Planetiler checkout it inherits planetiler-parent at ${revision} and takes planetiler-core at
-         ${project.version}, so it builds against that working tree (0.10.3-SNAPSHOT at the time of writing). The two
-         are meant to differ — pinning this to a SNAPSHOT would break the standalone build, which resolves from Maven
-         Central. Raise it when a newer Planetiler is released. -->
-    <planetiler.version>0.10.2</planetiler.version>
+    <!-- The Planetiler this standalone build compiles against. submodule.pom.xml deliberately does NOT use this:
+         inside a Planetiler checkout it inherits planetiler-parent at ${revision} and takes planetiler-core at
+         ${project.version}, so it builds against that working tree.
+         A SNAPSHOT for now, resolved from the Central Portal snapshots repository below: the GeoParquet ocean source
+         needs addParquetSource(name, path, url) with range requests (onthegomap/planetiler#1662), which no release
+         has yet. Switch to 0.10.3 once it is released, and before the next release of this repo, because a SNAPSHOT
+         changes under the tag. -->
+    <planetiler.version>0.10.3-SNAPSHOT</planetiler.version>
     <junit.version>6.1.3</junit.version>
 
     <mainClass>org.versatiles.shortbread.ShortbreadMain</mainClass>

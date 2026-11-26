@@ -11,15 +11,19 @@ import org.versatiles.shortbread.util.CountryLanguages;
  * Run with {@code java -jar planetiler.jar shortbread --area=monaco}. Input sources:
  * <ul>
  * <li>{@code osm} — an OpenStreetMap {@code .osm.pbf} extract (downloaded from Geofabrik by default)</li>
- * <li>{@code ocean} — the OSM water polygons shapefile from osmdata.openstreetmap.de, for the {@code ocean} layer</li>
+ * <li>{@code ocean} — the OSM water polygons as GeoParquet, for the {@code ocean} layer; only the parts the map bounds
+ * need are downloaded</li>
  * <li>{@code ne_10m_admin_0_countries} — Natural Earth country polygons, declared <em>before</em> the OSM source so
  * {@link CountryLanguages} builds its country&rarr;language index before any OSM feature is processed</li>
  * </ul>
  */
 public class ShortbreadMain {
 
-  private static final String OCEAN_URL =
-    "https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip";
+  // The osmdata.openstreetmap.de water polygons (https://osmdata.openstreetmap.de/data/water-polygons.html), converted
+  // to GeoParquet by Planetiler's CI (scripts/shp2parquet.py) and served with range requests, the same source
+  // planetiler-openmaptiles uses. --download fetches only the row groups the map bounds need; --download=full fetches
+  // the whole file.
+  private static final String OCEAN_URL = "https://planetiler.onthegomap.com/water_polygons.parquet";
   // Natural Earth's official CDN. We pull only the small per-layer shapefile we need (admin_0 countries, a few MB)
   // rather than the full ~800 MB Natural Earth vector dataset.
   private static final String NATURAL_EARTH_BASE_URL = "https://naciscdn.org/naturalearth/";
@@ -47,8 +51,8 @@ public class ShortbreadMain {
 
     planetiler
       .addOsmSource(Shortbread.OSM_SOURCE, Path.of("data", "sources", area + ".osm.pbf"), osmUrl)
-      .addShapefileSource(Shortbread.OCEAN_SOURCE,
-        Path.of("data", "sources", "water-polygons-split-3857.zip"), OCEAN_URL);
+      .addParquetSource(Shortbread.OCEAN_SOURCE,
+        Path.of("data", "sources", "water_polygons.parquet"), OCEAN_URL);
 
     planetiler.overwriteOutput(Path.of("data", "shortbread.mbtiles")).run();
   }

@@ -11,7 +11,8 @@ hand-written profile instead.
 
 ## Building and running
 
-This repo builds standalone against a released `planetiler-core` from Maven Central:
+This repo builds standalone against a released `planetiler-core` from Maven Central. Building and running need Java 25
+or newer, as Planetiler does:
 
 ```bash
 ./mvnw clean package

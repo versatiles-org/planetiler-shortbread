@@ -42,6 +42,6 @@ updates:
 
 # Not configured, deliberately:
 #
-# - docker: the container's base image (eclipse-temurin:21-jre) is declared in the jib plugin config inside pom.xml,
+# - docker: the container's base image (eclipse-temurin:25-jre) is declared in the jib plugin config inside pom.xml,
 #   not in a Dockerfile, so neither the docker updater (which needs a Dockerfile) nor the maven updater tracks it.
 #   Base-image updates have to be noticed by hand — check it when a JDK release lands.

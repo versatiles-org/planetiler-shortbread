@@ -4,6 +4,11 @@ A native Java [Planetiler](https://github.com/onthegomap/planetiler) profile tha
 [Shortbread](https://shortbread-tiles.org/) schema, versions [1.0](https://shortbread-tiles.org/schema/1.0/) and
 [1.1](https://shortbread-tiles.org/schema/1.1/).
 
+It is a community implementation, not a reference implementation: the Shortbread specification is the reference, and
+[shortbread-tilemaker](https://github.com/shortbread-tiles/shortbread-tilemaker) is another implementation of it.
+Additions beyond the specification are opt-in (see [experimental features](#experimental-features-beyond-the-spec)), so
+the default output is plain Shortbread.
+
 This replaces the previous YAML/`custommap` implementation (`planetiler-custommap/.../shortbread.yml`). The declarative
 YAML engine could not express several things the schema needs — size-based minimum zoom, sort keys / draw order,
 relation membership for administrative boundaries, and per-zoom attribute tiers — so the schema is implemented here as a
